@@ -15,7 +15,7 @@ app.use('/',express.static('public'));
 
 
 app.get('/', (req, res) => {
-    res.send("<h1>Hello world</h1>");
+    res.send("<h1>Alphacrunch Finance</h1>");
 });
 app.listen(port, () => {
     console.log(`Server started on http://localhost:${port}`);
