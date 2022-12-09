@@ -12,7 +12,6 @@ const mongodb = async ()=> {
             });
         console.log(`Database connection successful!`)    
     } catch (err) {
-        console.log(DB);
         console.log(err); 
     }
     }

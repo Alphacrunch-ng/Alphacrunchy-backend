@@ -2,6 +2,8 @@
 
 // importing mongoose
 const mongoose = require('mongoose');
+const { roles } = require('../utils/constants');
+const { isEmail } = require('validator');
 
 const userSchema = new mongoose.Schema({
     firstName : {
@@ -14,7 +16,8 @@ const userSchema = new mongoose.Schema({
     },
     email : {
         type: String,
-        required: ['true', 'email is required.']
+        required: ['true', 'email is required.'],
+        validate: [isEmail, 'please enter a valid email']
     },
     sex: {
         type: String,
@@ -59,8 +62,8 @@ const userSchema = new mongoose.Schema({
     },
     role : {
         type: String,
-        enum: ['admin','staff','user'],
-        default: 'user'
+        enum: [roles.admin, roles.staff, roles.client],
+        default: roles.client
     },
     active : {
         type: Boolean,
@@ -69,6 +72,22 @@ const userSchema = new mongoose.Schema({
     deleted: {
         type: Boolean,
         default: false
+    }
+});
+
+userSchema.pre("save",async (next)=>{
+    try {
+        if (this.isNew) {
+            // hash password
+            const hashedPassword = await bcrypt.hash(this.password, 13);
+            this.password = hashedPassword
+            if (this.email === process.env.ADMIN_EMAIL.toLowerCase()) {
+              this.role = roles.admin;  
+            }
+        }
+        next();
+    } catch (error) {
+        next();
     }
 });
 
