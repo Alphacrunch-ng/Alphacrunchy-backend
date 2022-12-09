@@ -9,7 +9,7 @@ const mongodb = require('./utils/db.js');
 
 const indexRoute = require('./routes/indexRoute');
 const adminRoute = require('./routes/adminRoute');
-const options = require('./utils/swaggerOptions')
+const options = require('./utils/swaggerOptions');
 
 const app = express();
 const spec = swaggerJsDoc(options);
