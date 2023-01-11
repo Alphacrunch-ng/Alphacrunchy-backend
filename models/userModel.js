@@ -4,15 +4,12 @@
 const mongoose = require('mongoose');
 const { roles } = require('../utils/constants');
 const { isEmail } = require('validator');
+const { encryptPasswordSetRole } = require('./hooks');
 
 const userSchema = new mongoose.Schema({
-    firstName : {
+    fullName : {
         type: String,
-        required: ['true', 'first name is required.']
-    },
-    lastName : {
-        type: String,
-        required: ['true', 'last name is required.']
+        required: ['true', 'fullName is required.']
     },
     email : {
         type: String,
@@ -65,6 +62,17 @@ const userSchema = new mongoose.Schema({
         enum: [roles.admin, roles.staff, roles.client],
         default: roles.client
     },
+    otp:{
+        type: String
+    },
+    verified : {
+        type: Boolean,
+        default: false
+    },
+    confirmedEmail : {
+        type: Boolean,
+        default: false
+    },
     active : {
         type: Boolean,
         default: true
@@ -75,21 +83,11 @@ const userSchema = new mongoose.Schema({
     }
 });
 
-userSchema.pre("save",async (next)=>{
-    try {
-        if (this.isNew) {
-            // hash password
-            const hashedPassword = await bcrypt.hash(this.password, 13);
-            this.password = hashedPassword
-            if (this.email === process.env.ADMIN_EMAIL.toLowerCase()) {
-              this.role = roles.admin;  
-            }
-        }
-        next();
-    } catch (error) {
-        next();
-    }
-});
+//encrypts the password and sets the role
+userSchema.pre("save", encryptPasswordSetRole);
+
+//setting modifiedAt to current time after every update
+userSchema.pre('save', modifiedAt);
 
 const User = mongoose.model('User', userSchema);
 

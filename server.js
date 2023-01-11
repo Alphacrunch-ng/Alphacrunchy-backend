@@ -8,7 +8,6 @@ const swaggerJsDoc = require('swagger-jsdoc');
 const mongodb = require('./utils/db.js');
 
 const indexRoute = require('./routes/indexRoute');
-const adminRoute = require('./routes/adminRoute');
 const options = require('./utils/swaggerOptions');
 
 const app = express();
@@ -25,7 +24,6 @@ app.use(morgan('dev'));
 
 mongodb().then(()=>{
     app.use('/', indexRoute);
-    app.use('/back-door', adminRoute);
     app.use((req, res, next)=>{
         next(new Error(message = "Not found"));
     });

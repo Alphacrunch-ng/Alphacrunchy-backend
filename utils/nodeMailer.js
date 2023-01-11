@@ -1,20 +1,20 @@
 const nodemailer = require('nodemailer');
 
+// create reusable transporter object using the default smtp transport
+let transport = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        user: process.env.SENDER_EMAIL,
+        pass: process.env.SENDER_EMAIL_PASSWORD,
+    }
+});
+
 exports.signUpMailer = (name, email, token) => {
     const message = `
     <h1> Welcome to Alphacrunch. ${name}</h1>
     <p>Your account has been sucessfully created</p>
     <p>Here is your token to set your password : ${token}</p>
     `
-
-    // create reusable transporter object using the default smtp transport
-    let transport = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        auth: {
-            user: process.env.SENDER_EMAIL,
-            password: process.env.SENDER_EMAIL_PASSWORD,
-        }
-    });
     // setup email data with unicode symbols
     let mailOptions = {
         from: `"Alphacrunch" <${process.env.SENDER_EMAIL}>`,// sender address
@@ -30,9 +30,6 @@ exports.signUpMailer = (name, email, token) => {
         }
         else{res.sendMail("Email has been sent")}
     });
-    tls:{
-        rejectUnauthorized:false
-    };
 }
 
 exports.noticeMailer = (email, operation) => {
@@ -42,14 +39,6 @@ exports.noticeMailer = (email, operation) => {
     <p>Thank You</p>
     </div>`
     
-    // create reusable transporter object using the default smtp transport
-    let transport = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        auth: {
-            user: process.env.SENDER_EMAIL,
-            password: process.env.SENDER_EMAIL_PASSWORD,
-        }
-    });
     // setup email data with unicode symbols
     let mailOptions = {
         from: `"Alphacrunch" <${process.env.SENDER_EMAIL}>`,// sender address
@@ -65,7 +54,31 @@ exports.noticeMailer = (email, operation) => {
         }
         res.sendMail("Email has been sent")
     });
-    tls:{
-        rejectUnauthorized:false
+}
+
+//email sender for reset password
+exports.resetPasswordMailer = (email, token) => {
+    const message = `
+    <h1>Alphacrunch.</h1>
+    <p>Your OTP is <b>${token}</b> to reset your password. </p>
+    `;
+
+    // setup email data with unicode symbols
+    let mailOptions = {
+        from: `"Alphacrunch" <${process.env.SENDER_EMAIL}>`,// sender address
+        to: `${email}`,
+        subject: "Alphacrunch Reset Password token",//
+        text: `Your OTP is <b>${token}</b> to reset your password. `,// subject
+        html: message, // html body
     };
+
+    // send mail with defined transport object
+    transport.sendMail(mailOptions, (error, info) =>{
+        if(error) {
+            console.log(error)
+        }
+        else{
+            console.log("Email has been sent");
+        }
+    });
 }
