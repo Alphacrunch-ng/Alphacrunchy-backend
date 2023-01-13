@@ -1,8 +1,8 @@
 const nodemailer = require('nodemailer');
 
 
-var emailSent = false;
 exports.signUpMailer = (name, email, token) => {
+    var emailSent = false;
     const message = `
     <h1> Welcome to Alphacrunch. ${name}</h1>
     <p>Your account has been sucessfully created</p>
@@ -67,9 +67,11 @@ exports.noticeMailer = (email, operation) => {
     // send mail with defined transport object
     transport.sendMail(mailOptions, (error, info) =>{
         if(error) {
-            return console.log(error);
+            console.log(error);
         }
-        res.sendMail("Email has been sent")
+        else{
+            console.log("Email has been sent");
+        }
     });
 }
 
@@ -89,6 +91,7 @@ exports.resetPasswordMailer = (email, token) => {
         html: message, // html body
     };
 
+
     // create reusable transporter object using the default smtp transport
     let transport = nodemailer.createTransport({
         service: "gmail",
@@ -100,7 +103,7 @@ exports.resetPasswordMailer = (email, token) => {
     // send mail with defined transport object
     transport.sendMail(mailOptions, (error, info) =>{
         if(error) {
-            console.log(error)
+            console.log(error);
         }
         else{
             console.log("Email has been sent");

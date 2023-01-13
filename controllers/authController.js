@@ -147,17 +147,10 @@ exports.resetPassword = async (req, res) => {
                 message: 'user not found'
             });
         }
-        if (checkUser.otp ===''){
-            return res.status(400).json({
-                status: 'failed',
-                message: 'email already confirmed'
-            });
-
-        }
         const isMatching = await bcrypt.compare(otp, checkUser.otp);
         if (isMatching) {
             const hashedPassword = await bcrypt.hash(password, 13);
-            await User.findByIdAndUpdate({_id: id},{hashedPassword, otp: ''});
+            await User.findByIdAndUpdate({_id: id},{ password: hashedPassword, otp: ''});
             noticeMailer(checkUser.email, operations.changedPassword);
             return res.status(200).json({
                 status: 'success',
@@ -179,7 +172,7 @@ exports.resetPassword = async (req, res) => {
 exports.requstResetPassword = async (req, res) => {
     const {email} = req.body;
     try {
-        const checkUser = await User.findOne({ email: email}).lean();
+        var checkUser = await User.findOne({ email: email}).lean();
         if (!checkUser) {
             return res.status(404).json({
                 status: 'failed',
@@ -187,20 +180,14 @@ exports.requstResetPassword = async (req, res) => {
             });
         }
         const otp =  createOtp();
-        const sentEmail = resetPasswordMailer(checkUser.email, otp);
-        if (sentEmail) {
-            noticeMailer(checkUser.email, operations.requestResetPassword);
+        const hashedOtp = await bcrypt.hash(otp.toString(), 10);
+        await User.findByIdAndUpdate({_id: checkUser._id},{ otp: hashedOtp });
+        resetPasswordMailer(checkUser.email, otp);
             return res.status(200).json({
                 status: 'success',
                 message: 'an email has been sent with the reset otp'
             });
-        }
-        else{
-            return res.status(500).json({
-                status: 'fail',
-                message: 'error sending email'
-            });
-        }
+        
     } catch (error) {
         return serverError(res, error);
     }
