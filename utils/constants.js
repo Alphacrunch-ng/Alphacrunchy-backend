@@ -3,3 +3,11 @@ exports.roles = {
     staff:  'STAFF',
     client: 'CLIENT'
 }
+
+exports.operations = {
+    changedPassword: 'Changed Password',
+    requestResetPassword: 'Request Reset Password',
+    debit: 'Debit',
+    credit: 'Credit',
+    transfer: 'Transfer'
+}

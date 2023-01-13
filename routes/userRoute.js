@@ -1,4 +1,7 @@
-const { signup, getUser } = require('../controllers/usersController');
+const { setInActiveUser, getUserById, updateUser, getUsers } = require('../controllers/usersController');
+const upload = require('../middlewares/multer');
+
+
 
 const router = require('express').Router();
 
@@ -10,25 +13,22 @@ const router = require('express').Router();
  *  schemas: 
  */
 
-// Create a new adminRoute
-router.post('/signup', signup);
 
 // Get all adminRoutes
 router.get('/', (req, res)=>{
     res.send('welcome sir');
 });
 
+// Get user By ID
+router.get('/users', getUsers)
 
-// Get adminRoute By Email
-router.get('/getUserByEmail', getUser);
+// Get user By ID
+router.get('/:id', getUserById)
 
-// // Get adminRoute By ID
-// router.get('/:id', )
+// Update user By ID
+router.put('/:id', upload.single('profile_pic') , updateUser)
 
-// // Update adminRoute By ID
-// router.put('/:id', )
-
-// // Delete adminRoute By ID
-// router.delete('/:id', )
+// Delete user By ID
+router.put('/:id', setInActiveUser )
 
 module.exports = router;

@@ -1,4 +1,4 @@
-const { registration, loggingIn, confirmUserEmail, requstResetPassword, resetPassword } = require('../controllers/usersController');
+const { registration, loggingIn, confirmUserEmail, requstResetPassword, resetPassword } = require('../controllers/authController');
 
 const router = require('express').Router();
 /**
@@ -14,7 +14,7 @@ router.post('/signup', registration);
 router.post('/login', loggingIn);
 
 // confirm user email
-router.post('/confirm', confirmUserEmail)
+router.post('/confirm-email', confirmUserEmail)
 
 // request reset password for user using email
 router.post('/request-password-change', requstResetPassword)

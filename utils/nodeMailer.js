@@ -1,14 +1,7 @@
 const nodemailer = require('nodemailer');
 
-// create reusable transporter object using the default smtp transport
-let transport = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: process.env.SENDER_EMAIL,
-        pass: process.env.SENDER_EMAIL_PASSWORD,
-    }
-});
 
+var emailSent = false;
 exports.signUpMailer = (name, email, token) => {
     const message = `
     <h1> Welcome to Alphacrunch. ${name}</h1>
@@ -23,19 +16,34 @@ exports.signUpMailer = (name, email, token) => {
         text: `Welcome ${name}, Your account has been created`,// subject
         html: message, // html body
     };
+
+    // create reusable transporter object using the default smtp transport
+    let transport = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: process.env.SENDER_EMAIL,
+            pass: process.env.SENDER_EMAIL_PASSWORD,
+        }
+    });
     // send mail with defined transport object
     transport.sendMail(mailOptions, (error, info) =>{
         if(error) {
-            return console.log(error);
+            console.log(error);
         }
-        else{res.sendMail("Email has been sent")}
+        else{
+            
+            emailSent = true;
+            console.log("Email has been sent");
+        }
     });
+    return emailSent;
 }
 
 exports.noticeMailer = (email, operation) => {
     const message = `<div>
     <h1>Notification From Alphacrunch App</h1>
-    <p></p>
+    <p>Notifying you of ${operation} action on you account</p>
+    <p>If this was not initiated by you please contact customer care</p>
     <p>Thank You</p>
     </div>`
     
@@ -43,10 +51,19 @@ exports.noticeMailer = (email, operation) => {
     let mailOptions = {
         from: `"Alphacrunch" <${process.env.SENDER_EMAIL}>`,// sender address
         to: `${email}`,// list of recievedRequest
-        subject: "Alphacrunch transaction notification",//
-        text: `New ${operation} transaction notification`,// subject
+        subject: `Alphacrunch ${operation} notification`,//
+        text: `New ${operation} notification`,// subject
         html: message, // html body
     };
+
+    // create reusable transporter object using the default smtp transport
+    let transport = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: process.env.SENDER_EMAIL,
+            pass: process.env.SENDER_EMAIL_PASSWORD,
+        }
+    });
     // send mail with defined transport object
     transport.sendMail(mailOptions, (error, info) =>{
         if(error) {
@@ -72,6 +89,14 @@ exports.resetPasswordMailer = (email, token) => {
         html: message, // html body
     };
 
+    // create reusable transporter object using the default smtp transport
+    let transport = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: process.env.SENDER_EMAIL,
+            pass: process.env.SENDER_EMAIL_PASSWORD,
+        }
+    });
     // send mail with defined transport object
     transport.sendMail(mailOptions, (error, info) =>{
         if(error) {

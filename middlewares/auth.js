@@ -1,3 +1,4 @@
+const JWT = require('jsonwebtoken');
 
 exports.auth = async (req, res, next) => {
     try {

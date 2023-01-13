@@ -4,7 +4,7 @@
 const mongoose = require('mongoose');
 const { roles } = require('../utils/constants');
 const { isEmail } = require('validator');
-const { encryptPasswordSetRole } = require('./hooks');
+const { encryptPasswordSetRole, modifiedAt } = require('./hooks');
 
 const userSchema = new mongoose.Schema({
     fullName : {
@@ -39,11 +39,9 @@ const userSchema = new mongoose.Schema({
     },
     state : {
         type: String,
-        required: ['true', 'state is required.']
     },
     address : {
         type: String,
-        required: ['true', 'address is required.']
     },
     password : {
         type: String,

@@ -1,4 +1,4 @@
-const { signup, getUser } = require('../controllers/usersController');
+const { signup, getUser, deleteUser, updateUser, getUserById, setInActiveUser } = require('../controllers/usersController');
 
 const router = require('express').Router();
 
@@ -10,8 +10,6 @@ const router = require('express').Router();
  *  schemas: 
  */
 
-// Create a new adminRoute
-router.post('/signup', signup);
 
 // Get all adminRoutes
 router.get('/', (req, res)=>{
@@ -19,16 +17,16 @@ router.get('/', (req, res)=>{
 });
 
 
-// Get adminRoute By Email
-router.get('/getUserByEmail', getUser);
+// Get user By ID
+router.get('/user/:id', getUserById )
 
-// // Get adminRoute By ID
-// router.get('/:id', )
+// Update adminRoute By ID
+router.put('/update/:id', updateUser)
 
-// // Update adminRoute By ID
-// router.put('/:id', )
+// Update adminRoute By ID
+router.put('/setInactive/:id', setInActiveUser)
 
-// // Delete adminRoute By ID
-// router.delete('/:id', )
+// Delete adminRoute By ID
+router.delete('/user/delete/:id', deleteUser )
 
 module.exports = router;

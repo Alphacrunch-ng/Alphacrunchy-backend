@@ -1,55 +1,33 @@
 
 const User = require('../models/userModel.js');
-const cloudinary = require('../middlewares/cloudinary.js')
+const Wallet = require('../models/walletModel.js')
 const { serverError } = require('../utils/services.js');
 
 // controller for getting a User
-exports.getUserById = async (req, res) => {
+exports.getWalletById = async (req, res) => {
     try {
-        const checkUser = await User.findOne({ _id: req.params.id}).select("-password");
-        if (!checkUser) {
+        const checkWallet = await Wallet.findOne({ _id: req.params.id}).select("-password");
+        if (!checkWallet) {
             return res.status(204).json({
                 status: 'failed',
-                message: 'user not found'
+                message: 'wallet not found'
             });
         }
-        const staff = {...checkUser.toObject()}
+        const wallet = {...checkWallet.toObject()}
         return res.status(200).json({
             status: 'success',
-            data: staff
+            data: wallet
         });
     } catch (error) {
         return serverError(res, error);
     }
 }
 
-//completely deleting a user by id
-exports.deleteUser = async (request, response) => {
-    try {
-        const user = await User.findByIdAndDelete({ _id: request.params.id }, { useFindAndModify: false}).select("-password");
-        if (user) {
-                return response.status(200).json({
-                data: user,
-                success: true,
-                message: `Successfully Deleted`
-              });
-        } else {
-                return response.status(404).json({
-                    success: false,
-                    message: "User not found"
-                  });
-        }
-          
-    } catch (error) {
-        return serverError(res, error);
-    }
-}
-
 // deleting a user by id
-exports.setInActiveUser = async (request, response) => {
+exports.setUserWalletInactive = async (request, response) => {
     const {id} = request.params;
     try {
-        const user = await User.findByIdAndUpdate({ _id: id }, { active: false }, { new: true }).select("-password");
+        const user = await Wallet.findByIdAndUpdate({ user_id: id }, { active: false }, { new: true }).select("-password");
         if (user) {
                 return response.status(200).json({
                     data: user,
@@ -69,25 +47,25 @@ exports.setInActiveUser = async (request, response) => {
 }
 
 // get all users, both active and inactive or either one by passing the active parameter.
-exports.getUsers = async (request, response, next) => {
+exports.getWallets = async (request, response,) => {
     const {pageSize, page, active} = request.params;
 
     try {
-        const user = await User.find(active? {active: active}: {})
+        const wallets = await Wallet.find(active? {active: active}: {})
                                 .select("-password")
                                 .limit(pageSize? +pageSize : 30 )
                                 .skip(page? (+page - 1) * +pageSize : 0)
                                 .exec();
-        if (user) {
+        if (wallets) {
                 return response.status(200).json({
-                    data: user,
+                    data: wallets,
                     success: true,
                     message: `Successfull`
                 });
         } else {
-                return response.status(401).json({
+                return response.status(404).json({
                     success: false,
-                    message: "User not found"
+                    message: "No Wallets found"
                   });
         }
           
@@ -123,10 +101,6 @@ exports.updateUser = async (req, res) => {
             data: user
         });
     } catch (error) {
-        return res.status(500).json({
-            status: 'failed',
-            message: 'An error occured, we are working on it',
-            error: error.message
-        });
+        return serverError(res, error);
     }
 }
