@@ -1,4 +1,4 @@
-const { setInActiveUser, getUserById, updateUser, getUsers } = require('../controllers/usersController');
+const { setInActiveUser, getUserById, updateUser, getUsers, getUserByEmail } = require('../controllers/usersController');
 const upload = require('../middlewares/multer');
 
 
@@ -21,6 +21,9 @@ router.get('/', (req, res)=>{
 
 // Get user By ID
 router.get('/users', getUsers)
+
+// Get user By ID
+router.get('/email', getUserByEmail)
 
 // Get user By ID
 router.get('/:id', getUserById)

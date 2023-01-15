@@ -1,4 +1,5 @@
 const { registration, loggingIn, confirmUserEmail, requstResetPassword, resetPassword } = require('../controllers/authController');
+const { getUserByEmail } = require('../controllers/usersController');
 
 const router = require('express').Router();
 /**
@@ -21,5 +22,8 @@ router.post('/request-password-change', requstResetPassword)
 
 // reset a user's password.
 router.post('/reset-password', resetPassword)
+
+// Get user By email in query
+router.get('/email', getUserByEmail)
 
 module.exports = router;

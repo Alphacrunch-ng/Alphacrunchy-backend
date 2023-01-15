@@ -3,12 +3,34 @@ const User = require('../models/userModel.js');
 const cloudinary = require('../middlewares/cloudinary.js')
 const { serverError } = require('../utils/services.js');
 
-// controller for getting a User
+// controller for getting a User by Id
 exports.getUserById = async (req, res) => {
     try {
         const checkUser = await User.findOne({ _id: req.params.id}).select("-password");
         if (!checkUser) {
-            return res.status(204).json({
+            return res.status(404).json({
+                status: 'failed',
+                message: 'user not found'
+            });
+        }else{
+            const staff = {...checkUser.toObject()}
+            return res.status(200).json({
+                status: 'success',
+                data: staff
+            });
+        }
+        
+    } catch (error) {
+        return serverError(res, error);
+    }
+}
+
+// controller for getting a User by Email
+exports.getUserByEmail = async (req, res) => {
+    try {
+        const checkUser = await User.findOne({ email: req.query.email}).select("-password");
+        if (!checkUser) {
+            return res.status(404).json({
                 status: 'failed',
                 message: 'user not found'
             });
