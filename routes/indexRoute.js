@@ -26,6 +26,6 @@ router.use('/back-door', auth, authRoles(roles.admin), adminRoute);
 router.use('/user', auth, authRoles(roles.admin, roles.client, roles.staff) , userRoute);
 
 //admin routes
-router.use('/wallet', walletRoute);
+router.use('/wallet', auth, authRoles(roles.admin, roles.client, roles.staff), walletRoute);
 
 module.exports = router;
