@@ -22,7 +22,6 @@ exports.registration = async (req, res) => {
             var user = await User.create({
                 fullName,
                 email,
-                sex,
                 phoneNumber,
                 otp: hashedOtp,
                 password

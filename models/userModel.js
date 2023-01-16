@@ -22,7 +22,6 @@ const userSchema = new mongoose.Schema({
             values: ['male', 'female'],
             message: "status can either be 'male' or 'female'",
         },
-        required: ['true', "Input your sex"]
     },
     profilePicture_url : {
         type: String
