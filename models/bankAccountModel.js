@@ -2,8 +2,6 @@
 
 // importing mongoose
 const mongoose = require('mongoose');
-const { roles } = require('../utils/constants');
-const bcrypt = require('bcrypt');
 const { isEmail } = require('validator');
 const { modifiedAt } = require('./hooks');
 

@@ -16,7 +16,7 @@ exports.modifiedAt = async function(next){
 
 exports.setWalletNumber = async function(next){
     try {
-        if (!this.isNew) {
+        if (this.isNew) {
             this.wallet_number = createWalletNumber();
         }
         next();

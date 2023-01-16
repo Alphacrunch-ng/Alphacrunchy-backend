@@ -16,7 +16,7 @@ exports.registration = async (req, res) => {
             });
         }
         else {
-            const { fullName, email, phoneNumber, sex, password } = req.body;
+            const { fullName, email, phoneNumber, password } = req.body;
             const otp = createOtp();
             const hashedOtp = await bcrypt.hash(otp.toString(), 10);
             var user = await User.create({
@@ -27,6 +27,8 @@ exports.registration = async (req, res) => {
                 password
             });
             signUpMailer(fullName, email, otp);
+            user.password = "";
+            user.otp = "";
                 return res.status(201).json({
                     data: user,
                     success: true,

@@ -3,7 +3,7 @@
 // importing mongoose
 const mongoose = require('mongoose');
 const { isEmail } = require('validator');
-const { modifiedAt } = require('./hooks');
+const { modifiedAt, setWalletNumber } = require('./hooks');
 
 
 const walletSchema = new mongoose.Schema({
@@ -11,8 +11,7 @@ const walletSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId, ref: 'User'
     },
     wallet_number: {
-        type: String,
-        required: ['true', 'wallet_number is required.']
+        type: String
     },
     wallet_pin : {
         type: String,
@@ -38,6 +37,7 @@ const walletSchema = new mongoose.Schema({
 
 //setting modifiedAt to current time after every update
 walletSchema.pre('save', modifiedAt);
+walletSchema.pre('save', setWalletNumber);
 
 const Wallet = mongoose.model('Wallet', walletSchema);
 

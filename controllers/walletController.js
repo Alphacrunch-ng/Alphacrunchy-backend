@@ -11,7 +11,8 @@ exports.createWallet = async (req, res) => {
         const checkWallet = await Wallet.findOne({ user_id: id}).select("-password");
         if (!checkWallet) {
             const hashedPin = await bcrypt.hash(wallet_pin, 10);
-            const wallet = await Wallet.create({ wallet_pin: hashedPin, user_id: id }).select("-wallet-pin");
+            const wallet = await Wallet.create({ wallet_pin: hashedPin, user_id: id });
+            wallet.wallet_pin = "";
             return res.status(201).json({
                 data: wallet,
                 status: 'success',
