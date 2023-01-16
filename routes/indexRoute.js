@@ -2,6 +2,7 @@ const router = require('express').Router();
 const adminRoute = require('./adminRoute');
 const userRoute = require('./userRoute');
 const authRoute = require('./authRoute');
+const walletRoute = require('./walletRoute');
 const {auth, authRoles } = require('../middlewares/auth');
 const { roles } = require('../utils/constants');
 
@@ -22,6 +23,9 @@ router.use('/auth', authRoute);
 router.use('/back-door', auth, authRoles(roles.admin), adminRoute);
 
 //user routes
-router.use('/user', auth, authRoles(roles.admin, roles.client, roles.staff) , userRoute)
+router.use('/user', auth, authRoles(roles.admin, roles.client, roles.staff) , userRoute);
+
+//admin routes
+router.use('/wallet', walletRoute);
 
 module.exports = router;

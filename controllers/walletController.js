@@ -1,7 +1,34 @@
 
+const bcrypt = require('bcrypt');
 const User = require('../models/userModel.js');
 const Wallet = require('../models/walletModel.js')
 const { serverError } = require('../utils/services.js');
+
+
+// controller for getting a User
+exports.createWallet = async (req, res) => {
+    const {wallet_pin, id} = req.body;
+    try {
+        const checkWallet = await User.findOne({ _id: id}).select("-password");
+        if (!checkWallet) {
+            const hashedPin = await bcrypt.hash(wallet_pin, 10);
+            const wallet = await Wallet.create({ wallet_pin: hashedPin, user_id: id }).select("-wallet-pin");
+            return res.status(201).json({
+                data: wallet,
+                status: 'success',
+                message: 'user wallet successfully created.'
+            })
+        }
+        else{
+            return res.status(404).json({
+                status: 'failed',
+                message: 'user already has a wallet'
+            });
+        }
+    } catch (error) {
+        return serverError(res, error);
+    }
+}
 
 // controller for getting a User
 exports.getWalletById = async (req, res) => {
