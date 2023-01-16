@@ -1,6 +1,5 @@
 
 const bcrypt = require('bcrypt');
-const User = require('../models/userModel.js');
 const Wallet = require('../models/walletModel.js')
 const { serverError } = require('../utils/services.js');
 
@@ -9,7 +8,7 @@ const { serverError } = require('../utils/services.js');
 exports.createWallet = async (req, res) => {
     const {wallet_pin, id} = req.body;
     try {
-        const checkWallet = await User.findOne({ _id: id}).select("-password");
+        const checkWallet = await Wallet.findOne({ user_id: id}).select("-password");
         if (!checkWallet) {
             const hashedPin = await bcrypt.hash(wallet_pin, 10);
             const wallet = await Wallet.create({ wallet_pin: hashedPin, user_id: id }).select("-wallet-pin");
