@@ -1,5 +1,6 @@
 const { registration, loggingIn, confirmUserEmail, requstResetPassword, resetPassword } = require('../controllers/authController');
 const { getUserByEmail } = require('../controllers/usersController');
+const { createWallet } = require('../controllers/walletController');
 
 const router = require('express').Router();
 /**
@@ -25,5 +26,8 @@ router.post('/reset-password', resetPassword)
 
 // Get user By email in query
 router.get('/email', getUserByEmail)
+
+// Create user wallet
+router.post('/wallet/create', createWallet)
 
 module.exports = router;

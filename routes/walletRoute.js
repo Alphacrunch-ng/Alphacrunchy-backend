@@ -19,10 +19,6 @@ router.get('/', (req, res)=>{
     res.send('welcome to wallet sir');
 });
 
-
-// Get user By ID
-router.post('/create', createWallet)
-
 // Get user By ID
 router.get('/:id', getWalletById)
 
