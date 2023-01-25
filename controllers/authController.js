@@ -150,7 +150,7 @@ exports.resetPassword = async (req, res) => {
         }
         const isMatching = await bcrypt.compare(otp, checkUser.otp);
         if (isMatching) {
-            const hashedPassword = await bcrypt.hash(password, 13);
+            const hashedPassword = await bcrypt.hash(password, 10);
             await User.findByIdAndUpdate({_id: id},{ password: hashedPassword, otp: ''});
             noticeMailer(checkUser.email, operations.changedPassword);
             return res.status(200).json({

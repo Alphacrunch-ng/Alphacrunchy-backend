@@ -1,6 +1,6 @@
 
 const User = require('../models/userModel.js');
-const cloudinary = require('../middlewares/cloudinary.js')
+const cloudinary = require('../middlewares/cloudinary.js');
 const { serverError } = require('../utils/services.js');
 
 // controller for getting a User by Id
@@ -27,8 +27,9 @@ exports.getUserById = async (req, res) => {
 
 // controller for getting a User by Email
 exports.getUserByEmail = async (req, res) => {
+    const email = req.query.email;
     try {
-        const checkUser = await User.findOne({ email: req.query.email}).select("-password");
+        const checkUser = await User.findOne({ email: email.toLowerCase() }).select("-password");
         if (!checkUser) {
             return res.status(404).json({
                 status: 'failed',
@@ -130,7 +131,7 @@ exports.updateUser = async (req, res) => {
         }
 
         // checking the cloudiinary upload from multer
-        const cloudFile = await cloudinary.uploader.upload(req.file.path)
+        const cloudFile = await cloudinary.uploader.upload(req.file.path,{folder: "Alphacrunch/Users"})
         // Retrieving profile pic cloudinary public id if it exists.
         if (checkUser.profilePic_cloudId) {
            await cloudinary.uploader.destroy(checkPic.profilePic_cloudId)

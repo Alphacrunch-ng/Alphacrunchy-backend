@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const { modifiedAt } = require('./hooks');
 
 
-const transactionSchema = new mongoose.Schema({
+const walletTransactionSchema = new mongoose.Schema({
     sender_wallet_number: {
         type: mongoose.Schema.Types.ObjectId, ref: 'Wallet',
         required: ['true', 'sender_wallet_number is required.']
@@ -29,6 +29,13 @@ const transactionSchema = new mongoose.Schema({
         type: Date,
         default: Date.now()
     },
+    state : {
+        type: String,
+        enum: {
+            values: ['pending', 'successful', 'failed'],
+            message: "status can either be 'pending' or 'successful' or 'failed'",
+        },
+    },
     active : {
         type: Boolean,
         default: true
@@ -36,8 +43,8 @@ const transactionSchema = new mongoose.Schema({
 });
 
 //setting modifiedAt to current time after every update
-transactionSchema.pre('save', modifiedAt);
+walletTransactionSchema.pre('save', modifiedAt);
 
-const Transaction = mongoose.model('Transaction', transactionSchema);
+const WalletTransaction = mongoose.model('WalletTransaction', walletTransactionSchema);
 
-module.exports = Transaction;
+module.exports = WalletTransaction;

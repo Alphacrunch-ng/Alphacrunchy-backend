@@ -8,7 +8,7 @@ const { serverError } = require('../utils/services.js');
 exports.createWallet = async (req, res) => {
     const {wallet_pin, id} = req.body;
     try {
-        const checkWallet = await Wallet.findOne({ user_id: id}).select("-password");
+        const checkWallet = await Wallet.findOne({ user_id: id}).select("-wallet_pin");
         if (!checkWallet) {
             const hashedPin = await bcrypt.hash(wallet_pin, 10);
             const wallet = await Wallet.create({ wallet_pin: hashedPin, user_id: id });
@@ -33,7 +33,7 @@ exports.createWallet = async (req, res) => {
 // controller for getting a User
 exports.getWalletById = async (req, res) => {
     try {
-        const checkWallet = await Wallet.findOne({ _id: req.params.id}).select("-password");
+        const checkWallet = await Wallet.findOne({ _id: req.params.id}).select("-wallet_pin");
         if (!checkWallet) {
             return res.status(204).json({
                 status: 'failed',
@@ -54,7 +54,7 @@ exports.getWalletById = async (req, res) => {
 exports.setUserWalletInactive = async (request, response) => {
     const {id} = request.params;
     try {
-        const user = await Wallet.findByIdAndUpdate({ user_id: id }, { active: false }, { new: true }).select("-password");
+        const user = await Wallet.findByIdAndUpdate({ user_id: id }, { active: false }, { new: true }).select("-wallet_pin");
         if (user) {
                 return response.status(200).json({
                     data: user,
@@ -74,12 +74,12 @@ exports.setUserWalletInactive = async (request, response) => {
 }
 
 // get all users, both active and inactive or either one by passing the active parameter.
-exports.getWallets = async (request, response,) => {
+exports.getWallets = async (request, response, next) => {
     const {pageSize, page, active} = request.params;
 
     try {
         const wallets = await Wallet.find(active? {active: active}: {})
-                                .select("-password")
+                                .select("-wallet_pin")
                                 .limit(pageSize? +pageSize : 30 )
                                 .skip(page? (+page - 1) * +pageSize : 0)
                                 .exec();

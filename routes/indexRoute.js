@@ -2,6 +2,7 @@ const router = require('express').Router();
 const adminRoute = require('./adminRoute');
 const userRoute = require('./userRoute');
 const authRoute = require('./authRoute');
+const giftCardRoute = require('./giftCardRoute');
 const walletRoute = require('./walletRoute');
 const {auth, authRoles } = require('../middlewares/auth');
 const { roles } = require('../utils/constants');
@@ -18,6 +19,9 @@ router.get('/', (req, res) => {
 
 //admin routes
 router.use('/auth', authRoute);
+
+//giftcard routes
+router.use('/giftcard', giftCardRoute);
 
 //admin routes
 router.use('/back-door', auth, authRoles(roles.admin), adminRoute);

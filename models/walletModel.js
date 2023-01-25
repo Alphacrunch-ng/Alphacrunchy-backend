@@ -2,7 +2,6 @@
 
 // importing mongoose
 const mongoose = require('mongoose');
-const { isEmail } = require('validator');
 const { modifiedAt, setWalletNumber } = require('./hooks');
 
 

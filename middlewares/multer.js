@@ -4,12 +4,12 @@ const path = require('path');
 module.exports = multer({
     storage: multer.diskStorage({}),
     fileFilter: (req, file, cb)=>{
-        let fileSize = file.size();
-        if (file.mimetype !== 'image/jpeg' || file.mimetype !== 'image/png') {
-            cb({message:"This file type is not supported"}, false)
-            return;
-          }
-        if (fileSize > 1024*1024) {
+      let ext = path.extname(file.originalname);
+      if (ext !== '.jpg' && ext !== '.jpeg' && ext !== '.png') {
+        cb(new Error("This file type is not supported"), false)
+        return;
+      }
+        if (file.size > 1024*1024) {
             cb({message:"file too large. File should be less than 1MB"},false);
             return;
         }
