@@ -16,13 +16,11 @@ const router = require('express').Router();
 // Get giftcards, takes optional params of active, pagesize and page
 router.get('/giftcards', getAllGiftCards);
 
-
-
 // create giftcard
 router.post('/create', auth, authRoles(roles.admin), upload.single('card_pic') , createGiftCard);
 
 // create giftcard
-router.put('/edit/:id', auth, authRoles(roles.admin), upload.single('card_pic') , updateGiftCard)
+router.put('/edit/:id', auth, authRoles(roles.admin), upload.single('card_pic') , updateGiftCard);
 
 // Delete giftcard, not permanently
 router.put('/set-inactive/:id', auth, authRoles(roles.admin), setGiftCardInactive );

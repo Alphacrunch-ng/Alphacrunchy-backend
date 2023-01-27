@@ -108,6 +108,9 @@ exports.getAllGiftCards = async (request, response, next) => {
 
 // controller for updating a giftcard
 exports.updateGiftCard = async (req, res) => {
+    const {name, rate, description} = req.body;
+    let picture_url = undefined;
+    let picture_cloudId = undefined;
     try {
         const check = await GiftCard.findOne({ id: req.params.id});
         if (!check) {
@@ -116,23 +119,32 @@ exports.updateGiftCard = async (req, res) => {
                 message: 'card not found'
             });
         }
-        
-        // cloudiinary upload from multer
-        const cloudFile = await cloudinary.uploader.upload(req.file.path,{folder: "Alphacrunch/Giftcards"});
-        // Retrieving card pic cloudinary public id if it exists.
-        if (check.picture_cloudId) {
-            await cloudinary.uploader.destroy(check.picture_cloudId, (error,result)=>{
+        if (req.file) {
+            // cloudiinary upload from multer
+            const cloudFile = await cloudinary.uploader.upload(req.file.path,{folder: "Alphacrunch/Giftcards"}, (error,result) => {
                 if (error) {
-                    console.log("Error deleting file:", error);
-                  } else {
-                    console.log("File deleted successfully:", result);
-                  }
-            })
+                    console.log("Error uploading file:", error);
+                } else {
+                    console.log("File uploaded successfully:", result);
+                }
+            });
+            // Retrieving card pic cloudinary public id if it exists.
+            if (check.picture_cloudId) {
+                await cloudinary.uploader.destroy(check.picture_cloudId, (error,result) => {
+                    if (error) {
+                        console.log("Error deleting file:", error);
+                    } else {
+                        console.log("File deleted successfully:", result);
+                    }
+                })
+            }
+            picture_url = cloudFile.secure_url;
+            picture_cloudId = cloudFile.public_id;
         }
-        const {name, rate, description} = req.body;
-        const picture_url = cloudFile.secure_url;
-        const picture_cloudId = cloudFile.public_id;
+        
+        
 
+        const data = {name, rate, description, picture_url, picture_cloudId}
         const giftcard = await GiftCard.findOneAndUpdate({ id: check._id},{name, rate, description, picture_url, picture_cloudId}, {new: true});
         
         return res.status(200).json({
