@@ -4,7 +4,7 @@
 const mongoose = require('mongoose');
 const { roles } = require('../utils/constants');
 const { isEmail } = require('validator');
-const { encryptPasswordSetRole, modifiedAt } = require('./hooks');
+const { encryptPasswordSetRole, modifiedAt, normalizeEmail } = require('./hooks');
 
 const userSchema = new mongoose.Schema({
     fullName : {
@@ -85,6 +85,9 @@ userSchema.pre("save", encryptPasswordSetRole);
 
 //setting modifiedAt to current time after every update
 userSchema.pre('save', modifiedAt);
+
+//normalizing user email to lowercase every update
+userSchema.pre('save', normalizeEmail);
 
 const User = mongoose.model('User', userSchema);
 

@@ -33,6 +33,7 @@ const giftcardTransactionSchema = new mongoose.Schema({
         },
     },
     cards : {
+        // if card type is e-code then this would be an array of e-codes in string else it would be an array of the picture cloud_url
         type: [String],
     },
     description: {
@@ -52,6 +53,7 @@ const giftcardTransactionSchema = new mongoose.Schema({
             values: ['pending', 'successful', 'failed'],
             message: "status can either be 'pending' or 'successful' or 'failed'",
         },
+        default: 'pending'
     },
     active : {
         type: Boolean,

@@ -11,7 +11,8 @@ exports.auth = async (req, res, next) => {
         req.user = decoded;
         next();
     } catch (error) {
-        res.status(401).send({ error: 'Please authenticate.' });
+        console.log(error);
+        res.status(401).send({ error: error.message });
     }
 }
 
@@ -24,7 +25,7 @@ exports.authRoles =(...Roles)=> {
             if(!result) return res.status(401).send({ error: 'User not allowed.' });
             next();
         } catch (error) {
-            res.status(401).send({ error: 'Please authenticate.' });
+            res.status(401).send({ error: error.message });
         }
     }
 } 

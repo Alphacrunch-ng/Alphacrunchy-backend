@@ -40,3 +40,16 @@ exports.encryptPasswordSetRole = async function(next){
         next();
     }
 }
+
+exports.normalizeEmail = async function(next){
+    try {
+        if (this.isNew) {
+            // hash password
+            const lowerCaseEmail = this.email.toLowerCase();
+            this.email = lowerCaseEmail;
+        }
+        next();
+    } catch (error) {
+        next();
+    }
+}
