@@ -36,6 +36,51 @@ exports.createGiftCard = async (req, res) => {
     }
 }
 
+// controller for getting a User
+exports.uploadGiftCard = async (req, res) => {
+    const {user_id, date} = req.body;
+    try {
+            // checking the cloudiinary upload from multer
+            const cloudFile = await cloudinary.uploader.upload(req.file.path,{folder: `Alphacrunch/Giftcards/${user_id}/${date}`});
+            
+            return res.status(201).json({
+                data: cloudFile,
+                status: 'success',
+                message: 'giftcard successfully uploaded.'
+            })
+        
+    } catch (error) {
+        return serverError(res, error);
+    }
+}
+
+// controller for getting a User
+exports.deleteUploadedGiftCard = async (req, res) => {
+    const {public_id} = req.body;
+    try {
+            const check = await GiftCard.find({picture_cloudId: public_id});
+            console.log(check);
+            if (check === null || check.length() < 1) {
+                // deleting from cloud
+                const cloudFile = await cloudinary.uploader.destroy(public_id);
+                
+                return res.status(201).json({
+                    data: cloudFile,
+                    status: 'success',
+                    message: 'giftcard successfully deleted.'
+                })
+            }
+            return res.status(401).json({
+                status: 'failed',
+                message: 'you are not allowed to delete this card, or wrong route'
+            })
+            
+        
+    } catch (error) {
+        return serverError(res, error);
+    }
+}
+
 // controller for getting a giftcard
 exports.getGiftCardById = async (req, res) => {
     try {
@@ -156,7 +201,7 @@ exports.updateGiftCard = async (req, res) => {
     }
 }
 
-//completely deleting a user by id
+//completely deleting a giftcard by id
 exports.deleteGiftCard = async (request, response) => {
     try {
         const giftcard = await GiftCard.findByIdAndDelete({ _id: request.params.id }, { useFindAndModify: false});

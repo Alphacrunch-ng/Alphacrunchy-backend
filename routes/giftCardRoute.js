@@ -1,5 +1,5 @@
 
-const { getGiftCardById, setGiftCardInactive, getAllGiftCards, createGiftCard, updateGiftCard } = require('../controllers/giftCardController');
+const { getGiftCardById, setGiftCardInactive, getAllGiftCards, createGiftCard, updateGiftCard, uploadGiftCard, deleteGiftCard, deleteUploadedGiftCard } = require('../controllers/giftCardController');
 const { auth, authRoles } = require('../middlewares/auth');
 const upload = require('../middlewares/multer');
 const { roles } = require('../utils/constants');
@@ -19,14 +19,20 @@ router.get('/giftcards', getAllGiftCards);
 // create giftcard
 router.post('/create', auth, authRoles(roles.admin), upload.single('card_pic') , createGiftCard);
 
+// upload giftcard
+router.post('/upload', auth, authRoles(roles.client,roles.admin, roles.staff), upload.single('card_pic'), uploadGiftCard);
+
+// upload giftcard
+router.delete('/delete-uploaded-giftcard', auth, authRoles(roles.client,roles.admin, roles.staff), deleteUploadedGiftCard);
+
 // create giftcard
 router.put('/edit/:id', auth, authRoles(roles.admin), upload.single('card_pic') , updateGiftCard);
 
 // Delete giftcard, not permanently
-router.put('/set-inactive/:id', auth, authRoles(roles.admin), setGiftCardInactive );
+router.patch('/set-inactive/:id', auth, authRoles(roles.admin), setGiftCardInactive );
 
-// Delete giftcard, not permanently
-router.put('/delete/:id', auth, authRoles(roles.admin), setGiftCardInactive );
+// Delete giftcard, permanently!!!
+router.delete('/delete/:id', auth, authRoles(roles.admin), deleteGiftCard );
 
 // Get giftcard 
 router.get('/:id', getGiftCardById);

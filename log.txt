@@ -125,3 +125,7 @@
 ::1 - - [02/Feb/2023:10:34:03 +0000] "GET /wallet/wallets HTTP/1.1" 401 32 "-" "PostmanRuntime/7.30.1"
 ::1 - - [02/Feb/2023:10:34:17 +0000] "GET /wallet/wallets HTTP/1.1" 200 473 "-" "PostmanRuntime/7.30.1"
 ::1 - - [02/Feb/2023:10:36:47 +0000] "GET /wallet/63c750b670320a8e9e283f97 HTTP/1.1" 200 239 "-" "PostmanRuntime/7.30.1"
+::1 - - [06/Feb/2023:02:45:58 +0000] "POST /giftcard/upload HTTP/1.1" 201 1006 "-" "PostmanRuntime/7.30.1"
+::1 - - [06/Feb/2023:02:47:58 +0000] "GET /giftcard/giftcards HTTP/1.1" 200 4791 "-" "PostmanRuntime/7.30.1"
+::1 - - [06/Feb/2023:09:55:45 +0000] "POST /giftcard/delete-uploaded-giftcard HTTP/1.1" 404 41 "-" "PostmanRuntime/7.30.1"
+::1 - - [06/Feb/2023:09:59:16 +0000] "POST /giftcard/delete-uploaded-giftcard HTTP/1.1" 404 41 "-" "PostmanRuntime/7.30.1"

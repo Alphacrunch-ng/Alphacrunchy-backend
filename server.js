@@ -13,6 +13,11 @@ const indexRoute = require('./routes/indexRoute');
 const options = require('./utils/swaggerOptions');
 
 const app = express();
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
+io.on("chat",()=>{
+    console.log("connected");
+})
 const spec = swaggerJsDoc(options);
 const port = process.env.PORT || 5001;
 
@@ -39,10 +44,20 @@ mongodb().then(()=>{
                 status: 'failed',
                 message: error.message
             });
-        })
-        app.listen(port, () => {
+        });
+        http.listen(port)
+        http.on("listening", () => {
             console.log(`Server started on http://localhost:${port}`);
         });
+        http.on('error', (e) => {
+            if (e.code === 'EADDRINUSE') {
+              console.log('Address in use, retrying...');
+              setTimeout(() => {
+                http.close();
+                http.listen(port);
+              }, 1000);
+            }
+          });
 }).catch((error)=>{
     console.log(error.message);
 });
