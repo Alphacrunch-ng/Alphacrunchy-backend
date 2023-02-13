@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const User = require('../models/userModel.js');
+const Wallet = require('../models/walletModel.js');
 const { signUpMailer, resetPasswordMailer, noticeMailer } = require('../utils/nodeMailer.js');
 const { serverError, createOtp } = require('../utils/services.js');
 const { operations } = require('../utils/constants.js');
@@ -48,6 +49,7 @@ exports.loggingIn = async (request, response) => {
     const {email, password} = request.body;
     try {
         const user = await User.findOne({ email: email });
+        const checkWallet = await Wallet.findOne({user_id: user._id}).select("-wallet_pin");
         if (user) {
             const isPasswordMatching = await bcrypt.compare(password, user.password);
             if (!user.confirmedEmail) {
@@ -77,6 +79,7 @@ exports.loggingIn = async (request, response) => {
                 
                 return response.status(200).json({
                     data: user,
+                    wallet: checkWallet,
                     success: true,
                     message: `Login Successfull`,
                     token: token 
