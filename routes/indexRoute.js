@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const adminRoute = require('./adminRoute');
+const imageRoute = require('./imageRoute');
 const userRoute = require('./userRoute');
 const authRoute = require('./authRoute');
 const giftCardRoute = require('./giftCardRoute');
@@ -31,5 +32,7 @@ router.use('/user', auth, authRoles(roles.admin, roles.client, roles.staff) , us
 
 //admin routes
 router.use('/wallet', auth, authRoles(roles.admin, roles.client, roles.staff), walletRoute);
+
+router.use('/image', imageRoute);
 
 module.exports = router;

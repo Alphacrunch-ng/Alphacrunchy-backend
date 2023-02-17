@@ -68,7 +68,7 @@ exports.deleteUploadedGiftCard = async (req, res) => {
                     data: cloudFile,
                     status: 'success',
                     message: 'giftcard successfully deleted.'
-                })
+                });
             }
             return res.status(401).json({
                 status: 'failed',
