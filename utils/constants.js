@@ -11,3 +11,10 @@ exports.operations = {
     credit: 'Credit',
     transfer: 'Transfer'
 }
+
+exports.Status = {
+    approved: 'approved',
+    pending : 'pending',
+    failed: 'failed',
+    successful: 'successful'
+}

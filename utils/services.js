@@ -8,7 +8,7 @@ function generateRandomString(length) {
 
 exports.serverError = async (res, error) => {
     return res.status(500).json({
-        status: 'failed',
+        success: false,
         message: 'An error occured, we are working on it',
         error: error.message
     });

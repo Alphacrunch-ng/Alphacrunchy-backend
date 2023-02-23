@@ -2,18 +2,53 @@
 
 // importing mongoose
 const mongoose = require('mongoose');
-const { modifiedAt } = require('./hooks');
+const { Status } = require('../utils/constants');
+const { modifiedAt, sum } = require('./hooks');
 
+const cardItemSchema = new mongoose.Schema({
+    card_item : {
+        type: String // if card type is e-code then this would be an array of e-codes in string else it would be an array of the picture cloud_url
+    },
+    card_type : {
+        type: String,
+        enum: {
+            values: ['physical', 'e-code'],
+            message: "status can either be 'physical' or 'e-code'"
+        }
+    },
+    amount : {
+        type: Number,
+        default: 0
+    },
+    state : {
+        type: String,
+        enum: {
+            values: ['approved','pending', 'failed'],
+            message: "status can either be 'approved' 'pending', or 'failed'",
+        },
+        default: Status.pending
+    },
+});
 
 const giftcardTransactionSchema = new mongoose.Schema({
     reciever_wallet_number: {
         type: mongoose.Schema.Types.ObjectId, ref: 'Wallet',
         required: ['true', 'reciever_wallet_number is required.']
     },
-    currency: {
+    currency_name: {
         type: String,
     },
-    amount : {
+    currency_symbol: {
+        type: String,
+    },
+    currency_code: {
+        type: String,
+    },
+    total_amount_expected: {
+        type: Number,
+        default: 0
+    },
+    total_amount_paid: {
         type: Number,
         default: 0
     },
@@ -25,16 +60,8 @@ const giftcardTransactionSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    card_type : {
-        type: String,
-        enum: {
-            values: ['physical', 'e-code'],
-            message: "status can either be 'physical' or 'e-code'",
-        },
-    },
     cards : {
-        // if card type is e-code then this would be an array of e-codes in string else it would be an array of the picture cloud_url
-        type: [String],
+        type: [cardItemSchema],
     },
     description: {
         type: String,
@@ -47,19 +74,22 @@ const giftcardTransactionSchema = new mongoose.Schema({
         type: Date,
         default: Date.now()
     },
-    state : {
+    status : {
         type: String,
         enum: {
-            values: ['pending', 'successful', 'failed'],
-            message: "status can either be 'pending' or 'successful' or 'failed'",
+            values: [ Status.approved, Status.pending , Status.successful , Status.failed ],
+            message: "status can either be 'approved' 'pending', 'successful' or 'failed'",
         },
-        default: 'pending'
+        default: Status.pending
     },
     active : {
         type: Boolean,
         default: true
     },
 });
+
+//setting totals to current cards after every update
+giftcardTransactionSchema.pre('save', sum);
 
 //setting modifiedAt to current time after every update
 giftcardTransactionSchema.pre('save', modifiedAt);

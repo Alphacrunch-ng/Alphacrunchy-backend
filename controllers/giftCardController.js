@@ -4,6 +4,7 @@
 const GiftCard = require('../models/giftCardModel');
 const cloudinary = require('../middlewares/cloudinary.js');
 const { serverError } = require('../utils/services.js');
+const GiftCardTransaction = require('../models/giftcardTransactionModel');
 
 
 // ------------GIFTCARD-MANAGEMENT----------- //
@@ -23,7 +24,7 @@ exports.createGiftCard = async (req, res) => {
                 data: giftcard,
                 status: 'success',
                 message: 'giftcard successfully created.'
-            })
+            });
         }
         else{
             return res.status(400).json({
@@ -36,7 +37,43 @@ exports.createGiftCard = async (req, res) => {
     }
 }
 
-// controller for getting a User
+
+// controller for starting a giftcard trading transaction
+exports.createGiftCardTransaction = async (req, res) => {
+    // extract data from the request body
+  const {
+    receiverWalletId,
+    currencyName,
+    currencySymbol,
+    currencyCode,
+    rate,
+    cards,
+    description,
+  } = req.body;
+
+    try {
+        // create a new GiftCardTransaction document
+        const giftcardTransaction = GiftCardTransaction.create({
+            receiver_wallet_number: receiverWalletId,
+            currency_name: currencyName,
+            currency_symbol: currencySymbol,
+            currency_code: currencyCode,
+            rate: rate,
+            cards: cards,
+            description: description,
+        });
+
+        return res.status(201).json({
+            data: giftcardTransaction,
+            success: true,
+            message: 'giftcard transaction initiallized.'
+        });
+    } catch (error) {
+        return serverError(res, error);
+    }
+}
+
+// controller for uploading transaction card
 exports.uploadGiftCard = async (req, res) => {
     const {user_id, date} = req.body;
     try {
@@ -45,7 +82,7 @@ exports.uploadGiftCard = async (req, res) => {
             
             return res.status(201).json({
                 data: cloudFile,
-                status: 'success',
+                success: true,
                 message: 'giftcard successfully uploaded.'
             })
         
@@ -54,7 +91,7 @@ exports.uploadGiftCard = async (req, res) => {
     }
 }
 
-// controller for getting a User
+// controller for deleting uploaded transaction card
 exports.deleteUploadedGiftCard = async (req, res) => {
     const {public_id} = req.body;
     try {
@@ -64,14 +101,14 @@ exports.deleteUploadedGiftCard = async (req, res) => {
                 // deleting from cloud
                 const cloudFile = await cloudinary.uploader.destroy(public_id);
                 
-                return res.status(201).json({
+                return res.status(200).json({
                     data: cloudFile,
-                    status: 'success',
+                    success: true,
                     message: 'giftcard successfully deleted.'
                 });
             }
             return res.status(401).json({
-                status: 'failed',
+                success: false,
                 message: 'you are not allowed to delete this card, or wrong route'
             })
             
@@ -93,7 +130,7 @@ exports.getGiftCardById = async (req, res) => {
         }
         const giftcard = {...check.toObject()}
         return res.status(200).json({
-            status: 'success',
+            success: true,
             data: giftcard
         });
     } catch (error) {
@@ -160,7 +197,7 @@ exports.updateGiftCard = async (req, res) => {
         const check = await GiftCard.findOne({ id: req.params.id});
         if (!check) {
             return res.status(204).json({
-                status: 'failed',
+                success: false,
                 message: 'card not found'
             });
         }
@@ -193,7 +230,7 @@ exports.updateGiftCard = async (req, res) => {
         const giftcard = await GiftCard.findOneAndUpdate({ id: check._id},{name, rate, description, picture_url, picture_cloudId}, {new: true});
         
         return res.status(200).json({
-            status: 'success',
+            success: true,
             data: giftcard
         });
     } catch (error) {

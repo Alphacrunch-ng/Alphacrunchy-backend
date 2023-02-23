@@ -40,7 +40,7 @@ app.use(morgan("combined",{ stream: accessLogStream }));
 mongodb().then(()=>{
     app.use('/', indexRoute);
     app.use((req, res, next)=>{
-        next(new Error(message = "Not found"));
+        next(new Error(message = "Route Not found"));
     });
     
     app.use((error, req, res, next)=>{

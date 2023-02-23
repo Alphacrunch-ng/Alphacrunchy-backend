@@ -1,5 +1,5 @@
 
-const { getGiftCardById, setGiftCardInactive, getAllGiftCards, createGiftCard, updateGiftCard, uploadGiftCard, deleteGiftCard, deleteUploadedGiftCard } = require('../controllers/giftCardController');
+const { getGiftCardById, setGiftCardInactive, getAllGiftCards, createGiftCard, updateGiftCard, uploadGiftCard, deleteGiftCard, deleteUploadedGiftCard, createGiftCardTransaction } = require('../controllers/giftCardController');
 const { auth, authRoles } = require('../middlewares/auth');
 const upload = require('../middlewares/multer');
 const { roles } = require('../utils/constants');
@@ -18,6 +18,9 @@ router.get('/giftcards', getAllGiftCards);
 
 // create giftcard
 router.post('/create', auth, authRoles(roles.admin), upload.single('card_pic') , createGiftCard);
+
+// create giftcard transaction
+router.post('/start-transaction', auth, createGiftCardTransaction);
 
 // upload giftcard
 router.post('/upload', auth, authRoles(roles.client,roles.admin, roles.staff), upload.single('card_pic'), uploadGiftCard);
