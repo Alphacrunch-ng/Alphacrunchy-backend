@@ -28,8 +28,8 @@ exports.sum = async function(next){
 
         });
 
-        this.total_amount_expected = totalAmountExpected;
-        this.total_amount_paid = totalAmount;
+        this.total_amount_expected = totalAmountExpected * this.rate;
+        this.total_amount_paid = totalAmount * this.rate;
 
         next();
     } catch (error) {

@@ -2,7 +2,7 @@
 
 // importing mongoose
 const mongoose = require('mongoose');
-const { Status } = require('../utils/constants');
+const { Status, CardTypes } = require('../utils/constants');
 const { modifiedAt, sum } = require('./hooks');
 
 const cardItemSchema = new mongoose.Schema({
@@ -12,8 +12,8 @@ const cardItemSchema = new mongoose.Schema({
     card_type : {
         type: String,
         enum: {
-            values: ['physical', 'e-code'],
-            message: "status can either be 'physical' or 'e-code'"
+            values: [CardTypes.physical, CardTypes.eCode],
+            message: "status can either be 'Physical Card' or 'E-Code'"
         }
     },
     amount : {
@@ -32,8 +32,7 @@ const cardItemSchema = new mongoose.Schema({
 
 const giftcardTransactionSchema = new mongoose.Schema({
     reciever_wallet_number: {
-        type: mongoose.Schema.Types.ObjectId, ref: 'Wallet',
-        required: ['true', 'reciever_wallet_number is required.']
+        type: mongoose.Schema.Types.ObjectId, ref: 'Wallet'
     },
     currency_name: {
         type: String,

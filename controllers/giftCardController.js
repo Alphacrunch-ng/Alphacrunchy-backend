@@ -3,8 +3,10 @@
 // const Wallet = require('../models/walletModel.js');
 const GiftCard = require('../models/giftCardModel');
 const cloudinary = require('../middlewares/cloudinary.js');
+const Wallet = require('../models/walletModel.js');
 const { serverError } = require('../utils/services.js');
 const GiftCardTransaction = require('../models/giftcardTransactionModel');
+const mongoose = require('mongoose');
 
 
 // ------------GIFTCARD-MANAGEMENT----------- //
@@ -50,24 +52,36 @@ exports.createGiftCardTransaction = async (req, res) => {
     cards,
     description,
   } = req.body;
-
     try {
-        // create a new GiftCardTransaction document
-        const giftcardTransaction = GiftCardTransaction.create({
-            receiver_wallet_number: receiverWalletId,
-            currency_name: currencyName,
-            currency_symbol: currencySymbol,
-            currency_code: currencyCode,
-            rate: rate,
-            cards: cards,
-            description: description,
-        });
 
-        return res.status(201).json({
-            data: giftcardTransaction,
-            success: true,
-            message: 'giftcard transaction initiallized.'
-        });
+        const check = await Wallet.findById(receiverWalletId);
+        if(check !== null){
+            // create a new GiftCardTransaction document
+            const giftcardTransaction = await GiftCardTransaction.create({
+                receiver_wallet_number: check._id,
+                currency_name: currencyName,
+                currency_symbol: currencySymbol,
+                currency_code: currencyCode,
+                rate: rate,
+                cards: cards,
+                description: description,
+            }, (error, result)=>{
+                if(error) {
+                    console.log(error);
+                    return serverError(res, error);
+                }else{
+                    return res.status(201).json({
+                        data: result,
+                        success: true,
+                        message: 'giftcard transaction initiallized.'
+                    });
+                }
+
+            });
+        }
+        
+
+        
     } catch (error) {
         return serverError(res, error);
     }

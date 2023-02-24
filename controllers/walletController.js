@@ -1,6 +1,6 @@
 
 const bcrypt = require('bcrypt');
-const Wallet = require('../models/walletModel.js')
+const Wallet = require('../models/walletModel.js');
 const { serverError } = require('../utils/services.js');
 
 

@@ -18,3 +18,8 @@ exports.Status = {
     failed: 'failed',
     successful: 'successful'
 }
+
+exports.CardTypes= {
+    physical: "Physical Card",
+    eCode: "E-Code"
+}
