@@ -1,4 +1,4 @@
-const { getChatMessages, sendMessage, setChatInactive, deleteChat, getChats, getChat } = require('../controllers/messagesController');
+const { getChatMessages, sendMessage, setChatInactive, deleteChat, getChats, getChat, getChatById } = require('../controllers/messagesController');
 const upload = require('../middlewares/multer');
 
 
@@ -19,6 +19,9 @@ router.get('/user-chat-messages/:id', getChatMessages)
 
 // Get user By ID
 router.get('/chats', getChats);
+
+// Get user By ID
+router.get('/user-chat/:userId', getChatById)
 
 // Get user By ID
 router.get('/chat/:id', getChat)

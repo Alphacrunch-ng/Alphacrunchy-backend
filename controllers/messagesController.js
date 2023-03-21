@@ -29,6 +29,28 @@ const createChat = async (id) => {
 }
 
 // GET all chats for a specific user
+exports.getChatById = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const chat = await Chat.findOne({client : userId})
+                            .populate('client',"id fullName email phoneNumber profilePicture_url");
+    if(!chat){
+      return res.status(404).json({
+        success: false,
+        message: `not found`
+    });
+    }
+    return res.status(200).json({
+        data: chat,
+        success: true,
+        message: `Successfull`
+    });
+  } catch (error) {
+    return serverError(res, error);
+  }
+};
+
+// GET all chats for a specific user
 exports.getChat = async (req, res) => {
   try {
     const chatId = req.params.id;
@@ -100,10 +122,10 @@ exports.sendMessage = async (req, res) => {
           chatId: chat._id,
           message,
           sender,
-          recipient: roles.admin,
+          recipient: req.body.recipient? req.body.recipient: client ,
           attachments,
         });
-    
+
         await newMessage.save();
         io.emit(CustomEvents.newMessage, 'created a message');
         return res.status(201).json({
