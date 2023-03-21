@@ -19,6 +19,14 @@ exports.Status = {
     successful: 'successful'
 }
 
+exports.CustomEvents = {
+    newMessage: 'new_message',
+    deleteMessage: 'delete_message',
+    debitTransaction: 'debit_transaction',
+    creditTransaction: 'credit_transaction',
+    newNotification: 'new_notification'
+}
+
 exports.CardTypes= {
     physical: "Physical Card",
     eCode: "E-Code"

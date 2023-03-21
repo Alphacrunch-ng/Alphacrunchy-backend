@@ -92,13 +92,13 @@ exports.setInActiveUser = async (request, response) => {
 }
 
 // get all users, both active and inactive or either one by passing the active parameter.
-exports.getUsers = async (request, response, next) => {
+exports.getUsers = async (request, response) => {
     const {pageSize, page, active} = request.params;
 
     try {
         const user = await User.find(active? {active: active}: {})
                                 .select("-password")
-                                .limit(pageSize? +pageSize : 30 )
+                                .limit(pageSize? +pageSize : 16 )
                                 .skip(page? (+page - 1) * +pageSize : 0)
                                 .exec();
         if (user) {

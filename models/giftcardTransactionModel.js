@@ -32,7 +32,9 @@ const cardItemSchema = new mongoose.Schema({
 
 const giftcardTransactionSchema = new mongoose.Schema({
     reciever_wallet_number: {
-        type: mongoose.Schema.Types.ObjectId, ref: 'Wallet'
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Wallet',
+        required: true
     },
     currency_name: {
         type: String,

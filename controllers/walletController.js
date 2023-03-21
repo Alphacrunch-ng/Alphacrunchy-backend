@@ -1,5 +1,7 @@
 
 const bcrypt = require('bcrypt');
+const Notification = require('../models/notificationModel');
+const { getIo } = require('../utils/socket.js');
 const Wallet = require('../models/walletModel.js');
 const { serverError } = require('../utils/services.js');
 

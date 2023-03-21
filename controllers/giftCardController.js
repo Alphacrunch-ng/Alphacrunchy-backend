@@ -7,6 +7,7 @@ const Wallet = require('../models/walletModel.js');
 const { serverError } = require('../utils/services.js');
 const GiftCardTransaction = require('../models/giftcardTransactionModel');
 const mongoose = require('mongoose');
+const ObjectId = mongoose.Types.ObjectId;
 
 
 // ------------GIFTCARD-MANAGEMENT----------- //
@@ -52,6 +53,7 @@ exports.createGiftCardTransaction = async (req, res) => {
     cards,
     description,
   } = req.body;
+  
     try {
 
         const check = await Wallet.findById(receiverWalletId);
@@ -153,25 +155,67 @@ exports.getGiftCardById = async (req, res) => {
 }
 
 // deleting a user by id
-exports.setGiftCardInactive = async (request, response) => {
-    const {id} = request.params;
+exports.setTransactionGiftCardState = async (req, res) => {
+    const {id} = req.params;
+    const {card_id, state} = req.body;
     try {
-        const giftcard = await GiftCard.findByIdAndUpdate({ _id: id }, { active: false }, { new: true });
-        if (giftcard) {
-                return response.status(200).json({
+        let giftcard = await GiftCardTransaction.updateOne(
+            {
+              _id: ObjectId(id),
+              'cards._id': ObjectId(card_id)
+            },
+            {
+              $set: {
+                'cards.$.state': state
+              }
+            },
+            function(err, result) {
+              if (err) {
+                console.log(err);
+              } else {
+                console.log(result);
+              }
+            }
+          );       
+        if (giftcard) 
+        {
+                return res.status(200).json({
                     data: giftcard,
                     success: true,
                     message: `Successfully Deleted`
                 });
-        } else {
-                return response.status(404).json({
+        } 
+        else {
+                return resetPasswordMailer.status(404).json({
                     success: false,
                     message: "giftcard not found"
                   });
         }
           
     } catch (error) {
-        return serverError(response, error);
+        return serverError(res, error);
+    }
+}
+
+// deleting a user by id
+exports.setGiftCardInactive = async (req, response) => {
+    const {id} = req.params;
+    try {
+        const giftcard = await GiftCard.findByIdAndUpdate({ _id: id }, { active: false }, { new: true });
+        if (giftcard) {
+                return res.status(200).json({
+                    data: giftcard,
+                    success: true,
+                    message: `Successfully Deleted`
+                });
+        } else {
+                return res.status(404).json({
+                    success: false,
+                    message: "giftcard not found"
+                  });
+        }
+    } catch (error) {
+        return serverError(res, error);
     }
 }
 
@@ -252,25 +296,25 @@ exports.updateGiftCard = async (req, res) => {
     }
 }
 
-//completely deleting a giftcard by id
-exports.deleteGiftCard = async (request, response) => {
+//permanently deleting a giftcard by id
+exports.deleteGiftCard = async (req, res) => {
     try {
-        const giftcard = await GiftCard.findByIdAndDelete({ _id: request.params.id }, { useFindAndModify: false});
+        const giftcard = await GiftCard.findByIdAndDelete({ _id: req.params.id }, { useFindAndModify: false});
         if (giftcard) {
-                return response.status(200).json({
+                return res.status(200).json({
                 data: giftcard,
                 success: true,
                 message: `Successfully Deleted`
               });
         } else {
-                return response.status(404).json({
+                return res.status(404).json({
                     success: false,
                     message: "giftcard not found"
                   });
         }
           
     } catch (error) {
-        return serverError(response, error);
+        return serverError(res, error);
     }
 }
 

@@ -8,16 +8,19 @@ const swaggerUI = require('swagger-ui-express');
 require('dotenv').config();
 const swaggerJsDoc = require('swagger-jsdoc');
 const mongodb = require('./utils/db.js');
+const rfs = require('rotating-file-stream');
 
 const indexRoute = require('./routes/indexRoute');
 const options = require('./utils/swaggerOptions');
+const { connectChat } = require('./utils/services.js');
+const socket = require('./utils/socket.js')
 
 const app = express();
 app.use(cors());
 const http = require('http').createServer(app);
-const io = require('socket.io')(http, {
+const io = socket.init(http, {
     cors: {
-        origin: "http://localhost:3000",
+        origin: ["http://localhost:3001", "http://localhost:3000"],
         methods: ["GET", "POST"],
         allowedHeaders: ["alphacrun"],
         credentials: true
@@ -31,11 +34,21 @@ app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(spec));
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/',express.static('public'));
-app.use(morgan('dev'));
-// create a write stream (in append mode)
-var accessLogStream = fs.createWriteStream(path.join(__dirname, 'log.txt'), { flags: 'a' })
-// create logger
-app.use(morgan("combined",{ stream: accessLogStream }));
+const logDirectory = path.join(__dirname, 'log');
+// ensure log directory exists
+fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory);
+
+// create a rotating write stream
+const accessLogStream = rfs.createStream('access.log', {
+  interval: '1d', // rotate daily
+  path: logDirectory
+});
+if (process.env.NODE_ENV === 'production'){
+    // create a write stream for logging to file
+    app.use(morgan("combined",{ stream: accessLogStream }));
+}else {
+    app.use(morgan('dev'));
+}
 
 mongodb().then(()=>{
     app.use('/', indexRoute);
@@ -53,20 +66,7 @@ mongodb().then(()=>{
     http.on("listening", () => {
         console.log(`Server started on http://localhost:${port}`);
     });
-    io.on("connection", (socket) => {
-        socket.on('chat', (message, user) => {
-            if(user === '') {
-            socket.broadcast.emit('receiveMessage', message); 
-            } else {
-                console.log(message);
-                socket.to(user).emit('receiveMessage', message); 
-            }
-        }
-        );
-    });
-    io.on("chat", (socket) => {
-        console.log(socket.message);
-    });
+    io.on("connection", connectChat );
     http.on('error', (e) => {
         if (e.code === 'EADDRINUSE') {
             console.log('Address in use, retrying...');

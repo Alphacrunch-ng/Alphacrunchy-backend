@@ -76,3 +76,12 @@ exports.normalizeEmail = async function(next){
         next();
     }
 }
+
+exports.populateUserId = async (next) => {
+    this.populate({
+        path: 'User',
+        select: '_id fullName profilePicture_url'
+    })
+
+    next()
+}

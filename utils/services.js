@@ -21,3 +21,17 @@ exports.createOtp = () =>{
 exports.createWalletNumber = () =>{
     return generateRandomString(8).toUpperCase();
 }
+
+exports.connectChat = (socket) => {
+    socket.on('admin', (user)=>{
+        socket.join(user);
+        socket.on('chat', (message, user) => {
+            console.log(message);
+            console.log(user);
+            socket.emit('chat', message);
+        });
+        console.log(`${user} has joined been connected`);
+    })
+
+    
+}
