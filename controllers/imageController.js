@@ -23,12 +23,19 @@ exports.deleteUploadedImage = async (req, res) => {
     try {
         const cloudFile = await cloudinary.uploader.destroy(public_id).then(result=>
             {
-                console.log(result);
-                return res.status(201).json({
+                if (result.result === 'ok') {
+                    return res.status(201).json({
+                        data: result,
+                        success: true,
+                        message: 'image successfully deleted.'
+                    });
+                }
+                return res.status(404).json({
                     data: result,
-                    status: 'success',
-                    message: 'image successfully deleted.'
+                    success: false,
+                    message: 'image not deleted.'
                 });
+                
             });
     } catch (error) {
         return serverError(res, error);

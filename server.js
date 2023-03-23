@@ -66,7 +66,6 @@ mongodb().then(()=>{
     http.on("listening", () => {
         console.log(`Server started on http://localhost:${port}`);
     });
-    io.on("connection", connectChat );
     http.on('error', (e) => {
         if (e.code === 'EADDRINUSE') {
             console.log('Address in use, retrying...');
