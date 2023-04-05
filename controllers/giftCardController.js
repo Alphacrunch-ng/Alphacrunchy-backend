@@ -60,7 +60,7 @@ exports.createGiftCardTransaction = async (req, res) => {
         if(check !== null){
             // create a new GiftCardTransaction document
             const giftcardTransaction = await GiftCardTransaction.create({
-                receiver_wallet_number: check._id,
+                reciever_wallet_number: check._id,
                 currency_name: currencyName,
                 currency_symbol: currencySymbol,
                 currency_code: currencyCode,
@@ -140,8 +140,28 @@ exports.getGiftCardById = async (req, res) => {
         const check = await GiftCard.findOne({ _id: req.params.id});
         if (!check) {
             return res.status(204).json({
-                status: 'failed',
+                success: false,
                 message: 'giftcard not found'
+            });
+        }
+        const giftcard = {...check.toObject()}
+        return res.status(200).json({
+            success: true,
+            data: giftcard
+        });
+    } catch (error) {
+        return serverError(res, error);
+    }
+}
+
+// controller for getting a giftcard
+exports.getGiftCardTransaction = async (req, res) => {
+    try {
+        const check = await GiftCardTransaction.findOne({ _id: req.params.id});
+        if (!check) {
+            return res.status(204).json({
+                success: true,
+                message: 'giftcard transaction not found'
             });
         }
         const giftcard = {...check.toObject()}
@@ -198,7 +218,7 @@ exports.setTransactionGiftCardState = async (req, res) => {
 }
 
 // deleting a user by id
-exports.setGiftCardInactive = async (req, response) => {
+exports.setGiftCardInactive = async (req, res) => {
     const {id} = req.params;
     try {
         const giftcard = await GiftCard.findByIdAndUpdate({ _id: id }, { active: false }, { new: true });
@@ -220,8 +240,8 @@ exports.setGiftCardInactive = async (req, response) => {
 }
 
 // get all giftcards, both active and inactive or either one by passing the active parameter.
-exports.getAllGiftCards = async (request, response, next) => {
-    const {pageSize, page, active} = request.params;
+exports.getAllGiftCards = async (req, res) => {
+    const {pageSize, page, active} = req.params;
 
     try {
         const giftcards = await GiftCard.find(active? {active: active}: {})
@@ -229,20 +249,20 @@ exports.getAllGiftCards = async (request, response, next) => {
                                 .skip(page? (+page - 1) * +pageSize : 0)
                                 .exec();
         if (giftcards) {
-                return response.status(200).json({
+                return res.status(200).json({
                     data: giftcards,
                     success: true,
                     message: `Successfull`
                 });
         } else {
-                return response.status(404).json({
+                return res.status(404).json({
                     success: false,
                     message: "No giftcards found"
                   });
         }
           
     } catch (error) {
-        return serverError(response, error);
+        return serverError(res, error);
     }
 }
 
