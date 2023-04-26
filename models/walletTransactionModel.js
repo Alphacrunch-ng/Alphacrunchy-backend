@@ -21,6 +21,9 @@ const walletTransactionSchema = new mongoose.Schema({
     description: {
         type: String,
     },
+    transaction_number: {
+        type: String,
+    },
     createdAt: {
         type: Date,
         default: Date.now()

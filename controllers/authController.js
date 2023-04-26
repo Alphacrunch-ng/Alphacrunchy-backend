@@ -172,6 +172,54 @@ exports.resetPassword = async (req, res) => {
     }
 }
 
+// controller for reseting a User's password
+exports.resetPin = async (req, res) => {
+    const {otp, wallet_number, pin} = req.body;
+
+    if (parseInt(pin)< 1000 || parseInt(pin) > 9999) {
+        return res.status(404).json({
+            success: false,
+            message: 'invalid pin'
+        });
+    }
+    try {
+        const checkWallet = await Wallet.findOne({wallet_number}).lean();
+        const checkUser = await User.findOne({ _id: checkWallet.user_id}).lean();
+        if (!checkUser) {
+            return res.status(404).json({
+                success: false,
+                message: 'user not found'
+            });
+        }
+        if (!checkWallet) {
+            return res.status(404).json({
+                success: false,
+                message: 'wallet not found'
+            });
+        }
+        const isMatching = await bcrypt.compare(otp, checkUser.otp);
+        if (isMatching) {
+            const hashedPin = await bcrypt.hash(pin, 10);
+            const wallet = await Wallet.findOneAndUpdate({wallet_number},{ wallet_pin: hashedPin});
+            await User.findByIdAndUpdate({_id: checkWallet.user_id}, {otp: ""})
+            noticeMailer(checkUser.email, operations.changedPassword);
+            return res.status(200).json({
+                data: wallet,
+                success: true,
+                message: 'Password changed successfully.'
+            });
+        }
+        else {
+            return res.status(400).json({
+                success: false,
+                message: 'otp not matched'
+            });
+        }
+    } catch (error) {
+        return serverError(res, error);
+    }
+}
+
 // controller for requesting reset of a User's password.
 exports.requstResetPassword = async (req, res) => {
     const {email} = req.body;

@@ -23,7 +23,7 @@ router.post('/create', auth, authRoles(roles.admin), upload.single('card_pic') ,
 router.post('/start-transaction', auth, createGiftCardTransaction);
 
 // approve individual uploaded cards of a transaction
-router.patch('/transaction/cards-verification/:id', auth, authRoles(roles.admin), setTransactionGiftCardState);
+router.patch('/transaction/approve-card/:id', auth, authRoles(roles.admin), setTransactionGiftCardState);
 
 // upload giftcard
 router.post('/upload', auth, authRoles(roles.client,roles.admin, roles.staff), upload.single('card_pic'), uploadGiftCard);

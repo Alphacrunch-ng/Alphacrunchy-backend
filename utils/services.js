@@ -18,8 +18,8 @@ exports.createOtp = () =>{
     return Math.floor(Math.random() * 900000) + 100000;
 }
 
-exports.createWalletNumber = () =>{
-    return generateRandomString(8).toUpperCase();
+exports.createWalletNumber = (length) =>{
+    return generateRandomString(length).toUpperCase();
 }
 
 exports.connectChat = (socket) => {

@@ -1,4 +1,4 @@
-const { registration, loggingIn, confirmUserEmail, requstResetPassword, resetPassword } = require('../controllers/authController');
+const { registration, loggingIn, confirmUserEmail, requstResetPassword, resetPassword, resetPin } = require('../controllers/authController');
 const { getUserByEmail } = require('../controllers/usersController');
 const { createWallet } = require('../controllers/walletController');
 
@@ -23,6 +23,9 @@ router.post('/request-password-change', requstResetPassword)
 
 // reset a user's password.
 router.post('/reset-password', resetPassword)
+
+// reset a user's wallet pin.
+router.post('/reset-pin', resetPin)
 
 // Get user By email in query
 router.get('/email', getUserByEmail)

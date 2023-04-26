@@ -71,6 +71,9 @@ const giftcardTransactionSchema = new mongoose.Schema({
         type: Date,
         default: Date.now()
     },
+    transaction_number: {
+        type: String,
+    },
     modifiedAt: {
         type: Date,
         default: Date.now()
@@ -94,6 +97,10 @@ giftcardTransactionSchema.pre('save', sum);
 
 //setting modifiedAt to current time after every update
 giftcardTransactionSchema.pre('save', modifiedAt);
+giftcardTransactionSchema.pre('findOneAndUpdate', function(next) {
+    this._update.modifiedAt = new Date();
+    next();
+  });
 
 const GiftCardTransaction = mongoose.model('GiftCardTransaction', giftcardTransactionSchema);
 

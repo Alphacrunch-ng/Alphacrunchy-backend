@@ -48,6 +48,10 @@ const bankSchema = new mongoose.Schema({
         type: Date,
         default: Date.now()
     },
+    modifiedAt: {
+        type: Date,
+        default: Date.now()
+    },
     active : {
         type: Boolean,
         default: true
@@ -56,6 +60,10 @@ const bankSchema = new mongoose.Schema({
 
 //setting modifiedAt to current time after every update
 bankSchema.pre('save', modifiedAt);
+bankSchema.pre('findOneAndUpdate', function(next) {
+    this._update.modifiedAt = new Date();
+    next();
+  });
 
 const Bank = mongoose.model('Account', bankSchema);
 

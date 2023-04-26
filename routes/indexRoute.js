@@ -3,6 +3,7 @@ const adminRoute = require('./adminRoute');
 const imageRoute = require('./imageRoute');
 const userRoute = require('./userRoute');
 const authRoute = require('./authRoute');
+const notificationRoute = require('./notificationRoute');
 const messageRoute = require('./messageRoute');
 const giftCardRoute = require('./giftCardRoute');
 const walletRoute = require('./walletRoute');
@@ -35,6 +36,9 @@ router.use('/user', auth, authRoles(roles.admin, roles.client, roles.staff) , us
 router.use('/wallet', auth, authRoles(roles.admin, roles.client, roles.staff), walletRoute);
 
 router.use('/image', imageRoute);
+
 router.use('/message', messageRoute);
+
+router.use('/notification', auth , notificationRoute)
 
 module.exports = router;

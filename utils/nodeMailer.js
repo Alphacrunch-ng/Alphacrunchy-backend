@@ -4,15 +4,15 @@ const nodemailer = require('nodemailer');
 exports.signUpMailer = (name, email, token) => {
     var emailSent = false;
     const message = `
-    <h1> Welcome to Alphacrunch. ${name}</h1>
+    <h1> Welcome to Cambio. ${name}</h1>
     <p>Your account has been sucessfully created</p>
     <p>Here is your token to set your password : ${token}</p>
     `
     // setup email data with unicode symbols
     let mailOptions = {
-        from: `"Alphacrunch" <${process.env.SENDER_EMAIL}>`,// sender address
+        from: `"Cambio" <${process.env.SENDER_EMAIL}>`,// sender address
         to: `${email}`,// list of recievedRequest
-        subject: "Alphacrunch Sign-up notification",//
+        subject: "Cambio Sign-up notification",//
         text: `Welcome ${name}, Your account has been created`,// subject
         html: message, // html body
     };
@@ -41,7 +41,7 @@ exports.signUpMailer = (name, email, token) => {
 
 exports.noticeMailer = (email, operation) => {
     const message = `<div>
-    <h1>Notification From Alphacrunch App</h1>
+    <h1>Notification From Cambio App</h1>
     <p>Notifying you of ${operation} action on you account</p>
     <p>If this was not initiated by you please contact customer care</p>
     <p>Thank You</p>
@@ -49,9 +49,9 @@ exports.noticeMailer = (email, operation) => {
     
     // setup email data with unicode symbols
     let mailOptions = {
-        from: `"Alphacrunch" <${process.env.SENDER_EMAIL}>`,// sender address
+        from: `"Cambio" <${process.env.SENDER_EMAIL}>`,// sender address
         to: `${email}`,// list of recievedRequest
-        subject: `Alphacrunch ${operation} notification`,//
+        subject: `Cambio ${operation} notification`,//
         text: `New ${operation} notification`,// subject
         html: message, // html body
     };
@@ -78,15 +78,15 @@ exports.noticeMailer = (email, operation) => {
 //email sender for reset password
 exports.resetPasswordMailer = (email, token) => {
     const message = `
-    <h1>Alphacrunch.</h1>
+    <h1>Cambio.</h1>
     <p>Your OTP is <b>${token}</b> to reset your password. </p>
     `;
 
     // setup email data with unicode symbols
     let mailOptions = {
-        from: `"Alphacrunch" <${process.env.SENDER_EMAIL}>`,// sender address
+        from: `"Cambio" <${process.env.SENDER_EMAIL}>`,// sender address
         to: `${email}`,
-        subject: "Alphacrunch Reset Password token",//
+        subject: "Cambio Reset Password token",//
         text: `Your OTP is <b>${token}</b> to reset your password. `,// subject
         html: message, // html body
     };

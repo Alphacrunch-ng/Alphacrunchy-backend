@@ -28,6 +28,10 @@ const chatSchema = new mongoose.Schema({
 
 //setting modifiedAt to current time after every update
 chatSchema.pre('save', modifiedAt);
+chatSchema.pre('findOneAndUpdate', function(next) {
+  this._update.modifiedAt = new Date();
+  next();
+});
 
 const Chat = mongoose.model('Chat', chatSchema);
 

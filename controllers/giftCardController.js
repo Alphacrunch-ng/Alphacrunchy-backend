@@ -7,6 +7,7 @@ const Wallet = require('../models/walletModel.js');
 const { serverError } = require('../utils/services.js');
 const GiftCardTransaction = require('../models/giftcardTransactionModel');
 const mongoose = require('mongoose');
+const { createTransaction } = require('./transactionController');
 const ObjectId = mongoose.Types.ObjectId;
 
 
@@ -56,22 +57,26 @@ exports.createGiftCardTransaction = async (req, res) => {
   
     try {
 
-        const check = await Wallet.findById(receiverWalletId);
+        const check = await Wallet.findById(receiverWalletId).populate({
+            path: "user_id",
+            select: "fullName "
+        });
         if(check !== null){
             // create a new GiftCardTransaction document
             const giftcardTransaction = await GiftCardTransaction.create({
-                reciever_wallet_number: check._id,
+                reciever_wallet_number: check.wallet_number,
                 currency_name: currencyName,
                 currency_symbol: currencySymbol,
                 currency_code: currencyCode,
                 rate: rate,
                 cards: cards,
                 description: description,
-            }, (error, result)=>{
+            }, async (error, result)=>{
                 if(error) {
                     console.log(error);
                     return serverError(res, error);
                 }else{
+                    await createTransaction(check.user_id.fullName, `selling ${cards.length()} giftcards `, result.total_amount_expected)
                     return res.status(201).json({
                         data: result,
                         success: true,
@@ -174,7 +179,7 @@ exports.getGiftCardTransaction = async (req, res) => {
     }
 }
 
-// deleting a user by id
+// approving a submitted giftcard by id
 exports.setTransactionGiftCardState = async (req, res) => {
     const {id} = req.params;
     const {card_id, state} = req.body;

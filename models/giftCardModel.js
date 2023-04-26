@@ -38,6 +38,10 @@ const giftCardSchema = new mongoose.Schema({
 
 //setting modifiedAt to current time after every update
 giftCardSchema.pre('save', modifiedAt);
+giftCardSchema.pre('findOneAndUpdate', function(next) {
+    this._update.modifiedAt = new Date();
+    next();
+  });
 
 const GiftCard = mongoose.model('GiftCard', giftCardSchema);
 

@@ -40,7 +40,18 @@ exports.sum = async function(next){
 exports.setWalletNumber = async function(next){
     try {
         if (this.isNew) {
-            this.wallet_number = createWalletNumber();
+            this.wallet_number = createWalletNumber(8);
+        }
+        next();
+    } catch (error) {
+        next();
+    }
+}
+
+exports.setTransactionNumber = async function(next){
+    try {
+        if (this.isNew) {
+            this.transaction_number = createWalletNumber(11);
         }
         next();
     } catch (error) {

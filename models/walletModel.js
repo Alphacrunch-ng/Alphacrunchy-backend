@@ -36,6 +36,10 @@ const walletSchema = new mongoose.Schema({
 
 //setting modifiedAt to current time after every update
 walletSchema.pre('save', modifiedAt);
+walletSchema.pre('findOneAndUpdate', function(next) {
+    this._update.modifiedAt = new Date();
+    next();
+  });
 walletSchema.pre('save', setWalletNumber);
 
 const Wallet = mongoose.model('Wallet', walletSchema);

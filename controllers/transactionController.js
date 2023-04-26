@@ -1,14 +1,15 @@
-const Notification = require('../models/notificationModel');
+const Transaction = require('../models/transactionModel');
 const { serverError } = require('../utils/services');
+const { Status } = require('../utils/constants');
 
 // GET all notifications for a specific user
-exports.getUserNotifications = async (req, res) => {
+exports.getUserTransactions = async (req, res) => {
   try {
     const userId = req.params.id;
-    const notifications = await Notification.find({ user: userId })
+    const transactions = await Transaction.find({ user_id: userId })
                                             .sort({ createdAt: -1 });
     return res.status(200).json({
-        data: notifications,
+        data: transactions,
         success: true,
         message: `Successfull`
     });
@@ -18,18 +19,26 @@ exports.getUserNotifications = async (req, res) => {
 };
 
 
-exports.setUserNotificationRead = async (req, res) => {
+exports.setTransactionStatus = async (req, res) => {
   try {
-    const notificationId = req.params.id;
-    if (!notificationId) {
-      return res.status(400).json({
+    const transactionId = req.params.id;
+    const { status } = req.body;
+    
+    if (!Object.values().includes(status.toLocaleLowerCase())) {
+        return res.status(400).json({
         success: false,
-        message: "no notification_id provided"
+        message: "invalid status: " + status
       })
     }
-    const notification = await Notification.findByIdAndUpdate(notificationId, {read : true}, {new: true});
+    if (!transactionId) {
+      return res.status(400).json({
+        success: false,
+        message: "no id provided"
+      })
+    }
+    const transaction = await Transaction.findByIdAndUpdate(transactionId, {status : status.toLocaleLowerCase()}, {new: true});
     return res.status(200).json({
-        data: notification,
+        data: transaction,
         success: true,
         message: `Successfull`
     });
@@ -40,16 +49,22 @@ exports.setUserNotificationRead = async (req, res) => {
 
 exports.setNotificationInactive = async (req, res) => {
   try {
-    const notificationId = req.params.id;
-    if (!notificationId) {
+    const transactionId = req.params.id;
+    if (!transactionId) {
       return res.status(400).json({
         success: false,
         message: "no notification_id provided"
       })
     }
-    const notification = await Notification.findByIdAndUpdate(notificationId, {active : false}, {new: true});
+    const transaction = await Transaction.findByIdAndUpdate(transactionId, {active : false}, {new: true});
+    if (!transaction) {
+      return res.status(404).json({
+        success: false,
+        message: "transaction not found"
+      })
+    }
     return res.status(200).json({
-        data: notification,
+        data: transaction,
         success: true,
         message: `Successfull`
     });
@@ -87,11 +102,11 @@ exports.deleteNotification = async (req, res) => {
 
 //Services 
 //create notification service
-exports.createNotification = async (recipient_id, message )=> {
+exports.createTransaction = async (user_id, description, amount )=> {
     try {
-        const newNotification = new Notification({ recipient: recipient_id, message });
-        const savedNotification = await newNotification.save();
-        return savedNotification;
+        const newTransaction = new Transaction({ user_id, description, amount });
+        const saveTransaction = await newTransaction.save();
+        return saveTransaction;
     } catch (error) {
         throw error;
     }
