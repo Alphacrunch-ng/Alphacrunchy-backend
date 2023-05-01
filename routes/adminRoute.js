@@ -1,4 +1,4 @@
-const { signup, getUser, deleteUser, updateUser, getUserById, setInActiveUser } = require('../controllers/usersController');
+const { deleteUser, updateUser, getUserById, setInActiveUser, setUserRole } = require('../controllers/usersController');
 
 const router = require('express').Router();
 
@@ -25,6 +25,9 @@ router.put('/update/:id', updateUser)
 
 // Update adminRoute By ID
 router.put('/setInactive/:id', setInActiveUser)
+
+// Update adminRoute By ID
+router.patch('/setUserRole/:id', setUserRole)
 
 // Delete adminRoute By ID
 router.delete('/user/delete/:id', deleteUser )

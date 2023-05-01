@@ -6,6 +6,8 @@ const { getIo } = require('../utils/socket.js');
 const Wallet = require('../models/walletModel.js');
 const { serverError } = require('../utils/services.js');
 const { createNotification } = require('./notificationController');
+const { operations } = require('../utils/constants');
+const { createTransaction } = require('./transactionController');
 
 
 // controller for creating a User wallet
@@ -42,7 +44,7 @@ exports.creditWallet = async (req, res) => {
     try {
         const checkWallet = await Wallet.findOne({ wallet_number});
         const checkAdmin = await User.findById(id);
-        const transaction = {wallet_number, amount, admin_user: id, admin_name: fullName, time_stamp: (new Date).toISOString()}
+        const description = `${amount} credited to wallet`;
         
         const checkPin = await bcrypt.compare(admin_password, checkAdmin.password);
         if (!checkWallet) {
@@ -64,8 +66,8 @@ exports.creditWallet = async (req, res) => {
                 message: 'invalid amount'
             })
         }
-        const creditWallet = await Wallet.findOneAndUpdate({wallet_number},  { $inc: { balance: amount } }, { new: true })
-                                            .select("-wallet_pin")
+        const creditWallet = await Wallet.findOneAndUpdate({wallet_number},  { $inc: { balance: amount } }, { new: true }).select("-wallet_pin");
+        const transaction = await createTransaction(checkWallet.user_id, description, amount, operations.credit);
         console.log(await createNotification(checkWallet.user_id, `credited with ${amount}`))
         return res.status(200).json({
             data: creditWallet,
@@ -85,7 +87,7 @@ exports.debitWallet = async (req, res) => {
     try {
         const checkWallet = await Wallet.findOne({ wallet_number});
         const checkAdmin = await User.findById(id);
-        const transaction = {wallet_number, amount, admin_user: id, admin_name: fullName, time_stamp: (new Date).toISOString()}
+        const description = `${amount} debited from wallet`
         
         const checkPin = await bcrypt.compare(admin_password, checkAdmin.password);
         if (!checkWallet) {
@@ -109,6 +111,7 @@ exports.debitWallet = async (req, res) => {
         }
         const creditWallet = await Wallet.findOneAndUpdate({wallet_number},  { $inc: { balance: -amount } }, { new: true })
                                             .select("-wallet_pin")
+        const transaction = await createTransaction(checkWallet.user_id, description, amount, operations.debit);
         console.log(await createNotification(checkWallet.user_id, `debited of ${amount}`))
         return res.status(200).json({
             data: creditWallet,
@@ -120,7 +123,58 @@ exports.debitWallet = async (req, res) => {
     }
 }
 
-// controller for getting a User
+// debit a users wallet
+exports.wallet2WalletTransfer = async (req, res) => {
+    const {wallet_number, amount, reciever_wallet_number } = req.body;
+    
+    try {
+        const checkWallet = await Wallet.findOne({ wallet_number}).populate({
+            path: "user_id",
+            select: "fullName _id"
+        });
+        const checkRecieverWallet = await Wallet.findOne({ wallet_number}).populate({
+            path: "user_id",
+            select: "fullName _id"
+        });
+
+        const debitDescription = `${amount} debited from wallet to ${checkRecieverWallet.user_id.fullName}: ${checkRecieverWallet.wallet_number}.`;
+
+        const creditDescription = `${amount} credited to wallet from ${checkWallet.user_id.fullName}: ${checkWallet.wallet_number}.`;
+
+        if (!checkWallet || !checkRecieverWallet) {
+            return res.status(404).json({
+                success: false,
+                message: 'wallet not found'
+            })
+        }
+        if (!amount || amount < 1 || !parseFloat(amount)) {
+            return res.status(400).json({
+                success: false,
+                message: 'invalid amount'
+            })
+        }
+
+        //debit the sender
+        const debitWallet = await Wallet.findOneAndUpdate({wallet_number},  { $inc: { balance: -amount } }, { new: true }).select("-wallet_pin");
+        const debitTransaction = await createTransaction(checkWallet.user_id, description, amount, operations.debit);
+        console.log(await createNotification(checkWallet.user_id._id, `debited of ${amount}`));
+
+        //credit the reciever
+        await Wallet.findOneAndUpdate({reciever_wallet_number},  { $inc: { balance: amount } }, { new: true }).select("-wallet_pin");
+        await createTransaction(checkWallet.user_id, description, amount, operations.credit);
+        console.log(await createNotification(checkRecieverWallet.user_id._id, `credited with ${amount}`));
+
+        return res.status(200).json({
+            data: debitWallet,
+            success: true,
+            message: 'successfully transfered funds'
+        });
+    } catch (error) {
+        return serverError(res, error);
+    }
+}
+
+// controller for getting a User wallet by id
 exports.getWalletById = async (req, res) => {
     try {
         const checkWallet = await Wallet.findOne({ _id: req.params.id}).select("-wallet_pin").populate({
@@ -143,7 +197,7 @@ exports.getWalletById = async (req, res) => {
     }
 }
 
-// deleting a user by id
+// deleting a user wallet temporarily by id
 exports.setUserWalletInactive = async (request, response) => {
     const {id} = request.params;
     try {
@@ -166,12 +220,13 @@ exports.setUserWalletInactive = async (request, response) => {
     }
 }
 
-// get all users, both active and inactive or either one by passing the active parameter.
+// get all user wallets, both active and inactive or either one by passing the active parameter.
 exports.getWallets = async (request, response, next) => {
-    const {pageSize, page, active} = request.params;
+    const {pageSize, page, active} = request.query;
+    const {id} = request.params
 
     try {
-        const wallets = await Wallet.find(active? {active: active}: {})
+        const wallets = await Wallet.find(active? {_id: id, active}: {_id: id})
                                 .select("-wallet_pin")
                                 .limit(pageSize? +pageSize : 30 )
                                 .skip(page? (+page - 1) * +pageSize : 0)

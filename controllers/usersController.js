@@ -2,6 +2,7 @@
 const User = require('../models/userModel.js');
 const cloudinary = require('../middlewares/cloudinary.js');
 const { serverError } = require('../utils/services.js');
+const { roles } = require('../utils/constants.js');
 
 // controller for getting a User by Id
 exports.getUserById = async (req, res) => {
@@ -68,7 +69,7 @@ exports.deleteUser = async (request, response) => {
     }
 }
 
-// deleting a user by id
+// deleting a user by id temporary
 exports.setInActiveUser = async (request, response) => {
     const {id} = request.params;
     try {
@@ -151,5 +152,42 @@ exports.updateUser = async (req, res) => {
             message: 'An error occured, we are working on it',
             error: error.message
         });
+    }
+}
+
+// deleting a user by id
+exports.setUserRole = async (request, response) => {
+    const {id} = request.params;
+    const { role } = request.body;
+
+    if (!role) {
+        return response.status(400).json({
+            success: false,
+            message: "invalid user role"
+          });
+    }
+    if (!Object.values(roles).includes(role.toLocaleUpperCase())) {
+        return response.status(400).json({
+            success: false,
+            message: "invalid user role"
+          });
+    }
+    try {
+        const user = await User.findByIdAndUpdate({ _id: id }, { role }, { new: true }).select("-password");
+        if (user) {
+                return response.status(200).json({
+                    data: user,
+                    success: true,
+                    message: `user is now ${role} successfully`
+                });
+        } else {
+                return response.status(404).json({
+                    success: false,
+                    message: "User not found"
+                  });
+        }
+          
+    } catch (error) {
+        return serverError(res, error);
     }
 }

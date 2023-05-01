@@ -76,13 +76,15 @@ exports.loggingIn = async (request, response) => {
                   issuer: process.env.JWT_ISSUER
                 });
                 user.password = "";
-                
+                const today = new Date();
+
                 return response.status(200).json({
                     data: user,
                     wallet: checkWallet,
                     success: true,
                     message: `Login Successfull`,
-                    token: token 
+                    token: token,
+                    expiresIn: new Date(today.getTime() + (6 * 24 * 60 * 60 * 1000))
                 });
             } else {
                 return response.status(401).json({

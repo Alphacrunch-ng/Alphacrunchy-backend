@@ -9,8 +9,7 @@ const transactionSchema = new mongoose.Schema({
     required: true
   },
   transaction_number: {
-    type: String,
-    required: true
+    type: String
   },
   description: {
     type: String,

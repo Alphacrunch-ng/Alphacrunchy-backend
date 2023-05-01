@@ -45,40 +45,43 @@ exports.createGiftCard = async (req, res) => {
 // controller for starting a giftcard trading transaction
 exports.createGiftCardTransaction = async (req, res) => {
     // extract data from the request body
+    console.log(req.user.id);
   const {
     receiverWalletId,
     currencyName,
     currencySymbol,
     currencyCode,
     rate,
+    amount,
     cards,
     description,
   } = req.body;
   
     try {
 
-        const check = await Wallet.findById(receiverWalletId).populate({
-            path: "user_id",
-            select: "fullName "
-        });
+        const check = await Wallet.findById(receiverWalletId);
         if(check !== null){
+            //create transactiondocument
+            const transaction = await createTransaction(check.user_id, description, amount);
             // create a new GiftCardTransaction document
             const giftcardTransaction = await GiftCardTransaction.create({
                 reciever_wallet_number: check.wallet_number,
+                user_id: req.user.id,
                 currency_name: currencyName,
                 currency_symbol: currencySymbol,
                 currency_code: currencyCode,
                 rate: rate,
                 cards: cards,
+                transaction_number: transaction.transaction_number,
                 description: description,
             }, async (error, result)=>{
                 if(error) {
                     console.log(error);
                     return serverError(res, error);
                 }else{
-                    await createTransaction(check.user_id.fullName, `selling ${cards.length()} giftcards `, result.total_amount_expected)
                     return res.status(201).json({
                         data: result,
+                        transaction,
                         success: true,
                         message: 'giftcard transaction initiallized.'
                     });
@@ -159,7 +162,7 @@ exports.getGiftCardById = async (req, res) => {
     }
 }
 
-// controller for getting a giftcard
+// controller for getting a giftcard transaction
 exports.getGiftCardTransaction = async (req, res) => {
     try {
         const check = await GiftCardTransaction.findOne({ _id: req.params.id});
@@ -179,12 +182,41 @@ exports.getGiftCardTransaction = async (req, res) => {
     }
 }
 
+// controller for getting a user's giftcard transactions
+exports.getUserGiftCardTransactions = async (req, res) => {
+    const user_id  = req.params.id;
+    try {
+        console.log(user_id);
+        const check = await GiftCardTransaction.find({ user_id });
+        if (!check) {
+            return res.status(404).json({
+                success: true,
+                message: 'giftcard transactions not found'
+            });
+        }
+        
+        return res.status(200).json({
+            success: true,
+            data: check
+        });
+    } catch (error) {
+        return serverError(res, error);
+    }
+}
+
 // approving a submitted giftcard by id
 exports.setTransactionGiftCardState = async (req, res) => {
     const {id} = req.params;
     const {card_id, state} = req.body;
+
+    if (!['approved','pending', 'failed'].includes(state)) {
+        return res.status(400).json({
+            success: false,
+            message: `invalid state`
+        });
+    }
     try {
-        let giftcard = await GiftCardTransaction.updateOne(
+        GiftCardTransaction.updateOne(
             {
               _id: ObjectId(id),
               'cards._id': ObjectId(card_id)
@@ -197,25 +229,17 @@ exports.setTransactionGiftCardState = async (req, res) => {
             function(err, result) {
               if (err) {
                 console.log(err);
+                return serverError(res, err);
               } else {
                 console.log(result);
+                return res.status(200).json({
+                    data: result,
+                    success: true,
+                    message: `Successfully ${state} card state`
+                });
               }
             }
-          );       
-        if (giftcard) 
-        {
-                return res.status(200).json({
-                    data: giftcard,
-                    success: true,
-                    message: `Successfully Deleted`
-                });
-        } 
-        else {
-                return resetPasswordMailer.status(404).json({
-                    success: false,
-                    message: "giftcard not found"
-                  });
-        }
+          );
           
     } catch (error) {
         return serverError(res, error);

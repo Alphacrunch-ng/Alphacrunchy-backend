@@ -1,5 +1,5 @@
 
-const { getWalletById, setUserWalletInactive, createWallet, getWallets, creditWallet, debitWallet } = require('../controllers/walletController');
+const { getWalletById, setUserWalletInactive, createWallet, getWallets, creditWallet, debitWallet, wallet2WalletTransfer } = require('../controllers/walletController');
 
 
 
@@ -21,16 +21,19 @@ router.get('/', (req, res)=>{
 
 router.get('/wallets', getWallets);
 
-// Get user By ID
+// Get user wallet By ID
 router.get('/:id', getWalletById)
 
-//credit a user wallet 
+//credit a user wallet
 router.post('/credit', creditWallet)
 
-//credit a user wallet 
+//debit a user wallet 
 router.post('/debit', debitWallet)
 
-// Delete user By ID
+//wallet to wallet transfer 
+router.post('/transfer', wallet2WalletTransfer)
+
+// Delete user wallet temporarily By ID
 router.put('/:id', setUserWalletInactive )
 
 

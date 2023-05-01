@@ -4,6 +4,7 @@ const imageRoute = require('./imageRoute');
 const userRoute = require('./userRoute');
 const authRoute = require('./authRoute');
 const notificationRoute = require('./notificationRoute');
+const transactionRoute= require('./transactionRoute')
 const messageRoute = require('./messageRoute');
 const giftCardRoute = require('./giftCardRoute');
 const walletRoute = require('./walletRoute');
@@ -25,6 +26,9 @@ router.use('/auth', authRoute);
 
 //giftcard routes
 router.use('/giftcard', giftCardRoute);
+
+//transaction routes
+router.use('/transaction', auth, transactionRoute);
 
 //admin routes
 router.use('/back-door', auth, authRoles(roles.admin), adminRoute);

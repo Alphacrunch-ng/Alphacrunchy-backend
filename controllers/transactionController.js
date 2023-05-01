@@ -1,6 +1,8 @@
 const Transaction = require('../models/transactionModel');
+const User = require('../models/userModel.js');
 const { serverError } = require('../utils/services');
 const { Status } = require('../utils/constants');
+const { transactionMailer } = require('../utils/nodeMailer');
 
 // GET all notifications for a specific user
 exports.getUserTransactions = async (req, res) => {
@@ -24,8 +26,8 @@ exports.setTransactionStatus = async (req, res) => {
     const transactionId = req.params.id;
     const { status } = req.body;
     
-    if (!Object.values().includes(status.toLocaleLowerCase())) {
-        return res.status(400).json({
+    if (!Object.values(Status).includes(status.toLocaleLowerCase())) {
+      return res.status(400).json({
         success: false,
         message: "invalid status: " + status
       })
@@ -47,7 +49,7 @@ exports.setTransactionStatus = async (req, res) => {
   }
 };
 
-exports.setNotificationInactive = async (req, res) => {
+exports.setTransactionInactive = async (req, res) => {
   try {
     const transactionId = req.params.id;
     if (!transactionId) {
@@ -88,12 +90,12 @@ exports.setNotificationInactive = async (req, res) => {
 //   }
 // };
 
-// DELETE a notification
-exports.deleteNotification = async (req, res) => {
+// DELETE a transaction
+exports.deleteTransaction = async (req, res) => {
   try {
-    const notificationId = req.params.id;
-    await Notification.findByIdAndDelete(notificationId);
-    res.status(200).json({ message: 'Notification deleted' });
+    const Id = req.params.id;
+    await Transaction.findByIdAndDelete(Id);
+    res.status(200).json({ message: 'Transaction deleted' });
   } catch (error) {
     return serverError(res, error);
   }
@@ -102,8 +104,13 @@ exports.deleteNotification = async (req, res) => {
 
 //Services 
 //create notification service
-exports.createTransaction = async (user_id, description, amount )=> {
+exports.createTransaction = async (user_id, description, amount , operation)=> {
     try {
+        const checkUser = await User.findOne({ _id: user_id}).select("-password");
+        if (!checkUser) {
+          throw new Error("user_id not found");
+      }
+        transactionMailer(checkUser.email, operation)
         const newTransaction = new Transaction({ user_id, description, amount });
         const saveTransaction = await newTransaction.save();
         return saveTransaction;

@@ -12,6 +12,8 @@ exports.operations = {
     transfer: 'Transfer'
 }
 
+exports.product_name = 'Cambio';
+
 exports.Status = {
     approved: 'approved',
     pending : 'pending',
