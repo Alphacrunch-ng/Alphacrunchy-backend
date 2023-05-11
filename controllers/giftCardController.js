@@ -8,6 +8,7 @@ const { serverError } = require('../utils/services.js');
 const GiftCardTransaction = require('../models/giftcardTransactionModel');
 const mongoose = require('mongoose');
 const { createTransaction } = require('./transactionController');
+const { Status } = require('../utils/constants');
 const ObjectId = mongoose.Types.ObjectId;
 
 
@@ -182,6 +183,33 @@ exports.getGiftCardTransaction = async (req, res) => {
     }
 }
 
+// controller for getting a giftcard transaction
+exports.setGiftCardTransaction = async (req, res) => {
+    const {status} = req.body;
+    if (!Object.values(Status).includes(status)) {
+        return res.status(400).json({
+            success: false,
+            message: "invalid transaction state : status can either be 'approved' 'pending', or 'failed'"
+        });
+    }
+    try {
+        const check = await GiftCardTransaction.findByIdAndUpdate({ _id: req.params.id}, { status }, {new: true});
+        if (!check) {
+            return res.status(404).json({
+                success: true,
+                message: 'giftcard transaction not found'
+            });
+        }
+        const giftcard = {...check.toObject()}
+        return res.status(200).json({
+            success: true,
+            data: giftcard
+        });
+    } catch (error) {
+        return serverError(res, error);
+    }
+}
+
 // controller for getting a user's giftcard transactions
 exports.getUserGiftCardTransactions = async (req, res) => {
     const user_id  = req.params.id;
@@ -246,7 +274,7 @@ exports.setTransactionGiftCardState = async (req, res) => {
     }
 }
 
-// deleting a user by id
+// temporarily delete a giftcard
 exports.setGiftCardInactive = async (req, res) => {
     const {id} = req.params;
     try {
