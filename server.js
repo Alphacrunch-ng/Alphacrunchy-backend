@@ -14,7 +14,7 @@ const indexRoute = require('./routes/indexRoute');
 const options = require('./utils/swaggerOptions');
 const { connectChat } = require('./utils/services.js');
 const socket = require('./utils/socket.js');
-const { authRoles } = require('./middlewares/auth.js');
+const { authRoles, auth } = require('./middlewares/auth.js');
 const { roles } = require('./utils/constants.js');
 
 const app = express();
@@ -59,7 +59,7 @@ if (process.env.NODE_ENV === 'production'){
 
 
 
-app.get('/logs',authRoles(roles.admin), (req, res) => {
+app.get('/logs', auth ,authRoles(roles.admin), (req, res) => {
     fs.readdir(logDirectory, (err, files) => {
       if (err) {
         console.error('Error reading logs directory', err);
