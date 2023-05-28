@@ -19,8 +19,8 @@ const userSchema = new mongoose.Schema({
     sex: {
         type: String,
         enum: {
-            values: ['male', 'female'],
-            message: "status can either be 'male' or 'female'",
+            values: ['male', 'female', 'others'],
+            message: "status can either be 'male' or 'female' or 'others'",
         },
     },
     profilePicture_url : {
