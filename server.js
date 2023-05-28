@@ -13,7 +13,9 @@ const rfs = require('rotating-file-stream');
 const indexRoute = require('./routes/indexRoute');
 const options = require('./utils/swaggerOptions');
 const { connectChat } = require('./utils/services.js');
-const socket = require('./utils/socket.js')
+const socket = require('./utils/socket.js');
+const { authRoles } = require('./middlewares/auth.js');
+const { roles } = require('./utils/constants.js');
 
 const app = express();
 app.use(cors());
@@ -57,7 +59,7 @@ if (process.env.NODE_ENV === 'production'){
 
 
 
-app.get('/logs', (req, res) => {
+app.get('/logs',authRoles(roles.admin), (req, res) => {
     fs.readdir(logDirectory, (err, files) => {
       if (err) {
         console.error('Error reading logs directory', err);
