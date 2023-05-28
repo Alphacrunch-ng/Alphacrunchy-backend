@@ -43,12 +43,36 @@ const accessLogStream = rfs.createStream('access.log', {
   interval: '1d', // rotate daily
   path: logDirectory
 });
+
+// Serve the logs folder as a static directory
+app.use('/logs', express.static(logDirectory));
+
 if (process.env.NODE_ENV === 'production'){
     // create a write stream for logging to file
     app.use(morgan("combined",{ stream: accessLogStream }));
 }else {
+    app.use(morgan("combined",{ stream: accessLogStream }));
     app.use(morgan('dev'));
 }
+
+
+
+app.get('/logs', (req, res) => {
+    fs.readdir(logDirectory, (err, files) => {
+      if (err) {
+        console.error('Error reading logs directory', err);
+        res.status(500).send('Internal Server Error');
+      } else {
+        const fileLinks = files.map((file) => {
+          const filePath = path.join(logDirectory, file);
+          const fileUrl = `/logs/${file}`;
+          return `<a href="${fileUrl}">${file}</a>`;
+        });
+        const html = `<h1>Log Files</h1>${fileLinks.join('<br>')}`;
+        res.send(html);
+      }
+    });
+  });
 
 mongodb().then(()=>{
     app.use('/', indexRoute);

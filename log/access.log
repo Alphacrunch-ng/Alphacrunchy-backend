@@ -1,0 +1,3 @@
+::1 - - [27/May/2023:23:03:31 +0000] "GET /logs/ HTTP/1.1" 200 138 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36"
+::1 - - [27/May/2023:23:03:50 +0000] "GET /logs/20230528-0000-01-access.log HTTP/1.1" 200 1461 "http://localhost:5003/logs/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36"
+::1 - - [27/May/2023:23:03:54 +0000] "GET /logs/access.log HTTP/1.1" 200 424 "http://localhost:5003/logs/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36"
