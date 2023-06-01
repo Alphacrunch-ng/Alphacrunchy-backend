@@ -14,3 +14,7 @@
 ::1 - - [31/May/2023:14:36:33 +0000] "PUT /user/63e14439166b531cffdca6a6 HTTP/1.1" 200 437 "http://localhost:3000/" "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Mobile Safari/537.36"
 ::1 - - [31/May/2023:14:36:35 +0000] "PUT /user/63e14439166b531cffdca6a6 HTTP/1.1" 200 437 "http://localhost:3000/" "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Mobile Safari/537.36"
 ::1 - - [31/May/2023:14:40:30 +0000] "PUT /user/63e14439166b531cffdca6a6 HTTP/1.1" 200 437 "http://localhost:3000/" "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Mobile Safari/537.36"
+::1 - - [01/Jun/2023:13:21:44 +0000] "PUT /user/63e14439166b531cffdca6a6 HTTP/1.1" 200 438 "http://localhost:3000/" "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Mobile Safari/537.36"
+::1 - - [01/Jun/2023:13:23:43 +0000] "DELETE /user/picture/63e14439166b531cffdca6a6 HTTP/1.1" 200 486 "http://localhost:3000/" "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Mobile Safari/537.36"
+::1 - - [01/Jun/2023:13:31:27 +0000] "DELETE /user/picture/63c0afb041cb48b6650895da HTTP/1.1" 200 32 "-" "PostmanRuntime/7.32.2"
+::1 - - [01/Jun/2023:13:32:29 +0000] "DELETE /user/picture/63c0afb041cb48b6650895da HTTP/1.1" 200 32 "-" "PostmanRuntime/7.32.2"

@@ -1,4 +1,4 @@
-const { setInActiveUser, getUserById, updateUser, getUsers, getUserByEmail } = require('../controllers/usersController');
+const { setInActiveUser, getUserById, updateUser, getUsers, getUserByEmail, deleteUserProfilePicture } = require('../controllers/usersController');
 const upload = require('../middlewares/multer');
 
 
@@ -30,6 +30,9 @@ router.get('/:id', getUserById)
 
 // Update user By ID
 router.put('/:id', upload.single('profile_pic') , updateUser)
+
+// Update user By ID Delete Profile Picture
+router.delete('/picture/:id', deleteUserProfilePicture)
 
 // Delete user By ID
 router.put('/:id', setInActiveUser )
