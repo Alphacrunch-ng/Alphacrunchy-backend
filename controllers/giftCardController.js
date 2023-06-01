@@ -232,6 +232,26 @@ exports.getUserGiftCardTransactions = async (req, res) => {
     }
 }
 
+// controller for getting a user's giftcard transactions
+exports.getAllGiftCardTransactions = async (req, res) => {
+    try {
+        const check = await GiftCardTransaction.find();
+        if (!check) {
+            return res.status(404).json({
+                success: true,
+                message: 'giftcard transactions not found'
+            });
+        }
+        
+        return res.status(200).json({
+            success: true,
+            data: check
+        });
+    } catch (error) {
+        return serverError(res, error);
+    }
+}
+
 // approving a submitted giftcard by id
 exports.setTransactionGiftCardState = async (req, res) => {
     const {id} = req.params;
