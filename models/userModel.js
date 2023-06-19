@@ -4,7 +4,7 @@
 const mongoose = require('mongoose');
 const { roles } = require('../utils/constants');
 const { isEmail } = require('validator');
-const { encryptPasswordSetRole, modifiedAt, normalizeEmail } = require('./hooks');
+const { modifiedAt, normalizeEmail, setRole, encryptPassword } = require('./hooks');
 
 const userSchema = new mongoose.Schema({
     fullName : {
@@ -33,11 +33,14 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: ['true', 'phone number is required.']
     },
-    city : {
-        type: String
+    country : {
+        type: String,
     },
     state : {
         type: String,
+    },
+    city : {
+        type: String
     },
     address : {
         type: String,
@@ -70,6 +73,10 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    twoFactorAuth : {
+        type: Boolean,
+        default: false
+    },
     active : {
         type: Boolean,
         default: true
@@ -81,10 +88,17 @@ const userSchema = new mongoose.Schema({
 });
 
 //encrypts the password and sets the role
-userSchema.pre("save", encryptPasswordSetRole);
+userSchema.pre("save", encryptPassword);
+
+//encrypts the password and sets the role
+userSchema.pre("save", setRole);
 
 //setting modifiedAt to current time after every update
 userSchema.pre('save', modifiedAt);
+userSchema.pre('findOneAndUpdate', function(next) {
+    this._update.modifiedAt = new Date();
+    next();
+  });
 
 //normalizing user email to lowercase every update
 userSchema.pre('save', normalizeEmail);

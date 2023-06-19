@@ -123,7 +123,7 @@ exports.getUsers = async (request, response) => {
 // controller for updating a User
 exports.updateUser = async (req, res) => {
     try {
-        const {fullName, sex, phoneNumber, city, state, address} = req.body;
+        const {fullName, sex, phoneNumber, country, city, state, address} = req.body;
         const checkUser = await User.findOne({ id: req.params.id});
         if (!checkUser) {
             return res.status(204).json({
@@ -141,9 +141,9 @@ exports.updateUser = async (req, res) => {
             const profilePicture_url = cloudFile.secure_url;
             const profilePic_cloudId = cloudFile.public_id;
 
-            const user = await User.findByIdAndUpdate(req.params.id,{fullName, sex, phoneNumber, city, state, address, profilePicture_url, profilePic_cloudId}, {new: true}).select("-password");
+            const user = await User.findByIdAndUpdate(req.params.id,{fullName, sex, phoneNumber, country, city, state, address, profilePicture_url, profilePic_cloudId}, {new: true}).select("-password");
         }
-        const user = await User.findByIdAndUpdate(req.params.id,{fullName, sex, phoneNumber, city, state, address}, {new: true}).select("-password");
+        const user = await User.findByIdAndUpdate(req.params.id,{fullName, sex, phoneNumber, country, city, state, address}, {new: true}).select("-password");
         return res.status(200).json({
             status: 'success',
             data: user

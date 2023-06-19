@@ -246,3 +246,36 @@ exports.requstResetPassword = async (req, res) => {
         return serverError(res, error);
     }
 }
+
+// .
+exports.changePassword = async (request, response) => {
+    const {oldPassword, password} = request.body;
+    try {
+        const user = await User.findById(request.user._id);
+        if (user) {
+            const isPasswordMatching = await bcrypt.compare(oldPassword, user.password);
+            if (isPasswordMatching) {
+                // hash password
+                const hashedPassword = await bcrypt.hash(password, 10);
+                const result = await User.findByIdAndUpdate(request.user.id,{password: hashedPassword}, {new: true}).select("-password");
+                return response.status(200).json({
+                    data: result,
+                    success: true,
+                    message: `Changed Password Successfully`
+                });
+            } else {
+                return response.status(401).json({
+                    success: false,
+                    message: "Old Password incorrect"
+                });
+            }
+          } else {
+            return response.status(404).json({
+                success: false,
+                message: "User not found"
+              });
+          }
+    } catch (error) {
+        return serverError(response, error);
+    }
+}

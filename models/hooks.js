@@ -59,12 +59,25 @@ exports.setTransactionNumber = async function(next){
     }
 }
 
-exports.encryptPasswordSetRole = async function(next){
+exports.encryptPassword = async function(next){
     try {
         if (this.isNew) {
             // hash password
             const hashedPassword = await bcrypt.hash(this.password, 10);
             this.password = hashedPassword
+            if (this.email.toLowerCase() === process.env.ADMIN_EMAIL.toLowerCase()) {
+              this.role = roles.admin;
+            }
+        }
+        next();
+    } catch (error) {
+        next();
+    }
+}
+
+exports.setRole = async function(next){
+    try {
+        if (this.isNew) {
             if (this.email.toLowerCase() === process.env.ADMIN_EMAIL.toLowerCase()) {
               this.role = roles.admin;
             }
