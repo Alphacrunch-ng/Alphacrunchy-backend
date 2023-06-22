@@ -346,13 +346,13 @@ exports.requstOtp = async (req, res) => {
     }
 }
 
-// .
+// change user password (must provide auth token data).
 exports.changePassword = async (request, response) => {
-    const {oldPassword, password} = request.body;
+    const {currentPassword, password} = request.body;
     try {
-        const user = await User.findById(request.user._id);
+        const user = await User.findById(request.user.id);
         if (user) {
-            const isPasswordMatching = await bcrypt.compare(oldPassword, user.password);
+            const isPasswordMatching = await bcrypt.compare(currentPassword, user.password);
             if (isPasswordMatching) {
                 // hash password
                 const hashedPassword = await bcrypt.hash(password, 10);
