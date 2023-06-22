@@ -1,3 +1,0 @@
-::1 - - [19/Jun/2023:11:33:35 +0000] "PUT /user/63e14439166b531cffdca6a6 HTTP/1.1" 200 650 "http://localhost:3000/" "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36"
-::1 - - [19/Jun/2023:11:36:43 +0000] "PUT /user/63e14439166b531cffdca6a6 HTTP/1.1" 200 650 "http://localhost:3000/" "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36"
-::1 - - [19/Jun/2023:11:38:25 +0000] "PUT /user/63e14439166b531cffdca6a6 HTTP/1.1" 200 670 "http://localhost:3000/" "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36"

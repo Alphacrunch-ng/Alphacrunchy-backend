@@ -77,6 +77,41 @@ exports.resetPasswordMailer = (email, token) => {
     });
 }
 
+exports.otpMailer = (email, token) => {
+    const message = `
+    <h1>${product_name}.</h1>
+    <p>Your OTP is <b>${token}</b></p>
+    `;
+    
+    // setup email data with unicode symbols
+    let mailOptions = {
+        from: `"${product_name}" <${process.env.SENDER_EMAIL}>`,// sender address
+        to: `${email}`,
+        subject: `${product_name} Reset Password token`,//
+        text: `Your OTP is <b>${token}</b>. `,// subject
+        html: message, // html body
+    };
+
+
+    // create reusable transporter object using the default smtp transport
+    let transport = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: process.env.SENDER_EMAIL,
+            pass: process.env.SENDER_EMAIL_PASSWORD,
+        }
+    });
+    // send mail with defined transport object
+    transport.sendMail(mailOptions, (error, info) =>{
+        if(error) {
+            console.log(error);
+        }
+        else{
+            console.log("Email has been sent");
+        }
+    });
+}
+
 exports.noticeMailer = (email, operation) => {
             const message = `<div>
             <h1>Notification From ${product_name} App</h1>

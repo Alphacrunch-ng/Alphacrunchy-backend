@@ -1,6 +1,7 @@
-const { registration, loggingIn, confirmUserEmail, requstResetPassword, resetPassword, resetPin } = require('../controllers/authController');
+const { registration, loggingIn, confirmUserEmail, requstResetPassword, resetPassword, resetPin, changePassword } = require('../controllers/authController');
 const { getUserByEmail } = require('../controllers/usersController');
 const { createWallet } = require('../controllers/walletController');
+const {auth } = require('../middlewares/auth');
 
 const router = require('express').Router();
 /**
@@ -29,6 +30,9 @@ router.post('/reset-pin', resetPin)
 
 // Get user By email in query
 router.get('/email', getUserByEmail)
+
+//change user password
+router.post('/change-password', auth, changePassword)
 
 // Create user wallet
 router.post('/wallet/create', createWallet)

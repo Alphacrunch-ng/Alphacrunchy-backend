@@ -73,9 +73,24 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    twoFactorAuth : {
-        type: Boolean,
-        default: false
+    twoFactorAuth: {
+        enabled: {
+          type: Boolean,
+          default: false
+        },
+        secret: {
+          type: String
+        },
+        tempSecret: {
+          type: String
+        },
+        tempSecretExpiresAt: {
+          type: Date
+        },
+        contactInfo: {
+          type: String,
+          default: () => this.email // or this.phoneNumber
+        }
     },
     active : {
         type: Boolean,
