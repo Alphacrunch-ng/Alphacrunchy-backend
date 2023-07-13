@@ -5,6 +5,7 @@ exports.roles = {
 }
 
 exports.operations = {
+    changedWalletPin: 'Changed Wallet Pin',
     changedPassword: 'Changed Password',
     requestResetPassword: 'Request Reset Password',
     debit: 'Debit',

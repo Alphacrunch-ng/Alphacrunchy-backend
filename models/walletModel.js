@@ -3,6 +3,9 @@
 // importing mongoose
 const mongoose = require('mongoose');
 const { modifiedAt, setWalletNumber } = require('./hooks');
+const {currencies} = require('../utils/currencies.json');
+
+const Naira = currencies.find(e => e.symbol ==='₦')
 
 
 const walletSchema = new mongoose.Schema({
@@ -20,6 +23,14 @@ const walletSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    currency: {
+        type: {
+            code: String,
+            name: String,
+            symbol: String
+        },
+        default: {...Naira}
+    },
     createdAt: {
         type: Date,
         default: Date.now()
@@ -27,6 +38,10 @@ const walletSchema = new mongoose.Schema({
     modifiedAt: {
         type: Date,
         default: Date.now()
+    },
+    default : {
+        type: Boolean,
+        default: false
     },
     active : {
         type: Boolean,

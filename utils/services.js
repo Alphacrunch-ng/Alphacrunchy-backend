@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const phones = require('./phone.json');
 
 function generateRandomString(length) {
     return crypto.randomBytes(Math.ceil(length/2))
@@ -22,6 +23,7 @@ exports.createWalletNumber = (length) =>{
     return generateRandomString(length).toUpperCase();
 }
 
+// not implemented
 exports.connectChat = (socket) => {
     socket.on('admin', (user)=>{
         socket.join(user);
@@ -32,6 +34,22 @@ exports.connectChat = (socket) => {
         });
         console.log(`${user} has joined been connected`);
     })
-
-    
 }
+
+exports.phoneFormater = (phone, country) => {
+    let countryPhone = {}
+    if (phone[0] === "+") {
+        return phone;
+    }
+    phones.forEach(phoneNum => {
+        if (phoneNum.name.includes(country)) {
+            countryPhone = phoneNum
+        }
+    });
+    return countryPhone + phone.slice(1)
+}
+
+exports.formatEmail = (email) => {
+    let firstPartEmail = email.slice(0,email.indexOf('@'));
+    return `${firstPartEmail.slice(0,3)}***${email.slice(email.indexOf('@'))}`
+   }

@@ -1,4 +1,5 @@
 
+const { changeWalletPin } = require('../controllers/authController');
 const { getWalletById, setUserWalletInactive, createWallet, getWallets, creditWallet, debitWallet, wallet2WalletTransfer } = require('../controllers/walletController');
 
 
@@ -19,9 +20,10 @@ router.get('/', (req, res)=>{
     res.send('welcome to wallet sir');
 });
 
-router.get('/wallets', getWallets);
+// get user wallets by user id
+router.get('/wallets/:id', getWallets);
 
-// Get user wallet By ID
+// Get user wallet By wallet ID
 router.get('/:id', getWalletById)
 
 //credit a user wallet
@@ -33,8 +35,12 @@ router.post('/debit', debitWallet)
 //wallet to wallet transfer 
 router.post('/transfer', wallet2WalletTransfer)
 
+// change user wallet pin
+router.put('/change-pin', changeWalletPin )
+
 // Delete user wallet temporarily By ID
 router.put('/:id', setUserWalletInactive )
+
 
 
 module.exports = router;

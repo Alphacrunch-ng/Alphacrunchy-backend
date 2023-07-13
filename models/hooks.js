@@ -44,7 +44,23 @@ exports.setWalletNumber = async function(next){
         }
         next();
     } catch (error) {
+        console.log('Error in setWalletNumber', err)
         next();
+    }
+}
+
+exports.set2FA = async function(next){
+    try{
+        if (this.isNew) {
+            this.twoFactorAuth.email = this.email
+            this.twoFactorAuth.phoneNumber = this.phoneNumber
+            this.twoFactorAuth.secret = '',
+            this.twoFactorAuth.enabled = false
+        }
+        next();
+    }catch(error){
+        console.log('Error in setTwoFa', err)
+        next()
     }
 }
 

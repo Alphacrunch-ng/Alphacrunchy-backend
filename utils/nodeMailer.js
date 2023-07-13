@@ -3,7 +3,6 @@ const { product_name } = require('./constants');
 
 
 exports.signUpMailer = (name, email, token) => {
-    var emailSent = false;
     const message = `
     <h1> Welcome to ${product_name}. ${name}</h1>
     <p>Your account has been sucessfully created</p>
@@ -19,25 +18,7 @@ exports.signUpMailer = (name, email, token) => {
     };
 
     // create reusable transporter object using the default smtp transport
-    let transport = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-            user: process.env.SENDER_EMAIL,
-            pass: process.env.SENDER_EMAIL_PASSWORD,
-        }
-    });
-    // send mail with defined transport object
-    transport.sendMail(mailOptions, (error, info) =>{
-        if(error) {
-            console.log(error);
-        }
-        else{
-            
-            emailSent = true;
-            console.log("Email has been sent");
-        }
-    });
-    return emailSent;
+    transportSender(mailOptions);
 }
 
 
@@ -59,24 +40,10 @@ exports.resetPasswordMailer = (email, token) => {
 
 
     // create reusable transporter object using the default smtp transport
-    let transport = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-            user: process.env.SENDER_EMAIL,
-            pass: process.env.SENDER_EMAIL_PASSWORD,
-        }
-    });
-    // send mail with defined transport object
-    transport.sendMail(mailOptions, (error, info) =>{
-        if(error) {
-            console.log(error);
-        }
-        else{
-            console.log("Email has been sent");
-        }
-    });
+    transportSender(mailOptions);
 }
 
+//general purpose mailer for otp
 exports.otpMailer = (email, token) => {
     const message = `
     <h1>${product_name}.</h1>
@@ -87,29 +54,14 @@ exports.otpMailer = (email, token) => {
     let mailOptions = {
         from: `"${product_name}" <${process.env.SENDER_EMAIL}>`,// sender address
         to: `${email}`,
-        subject: `${product_name} Reset Password token`,//
+        subject: `${product_name} Otp token`,//
         text: `Your OTP is <b>${token}</b>. `,// subject
         html: message, // html body
     };
 
 
     // create reusable transporter object using the default smtp transport
-    let transport = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-            user: process.env.SENDER_EMAIL,
-            pass: process.env.SENDER_EMAIL_PASSWORD,
-        }
-    });
-    // send mail with defined transport object
-    transport.sendMail(mailOptions, (error, info) =>{
-        if(error) {
-            console.log(error);
-        }
-        else{
-            console.log("Email has been sent");
-        }
-    });
+    return transportSender(mailOptions);
 }
 
 exports.noticeMailer = (email, operation) => {
@@ -130,30 +82,16 @@ exports.noticeMailer = (email, operation) => {
             };
         
             // create reusable transporter object using the default smtp transport
-            let transport = nodemailer.createTransport({
-                service: "gmail",
-                auth: {
-                    user: process.env.SENDER_EMAIL,
-                    pass: process.env.SENDER_EMAIL_PASSWORD,
-                }
-            });
-            // send mail with defined transport object
-            transport.sendMail(mailOptions, (error, info) =>{
-                if(error) {
-                    console.log(error);
-                }
-                else{
-                    console.log("Email has been sent");
-                }
-            });
+            transportSender(mailOptions);
 }
 
 exports.transactionMailer = (email, operation, amount, description) => {
-    const message = `<div>
+    const message = `
+    <div>
     <h1>Notification From ${product_name} App</h1>
     <p>Notifying you of ${operation} action on you account</p>
-    <table>
-      <thead>
+    <table  style="width:30rem;color:black;text-align:left;font-family:sans-serif;padding:0;margin:0;">
+      <thead style="background-color:#808080;border: solid blue 1px;color:white;padding:1rem;" >
         <tr>
           <th>Email</th>
           <th>Description</th>
@@ -161,18 +99,18 @@ exports.transactionMailer = (email, operation, amount, description) => {
           <th>Operation</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody style="width:30rem;color:black;border: solid black 1px;text-align:left;padding:0.5rem">
         <tr>
           <td>${email}</td>
-          <td>${description}</td>
+          <td style="color:blue;">${description}</td>
           <td>${amount}</td>
           <td>${operation}</td>
         </tr>
       </tbody>
     </table>
     <p>If this was not initiated by you please contact customer care</p>
-    <p>Thank You</p>
-    </div>`
+    <p style="">Thank You</p>
+ </div>`
     
     // setup email data with unicode symbols
     let mailOptions = {
@@ -183,6 +121,10 @@ exports.transactionMailer = (email, operation, amount, description) => {
         html: message, // html body
     };
 
+    transportSender(mailOptions);
+}
+
+const transportSender = (mailOptions) => {
     // create reusable transporter object using the default smtp transport
     let transport = nodemailer.createTransport({
         service: "gmail",
@@ -192,12 +134,5 @@ exports.transactionMailer = (email, operation, amount, description) => {
         }
     });
     // send mail with defined transport object
-    transport.sendMail(mailOptions, (error, info) =>{
-        if(error) {
-            console.log(error);
-        }
-        else{
-            console.log("Email has been sent");
-        }
-    });
-}
+    return transport.sendMail(mailOptions);
+} 

@@ -141,9 +141,9 @@ exports.updateUser = async (req, res) => {
             const profilePicture_url = cloudFile.secure_url;
             const profilePic_cloudId = cloudFile.public_id;
 
-            const user = await User.findByIdAndUpdate(req.params.id,{fullName, sex, phoneNumber, country, city, state, address, profilePicture_url, profilePic_cloudId}, {new: true}).select("-password");
+            const user = await User.findByIdAndUpdate(req.params.id,{fullName, sex, country, city, state, address, profilePicture_url, profilePic_cloudId}, {new: true}).select("-password");
         }
-        const user = await User.findByIdAndUpdate(req.params.id,{fullName, sex, phoneNumber, country, city, state, address}, {new: true}).select("-password");
+        const user = await User.findByIdAndUpdate(req.params.id,{fullName, sex, country, city, state, address}, {new: true}).select("-password");
         return res.status(200).json({
             status: 'success',
             data: user

@@ -1,4 +1,4 @@
-const { registration, loggingIn, confirmUserEmail, requstResetPassword, resetPassword, resetPin, changePassword } = require('../controllers/authController');
+const { registration, loggingIn, confirmUserEmail, requstResetPassword, resetPassword, resetPin, changePassword, requestOtp, setup2Factor, twoFactorLoggingIn } = require('../controllers/authController');
 const { getUserByEmail } = require('../controllers/usersController');
 const { createWallet } = require('../controllers/walletController');
 const {auth } = require('../middlewares/auth');
@@ -13,6 +13,9 @@ const router = require('express').Router();
 // register a user
 router.post('/signup', registration);
 
+// 2FA login a user
+router.post('/2fa-login', twoFactorLoggingIn);
+
 // login a user
 router.post('/login', loggingIn);
 
@@ -22,11 +25,17 @@ router.post('/confirm-email', confirmUserEmail)
 // request reset password for user using email
 router.post('/request-password-change', requstResetPassword)
 
+// request sms otp for user using sms
+router.post('/request-otp', requestOtp)
+
+// enable 2fa sms otp for user using sms
+router.post('/enable-2fa', auth, setup2Factor)
+
 // reset a user's password.
 router.post('/reset-password', resetPassword)
 
 // reset a user's wallet pin.
-router.post('/reset-pin', resetPin)
+router.post('/reset-pin', auth, resetPin)
 
 // Get user By email in query
 router.get('/email', getUserByEmail)
@@ -35,6 +44,6 @@ router.get('/email', getUserByEmail)
 router.post('/change-password', auth, changePassword)
 
 // Create user wallet
-router.post('/wallet/create', createWallet)
+router.post('/wallet/create', auth, createWallet)
 
 module.exports = router;

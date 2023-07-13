@@ -4,7 +4,8 @@
 const mongoose = require('mongoose');
 const { roles } = require('../utils/constants');
 const { isEmail } = require('validator');
-const { modifiedAt, normalizeEmail, setRole, encryptPassword } = require('./hooks');
+const { modifiedAt, normalizeEmail, setRole, encryptPassword, set2FA } = require('./hooks');
+const { phoneFormater } = require('../utils/services');
 
 const userSchema = new mongoose.Schema({
     fullName : {
@@ -35,6 +36,7 @@ const userSchema = new mongoose.Schema({
     },
     country : {
         type: String,
+        default: "Nigeria"
     },
     state : {
         type: String,
@@ -79,17 +81,12 @@ const userSchema = new mongoose.Schema({
           default: false
         },
         secret: {
-          type: String
-        },
-        tempSecret: {
-          type: String
-        },
-        tempSecretExpiresAt: {
-          type: Date
-        },
-        contactInfo: {
           type: String,
-          default: () => this.email // or this.phoneNumber
+          default: ''
+        },
+        expiresAt: {
+          type: Date,
+          default: Date.now()
         }
     },
     active : {
@@ -107,6 +104,8 @@ userSchema.pre("save", encryptPassword);
 
 //encrypts the password and sets the role
 userSchema.pre("save", setRole);
+
+userSchema.pre("save", set2FA);
 
 //setting modifiedAt to current time after every update
 userSchema.pre('save', modifiedAt);

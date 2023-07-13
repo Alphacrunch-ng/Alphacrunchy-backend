@@ -8,29 +8,43 @@ const { serverError } = require('../utils/services.js');
 const { createNotification } = require('./notificationController');
 const { operations } = require('../utils/constants');
 const { createTransaction } = require('./transactionController');
+const { currencies } = require('../utils/currencies.json')
 
 
 // controller for creating a User wallet
 exports.createWallet = async (req, res) => {
-    const {wallet_pin, id} = req.body;
+    const {wallet_pin, id, currency_code} = req.body;
+    //checking if the sent currency code exist in the collection of supported currency
+    const checkCurrency = currencies.filter((currency) => currency.code === String(currency_code).trim().toLocaleUpperCase());
+    let selectedCurrency = {};
+    if (checkCurrency.length < 1) {
+        return res.status(400).json({
+            success: false,
+            message: 'invalid currency code'
+        })
+    }
+    selectedCurrency = checkCurrency[0];
     try {
-        const checkWallet = await Wallet.findOne({ user_id: id}).select("-wallet_pin");
-        if (!checkWallet) {
+        const checkWallets = await Wallet.find({ user_id: id}).select("-wallet_pin");
+
+        //checking if user already has an wallet with provided currency
+        const checkWalletCurrency = checkWallets.filter((wallet)=> wallet.currency.code === selectedCurrency.code)
+        if (checkWalletCurrency.length > 0 ) {
+            return res.status(400).json({
+                success: false,
+                message: `wallet with ${selectedCurrency.code} already exist.`
+            })
+        }
+       
+        
             const hashedPin = await bcrypt.hash(wallet_pin, 10);
-            const wallet = await Wallet.create({ wallet_pin: hashedPin, user_id: id });
+            const wallet = await Wallet.create({ wallet_pin: hashedPin, user_id: id, currency: selectedCurrency, default:(checkWallets.length < 1)});
             wallet.wallet_pin = "";
             return res.status(201).json({
                 data: wallet,
                 status: 'success',
                 message: 'user wallet successfully created.'
-            })
-        }
-        else{
-            return res.status(404).json({
-                status: 'failed',
-                message: 'user already has a wallet'
             });
-        }
     } catch (error) {
         return serverError(res, error);
     }
@@ -174,7 +188,7 @@ exports.wallet2WalletTransfer = async (req, res) => {
     }
 }
 
-// controller for getting a User wallet by id
+// controller for getting a User wallet by wallet id
 exports.getWalletById = async (req, res) => {
     try {
         const checkWallet = await Wallet.findOne({ _id: req.params.id}).select("-wallet_pin").populate({
@@ -216,17 +230,16 @@ exports.setUserWalletInactive = async (request, response) => {
         }
           
     } catch (error) {
-        return serverError(res, error);
+        return serverError(response, error);
     }
 }
 
 // get all user wallets, both active and inactive or either one by passing the active parameter.
-exports.getWallets = async (request, response, next) => {
+exports.getWallets = async (request, response) => {
     const {pageSize, page, active} = request.query;
     const {id} = request.params
-
     try {
-        const wallets = await Wallet.find(active? {_id: id, active}: {_id: id})
+        const wallets = await Wallet.find(active? {user_id: id, active}: {user_id: id})
                                 .select("-wallet_pin")
                                 .limit(pageSize? +pageSize : 30 )
                                 .skip(page? (+page - 1) * +pageSize : 0)
@@ -245,6 +258,6 @@ exports.getWallets = async (request, response, next) => {
         }
           
     } catch (error) {
-        return serverError(res, error);
+        return serverError(response, error);
     }
 }

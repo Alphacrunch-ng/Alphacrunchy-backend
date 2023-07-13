@@ -1,0 +1,34 @@
+{
+    "currencies": [
+      {
+        "code": "USD",
+        "name": "United States Dollar",
+        "symbol": "$"
+      },
+      {
+        "code": "EUR",
+        "name": "Euro",
+        "symbol": "€"
+      },
+      {
+        "code": "JPY",
+        "name": "Japanese Yen",
+        "symbol": "¥"
+      },
+      {
+        "code": "GBP",
+        "name": "British Pound Sterling",
+        "symbol": "£"
+      },
+      {
+        "code": "CNY",
+        "name": "Chinese Yuan Renminbi",
+        "symbol": "¥"
+      },
+      {
+        "code": "NGN",
+        "name": "Nigerian Naira",
+        "symbol": "₦"
+      }
+    ]
+}  

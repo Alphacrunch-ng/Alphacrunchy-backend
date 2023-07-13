@@ -2,10 +2,10 @@ const bcrypt = require('bcrypt');
 const User = require('../models/userModel.js');
 const Wallet = require('../models/walletModel.js');
 const { signUpMailer, resetPasswordMailer, noticeMailer, otpMailer } = require('../utils/nodeMailer.js');
-const { serverError, createOtp } = require('../utils/services.js');
+const { serverError, createOtp, formatEmail } = require('../utils/services.js');
 const { operations } = require('../utils/constants.js');
 const jwt = require('jsonwebtoken');
-const { sendSmsOtp } = require('../utils/twilio.js');
+const { sendSmsOtp } = require('../utils/smsService.js');
 
 // controller for signing up
 exports.registration = async (req, res) => {
@@ -18,7 +18,7 @@ exports.registration = async (req, res) => {
             });
         }
         else {
-            const { fullName, email, phoneNumber, password } = req.body;
+            const { fullName, email, phoneNumber, password, country } = req.body;
             const otp = createOtp();
             const hashedOtp = await bcrypt.hash(otp.toString(), 10);
             var user = await User.create({
@@ -50,43 +50,75 @@ exports.loggingIn = async (request, response) => {
     const {email, password} = request.body;
     try {
         const user = await User.findOne({ email: email });
-        const checkWallet = await Wallet.findOne({user_id: user._id}).select("-wallet_pin");
+        const checkWallets = await Wallet.find({user_id: user._id}).select("-wallet_pin");
         if (user) {
             const isPasswordMatching = await bcrypt.compare(password, user.password);
+            
             if (!user.confirmedEmail) {
                 return response.status(400).json({
                     success: false,
                     message: "email not yet confirmed, please check your email or create new otp"
                   });
             }
+            // if 2 factor auth is enable we generate the otp here for and send an sms
             if (isPasswordMatching) {
+                if (user.twoFactorAuth?.enabled) {
+                    const otp =  createOtp();
+                    const hashedOtp = await bcrypt.hash(otp.toString(), 10);
 
-                const secret = process.env.JWT_SECRET;
+                    user.twoFactorAuth.secret = hashedOtp
+                    user.twoFactorAuth.expiresAt = new Date( Date.now() + 2 * 60 * 1000)
 
-                const dataStoredInToken = {
-                    id: user._id.toString(),
-                    email: user.email,
-                    fullName: user.fullName,
-                    role: user.role
-                  };
+                    const otpPhone = `${user.phoneNumber.slice(0,7)}...${user.phoneNumber.slice(-2)}` // making the phonenumber to this format 0801...89
+                    const otpEmail = formatEmail(user.email)
+                    await User.findByIdAndUpdate({_id: user._id},{ twoFactorAuth: user.twoFactorAuth }).catch((error)=>{
+                        console.log(error);
+                    })
+                    await Promise.all([otpMailer(user.email, otp), sendSmsOtp(user.phoneNumber, otp)])
+                    .then(() => {
+                        return response.status(200).json({
+                            is2FactorEnabled: true,
+                            data: user,
+                            success: true,
+                            message: `An OTP has been sent to: ${otpPhone} and ${otpEmail}`,
+                            expiresIn: user.twoFactorAuth.expiresAt,
+                        });
+                    })
+                    .catch((error) => {
+                        console.log(error);
+                        return serverError(response, error);
+                    });
 
-                //signing token
-                const token = jwt.sign(dataStoredInToken,secret,{
-                  expiresIn:"7d",
-                  audience: process.env.JWT_AUDIENCE,
-                  issuer: process.env.JWT_ISSUER
-                });
-                user.password = "";
-                const today = new Date();
+                    
+                } else {
+                    const secret = process.env.JWT_SECRET;
 
-                return response.status(200).json({
-                    data: user,
-                    wallet: checkWallet,
-                    success: true,
-                    message: `Login Successfull`,
-                    token: token,
-                    expiresIn: new Date(today.getTime() + (6 * 24 * 60 * 60 * 1000))
-                });
+                    const dataStoredInToken = {
+                        id: user._id.toString(),
+                        email: user.email,
+                        fullName: user.fullName,
+                        role: user.role
+                    };
+
+                    //signing token
+                    const token = jwt.sign(dataStoredInToken,secret,{
+                    expiresIn:"7d",
+                    audience: process.env.JWT_AUDIENCE,
+                    issuer: process.env.JWT_ISSUER
+                    });
+                    user.password = "";
+                    const today = new Date();
+
+                    return response.status(200).json({
+                        data: user,
+                        wallets: checkWallets,
+                        success: true,
+                        is2FactorEnabled: false,
+                        message: `Login Successfull`,
+                        token: token,
+                        expiresIn: new Date(today.getTime() + (6 * 24 * 60 * 60 * 1000))
+                    });
+                }
             } else {
                 return response.status(401).json({
                     success: false,
@@ -109,9 +141,15 @@ exports.twoFactorLoggingIn = async (request, response) => {
     const {email, otp} = request.body;
     try {
         const user = await User.findOne({ email: email });
-        const checkWallet = await Wallet.findOne({user_id: user._id}).select("-wallet_pin");
+        const checkWallets = await Wallet.find({user_id: user._id}).select("-wallet_pin");
         if (user) {
-            const isOtpMatching = await bcrypt.compare(otp, user.twoFactorAuth?.tempSecret);
+            const isOtpMatching = await bcrypt.compare(otp, user.twoFactorAuth?.secret);
+            if (user.twoFactorAuth.expiresAt < Date.now()) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'otp expired'
+                });
+            }
             if (!user.confirmedEmail) {
                 return response.status(400).json({
                     success: false,
@@ -135,7 +173,7 @@ exports.twoFactorLoggingIn = async (request, response) => {
                     role: user.role
                   };
 
-                //signing token
+                //creating token
                 const token = jwt.sign(dataStoredInToken,secret,{
                   expiresIn:"7d",
                   audience: process.env.JWT_AUDIENCE,
@@ -144,9 +182,22 @@ exports.twoFactorLoggingIn = async (request, response) => {
                 user.password = "";
                 const today = new Date();
 
+                //resetting the 2 factor properties to default value
+                const updatedUser =  await User.findOneAndUpdate(
+                    { _id: user._id }, // Specify the query condition to find the user
+                    { 
+                      $unset: { 'twoFactorAuth.expiresAt': 1 }, // Unset the tempSecretExpiresAt field
+                      $set: { 'twoFactorAuth.secret': '' } // Set the secret field to an empty string
+                    },
+                    { 
+                      new: true, // Return the updated document
+                      setDefaultsOnInsert: true // Apply default values on insert
+                    }
+                ).select('-password')
+
                 return response.status(200).json({
-                    data: user,
-                    wallet: checkWallet,
+                    data: updatedUser,
+                    wallets: checkWallets,
                     success: true,
                     message: `Login Successfull`,
                     token: token,
@@ -155,7 +206,7 @@ exports.twoFactorLoggingIn = async (request, response) => {
             } else {
                 return response.status(401).json({
                     success: false,
-                    message: "Username or Password incorrect"
+                    message: "Wrong OTP"
                   });
             }
           } else {
@@ -240,7 +291,7 @@ exports.resetPassword = async (req, res) => {
     }
 }
 
-// controller for reseting a User's password
+// controller for reseting a User's wallet pin
 exports.resetPin = async (req, res) => {
     const {otp, wallet_number, pin} = req.body;
 
@@ -248,6 +299,12 @@ exports.resetPin = async (req, res) => {
         return res.status(404).json({
             success: false,
             message: 'invalid pin'
+        });
+    }
+    if (!wallet_number) {
+        return res.status(404).json({
+            success: false,
+            message: 'invalid wallet number '+ wallet_number
         });
     }
     try {
@@ -265,22 +322,75 @@ exports.resetPin = async (req, res) => {
                 message: 'wallet not found'
             });
         }
-        const isMatching = await bcrypt.compare(otp, checkUser.otp);
+        const isMatching = await bcrypt.compare(otp, checkUser.twoFactorAuth?.secret);
         if (isMatching) {
+            if (checkUser.twoFactorAuth.expiresAt < Date.now()) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'otp expired'
+                });
+            }
             const hashedPin = await bcrypt.hash(pin, 10);
             const wallet = await Wallet.findOneAndUpdate({wallet_number},{ wallet_pin: hashedPin});
             await User.findByIdAndUpdate({_id: checkWallet.user_id}, {otp: ""})
-            noticeMailer(checkUser.email, operations.changedPassword);
+            noticeMailer(checkUser.email, operations.changedWalletPin);
             return res.status(200).json({
                 data: wallet,
                 success: true,
-                message: 'Password changed successfully.'
+                message: 'Wallet Pin changed successfully.'
             });
         }
         else {
             return res.status(400).json({
                 success: false,
                 message: 'otp not matched'
+            });
+        }
+    } catch (error) {
+        return serverError(res, error);
+    }
+}
+
+// controller for reseting a User's wallet pin
+exports.changeWalletPin = async (req, res) => {
+    const {wallet_number, current_pin, pin} = req.body;
+
+    if (parseInt(pin)< 1000 || parseInt(pin) > 9999) {
+        return res.status(404).json({
+            success: false,
+            message: 'invalid new pin'
+        });
+    }
+    try {
+        const checkWallet = await Wallet.findOne({wallet_number}).lean();
+        const checkUser = await User.findOne({ _id: checkWallet.user_id}).lean();
+        if (!checkUser) {
+            return res.status(404).json({
+                success: false,
+                message: 'user not found'
+            });
+        }
+        if (!checkWallet) {
+            return res.status(404).json({
+                success: false,
+                message: 'wallet not found'
+            });
+        }
+        const isMatching = await bcrypt.compare(current_pin, checkWallet.wallet_pin);
+        if (isMatching) {
+            const hashedPin = await bcrypt.hash(pin, 10);
+            const wallet = await Wallet.findOneAndUpdate({wallet_number},{ wallet_pin: hashedPin }, { new: true });
+            noticeMailer(checkUser.email, operations.changedWalletPin);
+            return res.status(200).json({
+                data: wallet,
+                success: true,
+                message: 'Wallet Pin changed successfully.'
+            });
+        }
+        else {
+            return res.status(400).json({
+                success: false,
+                message: 'old pin incorrect'
             });
         }
     } catch (error) {
@@ -313,33 +423,84 @@ exports.requstResetPassword = async (req, res) => {
     }
 }
 
-exports.requstOtp = async (req, res) => {
+//uses either email or phone number
+exports.requestOtp = async (req, res) => {
     const {email, phoneNumber} = req.body;
     try {
         
         const otp =  createOtp();
         const hashedOtp = await bcrypt.hash(otp.toString(), 10);
-        var checkUser = await User.findOne(email? { email: email} : { phoneNumber : phoneNumber }).lean();
-
+        var checkUser = await User.findOne(email? { email} : { phoneNumber }).lean();
         if (!checkUser) {
             return res.status(404).json({
                 status: 'failed',
                 message: 'user not found'
             });
         }
-        if (!checkUser.twoFactorAuth.enabled) {
-            return res.status(401).json({
+        
+        checkUser.twoFactorAuth.secret = hashedOtp
+        checkUser.twoFactorAuth.expiresAt = new Date( Date.now() + 2 * 60 * 1000) // expires in 10mins time
+
+        await User.findByIdAndUpdate({_id: checkUser._id},{ twoFactorAuth: checkUser.twoFactorAuth })
+        try {
+            if (email) {
+                otpMailer(checkUser.email, otp)
+            }
+            sendSmsOtp(checkUser.phoneNumber, otp)
+        } catch (error) {
+            return res.status(500).json({
                 status: 'failed',
-                message: '2 factor authentication not activated'
+                message: 'an error has occured we are working on it',
+                error: error
             });
         }
+        const minutes = Math.floor((checkUser.twoFactorAuth.expiresAt.getTime() - Date.now()) / 60000);
+        return res.status(200).json({
+            status: 'success',
+            message: `otp sent and expires in ${minutes} minutes`,
+            expiresIn: checkUser.twoFactorAuth.expiresAt
+        });
         
-        await User.findByIdAndUpdate({_id: checkUser._id},{ otp: hashedOtp });
-        email? otpMailer(checkUser.email, otp) : sendSmsOtp(checkUser.phoneNumber, otp);
-            return res.status(200).json({
-                status: 'success',
-                message: 'otp sent'
+    } catch (error) {
+        return serverError(res, error);
+    }
+}
+
+exports.setup2Factor = async (req, res) => {
+    const {email, phoneNumber, otp} = req.body;
+    try {
+        var checkUser = await User.findOne(email? { email} : { phoneNumber }).lean();
+        const isOtpMatching = await bcrypt.compare(otp, checkUser.twoFactorAuth?.secret);
+        if (!checkUser) {
+            return res.status(404).json({
+                status: 'failed',
+                message: 'user not found'
             });
+        }
+        if (checkUser.twoFactorAuth?.enabled) {
+            return res.status(401).json({
+                status: 'failed',
+                message: '2 factor authentication already activated'
+            });
+        }
+
+        if (isOtpMatching) {
+            const twoFA ={
+                enabled : true
+            }
+    
+            const activatedUser = await User.findByIdAndUpdate({_id: checkUser._id},{ twoFactorAuth: {...twoFA} }, { new: true}).select('-password');
+            return res.status(200).json({
+                data: activatedUser,
+                status: 'success',
+                 message: `2 factor authentication activated`
+            });
+        } else {
+            return res.status(401).json({
+                status: 'failed',
+                message: 'otp not matching'
+            });
+        }
         
     } catch (error) {
         return serverError(res, error);

@@ -110,7 +110,7 @@ exports.createTransaction = async (user_id, description, amount , operation)=> {
         if (!checkUser) {
           throw new Error("user_id not found");
       }
-        transactionMailer(checkUser.email, operation)
+        transactionMailer(checkUser.email, operation, amount, description)
         const newTransaction = new Transaction({ user_id, description, amount });
         const saveTransaction = await newTransaction.save();
         return saveTransaction;
