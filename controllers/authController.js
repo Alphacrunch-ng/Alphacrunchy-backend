@@ -74,7 +74,10 @@ exports.loggingIn = async (request, response) => {
                     await User.findByIdAndUpdate({_id: user._id},{ twoFactorAuth: user.twoFactorAuth }).catch((error)=>{
                         console.log(error);
                     })
-                    await Promise.all([otpMailer(user.email, otp), sendSmsOtp(user.phoneNumber, otp)])
+                    await Promise.all([
+                        otpMailer(user.email, otp), 
+                        // sendSmsOtp(user.phoneNumber, otp)
+                    ])
                     .then(() => {
                         return response.status(200).json({
                             is2FactorEnabled: true,
@@ -443,10 +446,11 @@ exports.requestOtp = async (req, res) => {
 
         await User.findByIdAndUpdate({_id: checkUser._id},{ twoFactorAuth: checkUser.twoFactorAuth })
         try {
-            if (email) {
-                otpMailer(checkUser.email, otp)
-            }
-            sendSmsOtp(checkUser.phoneNumber, otp)
+            otpMailer(checkUser.email, otp)
+            // if (email) {
+            //     otpMailer(checkUser.email, otp)
+            // }
+            // sendSmsOtp(checkUser.phoneNumber, otp)
         } catch (error) {
             return res.status(500).json({
                 status: 'failed',
@@ -467,37 +471,38 @@ exports.requestOtp = async (req, res) => {
 }
 
 exports.setup2Factor = async (req, res) => {
-    const {email, phoneNumber, otp} = req.body;
+    const {email, phoneNumber, otp, state} = req.body;
     try {
         var checkUser = await User.findOne(email? { email} : { phoneNumber }).lean();
         const isOtpMatching = await bcrypt.compare(otp, checkUser.twoFactorAuth?.secret);
         if (!checkUser) {
             return res.status(404).json({
-                status: 'failed',
+                success: false,
                 message: 'user not found'
-            });
-        }
-        if (checkUser.twoFactorAuth?.enabled) {
-            return res.status(401).json({
-                status: 'failed',
-                message: '2 factor authentication already activated'
             });
         }
 
         if (isOtpMatching) {
-            const twoFA ={
-                enabled : true
+            const twoFA = {
+                enabled : state,
+                secret : ''
             }
     
-            const activatedUser = await User.findByIdAndUpdate({_id: checkUser._id},{ twoFactorAuth: {...twoFA} }, { new: true}).select('-password');
+            if (checkUser.twoFactorAuth.expiresAt < Date.now()) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'otp expired'
+                });
+            }
+            const setUser = await User.findByIdAndUpdate({_id: checkUser._id},{ twoFactorAuth: {...twoFA} }, { new: true}).select('-password');
             return res.status(200).json({
-                data: activatedUser,
-                status: 'success',
-                 message: `2 factor authentication activated`
+                data: setUser,
+                success: true,
+                message: `2 factor authentication ${setUser.twoFactorAuth.enabled? 'activated': 'deactivated'}`
             });
         } else {
             return res.status(401).json({
-                status: 'failed',
+                success: false,
                 message: 'otp not matching'
             });
         }

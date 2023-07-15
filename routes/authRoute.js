@@ -29,7 +29,7 @@ router.post('/request-password-change', requstResetPassword)
 router.post('/request-otp', requestOtp)
 
 // enable 2fa sms otp for user using sms
-router.post('/enable-2fa', auth, setup2Factor)
+router.post('/set-2fa', auth, setup2Factor)
 
 // reset a user's password.
 router.post('/reset-password', resetPassword)
