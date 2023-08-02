@@ -9,6 +9,7 @@ const GiftCardTransaction = require('../models/giftcardTransactionModel');
 const mongoose = require('mongoose');
 const { createTransaction } = require('./transactionController');
 const { Status } = require('../utils/constants');
+const { getCacheData, setCacheData } = require('../utils/cache');
 const ObjectId = mongoose.Types.ObjectId;
 
 
@@ -319,13 +320,24 @@ exports.setGiftCardInactive = async (req, res) => {
 // get all giftcards, both active and inactive or either one by passing the active parameter.
 exports.getAllGiftCards = async (req, res) => {
     const {pageSize, page, active} = req.params;
+    const cacheKey = 'allgiftcards'
 
     try {
+        // Check if the result is already cached
+        const cachedData = getCacheData(cacheKey);
+        if (cachedData) {
+        return res.status(200).json({
+            data: cachedData,
+            success: true,
+            message: 'Cached result',
+        });
+        }
         const giftcards = await GiftCard.find(active? {active: active}: {})
                                 .limit(pageSize? +pageSize : 30 )
                                 .skip(page? (+page - 1) * +pageSize : 0)
                                 .exec();
         if (giftcards) {
+                setCacheData(cacheKey, giftcards, (60 * 5 * 1000));
                 return res.status(200).json({
                     data: giftcards,
                     success: true,

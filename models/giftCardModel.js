@@ -3,7 +3,8 @@
 // importing mongoose
 const mongoose = require('mongoose');
 const { modifiedAt } = require('./hooks');
-
+const {currencies} = require('../utils/currencies.json')
+const supportedCurrencies = currencies.map((currency)=> currency.code )
 
 const giftCardSchema = new mongoose.Schema({
     name: {
@@ -14,6 +15,16 @@ const giftCardSchema = new mongoose.Schema({
         default: 0
     },
     description: {
+        type: String,
+    },
+    currency:{
+        type: String,
+        enum: {
+            values: [...supportedCurrencies],
+            message: "currency must be amongst the list of supported currencies",
+        },
+    },
+    cardType: {
         type: String,
     },
     picture_url : {

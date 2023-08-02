@@ -29,6 +29,26 @@
         "code": "NGN",
         "name": "Nigerian Naira",
         "symbol": "₦"
+      },
+      {
+        "code": "CAD",
+        "name": "Canadian Dollar",
+        "symbol": "$"
+      },
+      {
+        "code": "AUD",
+        "name": "Australian Dollar",
+        "symbol": "$"
+      },
+      {
+        "code": "MXN",
+        "name": "Mexican Peso",
+        "symbol": "$"
+      },
+      {
+        "code": "SGD",
+        "name": "Singapore Dollar",
+        "symbol": "$"
       }
     ]
 }  
