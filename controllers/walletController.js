@@ -8,7 +8,8 @@ const { serverError } = require('../utils/services.js');
 const { createNotification } = require('./notificationController');
 const { operations } = require('../utils/constants');
 const { createTransaction } = require('./transactionController');
-const { currencies } = require('../utils/currencies.json')
+const { currencies } = require('../utils/currencies.json');
+const { getCacheData, setCacheData } = require('../utils/cache');
 
 
 // controller for creating a User wallet
@@ -237,14 +238,25 @@ exports.setUserWalletInactive = async (request, response) => {
 // get all user wallets, both active and inactive or either one by passing the active parameter.
 exports.getWallets = async (request, response) => {
     const {pageSize, page, active} = request.query;
-    const {id} = request.params
+    const {id} = request.params;
+    const cacheKey = 'userwallets';
     try {
+        // Check if the result is already cached
+        const cachedData = getCacheData(cacheKey);
+        if (cachedData) {
+            return res.status(200).json({
+                data: cachedData,
+                success: true,
+                message: 'Cached result',
+            });
+        }
         const wallets = await Wallet.find(active? {user_id: id, active}: {user_id: id})
                                 .select("-wallet_pin")
                                 .limit(pageSize? +pageSize : 30 )
                                 .skip(page? (+page - 1) * +pageSize : 0)
                                 .exec();
         if (wallets) {
+                setCacheData(cacheKey, wallets, (60 * 5 * 1000));
                 return response.status(200).json({
                     data: wallets,
                     success: true,

@@ -2,6 +2,7 @@
 // const bcrypt = require('bcrypt');
 // const Wallet = require('../models/walletModel.js');
 const GiftCard = require('../models/giftCardModel');
+const GiftCardRate = require('../models/giftCardRateModel');
 const cloudinary = require('../middlewares/cloudinary.js');
 const Wallet = require('../models/walletModel.js');
 const { serverError } = require('../utils/services.js');
@@ -15,7 +16,7 @@ const ObjectId = mongoose.Types.ObjectId;
 
 // ------------GIFTCARD-MANAGEMENT----------- //
 
-// controller for getting a User
+// controller for creating a supported giftcard
 exports.createGiftCard = async (req, res) => {
     const {name, rate, description} = req.body;
     try {
@@ -428,3 +429,78 @@ exports.deleteGiftCard = async (req, res) => {
 }
 
 // --------------------------------------------------------- //
+
+// --- Rates --- //
+// get all giftcard rates, both active and inactive or either one by passing the active parameter.
+exports.getAllGiftCardRates = async (req, res) => {
+    const {pageSize, page, active} = req.params;
+    const cacheKey = 'giftcardrates'
+
+    try {
+        // Check if the result is already cached
+        const cachedData = getCacheData(cacheKey);
+        if (cachedData) {
+        return res.status(200).json({
+            data: cachedData,
+            success: true,
+            message: 'Cached result',
+        });
+        }
+        const giftcards = await GiftCardRate.find(active? {active: active}: {})
+                                .limit(pageSize? +pageSize : 30 )
+                                .skip(page? (+page - 1) * +pageSize : 0)
+                                .exec();
+        if (giftcards) {
+                setCacheData(cacheKey, giftcards, (60 * 5 * 1000));
+                return res.status(200).json({
+                    data: giftcards,
+                    success: true,
+                    message: `Successfull`
+                });
+        } else {
+                return res.status(404).json({
+                    success: false,
+                    message: "No giftcards found"
+                  });
+        }
+          
+    } catch (error) {
+        return serverError(res, error);
+    }
+}
+
+// controller for creating a supported giftcard rate
+exports.createGiftCardRate = async (req, res) => {
+    const {giftCardId, rate, currency, cardType} = req.body;
+    try {
+
+        // checking if there is already an active rate document with that currency, card type and giftcard
+        const check = await GiftCardRate.findOne({ giftCardId, cardType, 'currency.code': currency?.code, active: true });
+        if (!check) {
+            
+            GiftCardRate.create({ giftCardId, rate, cardType, currency}, (error, result)=>{
+                if (error) {
+                    return res.status(500).json({
+                        data: error,
+                        success: false,
+                        message: 'failed to create giftcard rate'
+                    });
+                }
+                return res.status(201).json({
+                    data: result,
+                    status: 'success',
+                    message: 'giftcard rate successfully created.'
+                });
+            });
+            
+        }
+        else{
+            return res.status(400).json({
+                status: 'failed',
+                message: 'card already exists'
+            });
+        }
+    } catch (error) {
+        return serverError(res, error);
+    }
+}

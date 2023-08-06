@@ -21,7 +21,6 @@ exports.signUpMailer = (name, email, token) => {
     transportSender(mailOptions);
 }
 
-
 //email sender for reset password
 exports.resetPasswordMailer = (email, token) => {
     const message = `

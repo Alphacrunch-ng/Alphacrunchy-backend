@@ -22,7 +22,7 @@ app.use(cors());
 const http = require('http').createServer(app);
 const io = socket.init(http, {
     cors: {
-        origin: ["http://localhost:3001", "http://localhost:3000"],
+        origin: ["http://localhost:3001", "http://localhost:3000", "https://cambio.ng/"],
         methods: ["GET", "POST"],
         allowedHeaders: ["alphacrun"],
         credentials: true

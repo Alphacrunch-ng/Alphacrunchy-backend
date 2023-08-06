@@ -1,5 +1,5 @@
 
-const { getGiftCardById, setGiftCardInactive, getAllGiftCards, createGiftCard, updateGiftCard, uploadGiftCard, deleteGiftCard, deleteUploadedGiftCard, createGiftCardTransaction, setTransactionGiftCardState, getGiftCardTransaction, getUserGiftCardTransactions, setGiftCardTransaction, getAllGiftCardTransactions } = require('../controllers/giftCardController');
+const { getGiftCardById, setGiftCardInactive, getAllGiftCards, createGiftCard, updateGiftCard, uploadGiftCard, deleteGiftCard, deleteUploadedGiftCard, createGiftCardTransaction, setTransactionGiftCardState, getGiftCardTransaction, getUserGiftCardTransactions, setGiftCardTransaction, getAllGiftCardTransactions, getAllGiftCardRates, createGiftCardRate } = require('../controllers/giftCardController');
 const { auth, authRoles } = require('../middlewares/auth');
 const upload = require('../middlewares/multer');
 const { roles } = require('../utils/constants');
@@ -16,8 +16,14 @@ const router = require('express').Router();
 // Get giftcards, takes optional params of active, pagesize and page
 router.get('/giftcards', getAllGiftCards);
 
+// Get giftcard RATES, takes optional params of active, pagesize and page
+router.get('/rates', getAllGiftCardRates);
+
 // create giftcard
 router.post('/create', auth, authRoles(roles.admin), upload.single('card_pic') , createGiftCard);
+
+// create giftcard rate
+router.post('/rate-create', auth, authRoles(roles.admin), createGiftCardRate);
 
 // create giftcard transaction
 router.post('/start-transaction', auth, createGiftCardTransaction);
