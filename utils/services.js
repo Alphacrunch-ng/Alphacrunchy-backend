@@ -53,3 +53,23 @@ exports.formatEmail = (email) => {
     let firstPartEmail = email.slice(0,email.indexOf('@'));
     return `${firstPartEmail.slice(0,3)}***${email.slice(email.indexOf('@'))}`
    }
+
+// For Populating the rates => 
+//    giftcards.forEach((giftcard)=>{
+//     currencies.forEach(async (currency)=>{
+//         const dataP = {
+//             giftCardId: giftcard._id,
+//             rate: 860,
+//             currency,
+//             cardType: "Physical Card"
+//         }
+//         await GiftCardRate.create(dataP)
+//         const dataE = {
+//             giftCardId: giftcard._id,
+//             rate: 800,
+//             currency,
+//             cardType: "E-Code"
+//         }
+//         await GiftCardRate.create(dataE)
+//     })
+// })
