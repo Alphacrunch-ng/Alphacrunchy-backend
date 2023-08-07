@@ -431,9 +431,7 @@ exports.deleteGiftCard = async (req, res) => {
 
 // --------------------------------------------------------- //
 
-
-
-// ----------------------- RATES -------------------------- //
+// ----------------------- Rates --------------------------- //
 // get all giftcard rates, both active and inactive or either one by passing the active parameter.
 exports.getAllGiftCardRates = async (req, res) => {
     const {pageSize, page, active} = req.params;
