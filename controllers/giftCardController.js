@@ -11,6 +11,7 @@ const mongoose = require('mongoose');
 const { createTransaction } = require('./transactionController');
 const { Status } = require('../utils/constants');
 const { getCacheData, setCacheData } = require('../utils/cache');
+const { currencies } = require('../utils/currencies.json')
 const ObjectId = mongoose.Types.ObjectId;
 
 
@@ -430,11 +431,13 @@ exports.deleteGiftCard = async (req, res) => {
 
 // --------------------------------------------------------- //
 
-// --- Rates --- //
+
+
+// ----------------------- RATES -------------------------- //
 // get all giftcard rates, both active and inactive or either one by passing the active parameter.
 exports.getAllGiftCardRates = async (req, res) => {
     const {pageSize, page, active} = req.params;
-    const cacheKey = 'giftcardrates'
+    const cacheKey = 'allgiftcardrates'
 
     try {
         // Check if the result is already cached
@@ -446,14 +449,14 @@ exports.getAllGiftCardRates = async (req, res) => {
             message: 'Cached result',
         });
         }
-        const giftcards = await GiftCardRate.find(active? {active: active}: {})
+        const giftcardRates = await GiftCardRate.find(active? {active: active}: {})
                                 .limit(pageSize? +pageSize : 30 )
                                 .skip(page? (+page - 1) * +pageSize : 0)
                                 .exec();
-        if (giftcards) {
-                setCacheData(cacheKey, giftcards, (60 * 5 * 1000));
+        if (giftcardRates) {
+                setCacheData(cacheKey, giftcardRates, (60 * 5 * 1000));
                 return res.status(200).json({
-                    data: giftcards,
+                    data: giftcardRates,
                     success: true,
                     message: `Successfull`
                 });
@@ -473,7 +476,6 @@ exports.getAllGiftCardRates = async (req, res) => {
 exports.createGiftCardRate = async (req, res) => {
     const {giftCardId, rate, currency, cardType} = req.body;
     try {
-
         // checking if there is already an active rate document with that currency, card type and giftcard
         const check = await GiftCardRate.findOne({ giftCardId, cardType, 'currency.code': currency?.code, active: true });
         if (!check) {
@@ -500,6 +502,87 @@ exports.createGiftCardRate = async (req, res) => {
                 message: 'card already exists'
             });
         }
+    } catch (error) {
+        return serverError(res, error);
+    }
+}
+
+// controller for getting a giftcard transaction
+exports.getGiftCardRates = async (req, res) => {
+    const cacheKey = 'giftcardrates' + req.params.giftcardId;
+    try {
+        // Check if the result is already cached
+        const cachedData = getCacheData(cacheKey);
+        if (cachedData) {
+        return res.status(200).json({
+            data: cachedData,
+            success: true,
+            message: 'Cached result',
+        });
+        }
+        const check = await GiftCardRate.find({ giftCardId: req.params.giftcardId, active: true});
+        if (!check) {
+            return res.status(204).json({
+                success: true,
+                message: 'giftcard rates not found'
+            });
+        }
+        
+        const giftcardRates = check;
+        setCacheData(cacheKey, giftcardRates, (60 * 5 * 1000));
+        return res.status(200).json({
+            success: true,
+            data: giftcardRates
+        });
+    } catch (error) {
+        return serverError(res, error);
+    }
+}
+
+
+// controller for updating a giftcard rate
+exports.updateGiftCardRate = async (req, res) => {
+    const {rate, currency, cardType} = req.body;
+    try {
+        const check = await GiftCardRate.findOne({ id: req.params.id});
+        if (!check) {
+            return res.status(204).json({
+                success: false,
+                message: 'giftcard rate not found'
+            });
+        }
+
+        const giftcard = await GiftCardRate.findOneAndUpdate({ id: check._id},{ rate, currency, cardType}, {new: true});
+        
+        return res.status(200).json({
+            success: true,
+            data: giftcard
+        });
+    } catch (error) {
+        return serverError(res, error);
+    }
+}
+
+// controller for updating a giftcard rate
+exports.setGiftCardRateState = async (req, res) => {
+    const {active} = req.body;
+    try {
+        GiftCardRate.findOneAndUpdate({ _id: req.params.giftcardRateId},{ active }, {new: true}, (error, result)=>{
+            
+            if (error) {
+                return res.status(500).json({
+                    data: error,
+                    success: false,
+                    message: 'failed to set giftcard rate state'
+                });
+            }
+            return res.status(200).json({
+                        success: true,
+                        data: result
+                    });
+        });
+        
+        
     } catch (error) {
         return serverError(res, error);
     }

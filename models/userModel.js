@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const { roles } = require('../utils/constants');
 const { isEmail } = require('validator');
 const { modifiedAt, normalizeEmail, setRole, encryptPassword, set2FA } = require('./hooks');
-const { phoneFormater } = require('../utils/services');
+// const { phoneFormater } = require('../utils/services');
 
 const userSchema = new mongoose.Schema({
     fullName : {
@@ -61,7 +61,7 @@ const userSchema = new mongoose.Schema({
     },
     role : {
         type: String,
-        enum: [roles.admin, roles.staff, roles.client],
+        enum: Object.values(roles),
         default: roles.client
     },
     otp:{
