@@ -53,26 +53,15 @@ exports.createWallet = async (req, res) => {
 
 // credit a users wallet
 exports.creditWallet = async (req, res) => {
-    const {wallet_number, amount, admin_password} = req.body;
-    const { id, fullName} = req.user
+    const {wallet_number, amount} = req.body;
     
     try {
         const checkWallet = await Wallet.findOne({ wallet_number});
-        const checkAdmin = await User.findById(id);
         const description = `${amount} credited to wallet`;
-        
-        const checkPin = await bcrypt.compare(admin_password, checkAdmin.password);
         if (!checkWallet) {
             return res.status(404).json({
                 success: false,
                 message: 'wallet not found'
-            })
-        }
-        if (!checkPin) {
-            
-            return res.status(401).json({
-                success: false,
-                message: 'user password incorrect'
             })
         }
         if (!amount || amount < 1 || !parseFloat(amount)) {
@@ -82,10 +71,14 @@ exports.creditWallet = async (req, res) => {
             })
         }
         const creditWallet = await Wallet.findOneAndUpdate({wallet_number},  { $inc: { balance: amount } }, { new: true }).select("-wallet_pin");
-        const transaction = await createTransaction(checkWallet.user_id, description, amount, operations.credit);
-        console.log(await createNotification(checkWallet.user_id, `credited with ${amount}`))
+
+        await createTransaction(checkWallet.user_id, description, amount, operations.credit);
+        await createNotification(checkWallet.user_id, `credited with ${amount}`);
+        
+        const wallets = await Wallet.find({user_id: creditWallet.user_id})
+                                .select("-wallet_pin").exec();
         return res.status(200).json({
-            data: creditWallet,
+            data: wallets,
             success: true,
             message: 'successfully credited wallet'
         });
@@ -96,26 +89,16 @@ exports.creditWallet = async (req, res) => {
 
 // debit a users wallet
 exports.debitWallet = async (req, res) => {
-    const {wallet_number, amount, admin_password} = req.body;
+    const {wallet_number, amount} = req.body;
     const { id, fullName} = req.user
     
     try {
         const checkWallet = await Wallet.findOne({ wallet_number});
-        const checkAdmin = await User.findById(id);
-        const description = `${amount} debited from wallet`
-        
-        const checkPin = await bcrypt.compare(admin_password, checkAdmin.password);
+        const description = `${amount} debited from wallet`;
         if (!checkWallet) {
             return res.status(404).json({
                 success: false,
                 message: 'wallet not found'
-            })
-        }
-        if (!checkPin) {
-            console.log(checkPin + ": ", checkWallet.wallet_pin);
-            return res.status(401).json({
-                success: false,
-                message: 'user password incorrect'
             })
         }
         if (!amount || amount < 1 || !parseFloat(amount)) {
@@ -124,14 +107,16 @@ exports.debitWallet = async (req, res) => {
                 message: 'invalid amount'
             })
         }
-        const creditWallet = await Wallet.findOneAndUpdate({wallet_number},  { $inc: { balance: -amount } }, { new: true })
-                                            .select("-wallet_pin")
-        const transaction = await createTransaction(checkWallet.user_id, description, amount, operations.debit);
-        console.log(await createNotification(checkWallet.user_id, `debited of ${amount}`))
+        const debitWallet = await Wallet.findOneAndUpdate({wallet_number},  { $inc: { balance: -amount } }, { new: true }).select("-wallet_pin");
+        await createTransaction(checkWallet.user_id, description, amount, operations.debit);
+        await createNotification(checkWallet.user_id, `debited of ${amount}`);
+
+        const wallets = await Wallet.find({user_id: debitWallet.user_id}).select("-wallet_pin").exec();
+
         return res.status(200).json({
-            data: creditWallet,
+            data: wallets,
             success: true,
-            message: 'successfully debit wallet'
+            message: 'successfully debited wallet'
         });
     } catch (error) {
         return serverError(res, error);
@@ -191,7 +176,17 @@ exports.wallet2WalletTransfer = async (req, res) => {
 
 // controller for getting a User wallet by wallet id
 exports.getWalletById = async (req, res) => {
+    const cacheKey = 'wallet'+req.params.id;
     try {
+        // Check if the result is already cached
+        const cachedData = getCacheData(cacheKey);
+        if (cachedData) {
+        return res.status(200).json({
+            data: cachedData,
+            success: true,
+            message: 'Cached result',
+        });
+        }
         const checkWallet = await Wallet.findOne({ _id: req.params.id}).select("-wallet_pin").populate({
             path: "user_id",
             select: "fullName "
@@ -203,6 +198,8 @@ exports.getWalletById = async (req, res) => {
             });
         }
         const wallet = {...checkWallet.toObject()}
+
+        setCacheData(cacheKey, wallet, (60 * 1 * 1000));
         return res.status(200).json({
             status: 'success',
             data: wallet
@@ -239,12 +236,12 @@ exports.setUserWalletInactive = async (request, response) => {
 exports.getWallets = async (request, response) => {
     const {pageSize, page, active} = request.query;
     const {id} = request.params;
-    const cacheKey = 'userwallets';
+    const cacheKey = 'userwallets'+id;
     try {
         // Check if the result is already cached
         const cachedData = getCacheData(cacheKey);
         if (cachedData) {
-            return res.status(200).json({
+            return response.status(200).json({
                 data: cachedData,
                 success: true,
                 message: 'Cached result',

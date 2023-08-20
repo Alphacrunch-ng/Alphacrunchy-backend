@@ -34,3 +34,8 @@ exports.CardTypes= {
     physical: "Physical Card",
     eCode: "E-Code"
 }
+
+exports.urls = {
+    getFormSubmits: "https://formsubmit.co/api/get-submissions/", // api key to be concatenated to this url
+    
+}
