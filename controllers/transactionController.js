@@ -75,6 +75,15 @@ exports.setTransactionInactive = async (req, res) => {
   }
 };
 
+exports.completePayment = async (req, res) => {
+  console.log(req.body);
+  try {
+    return res.status(200);
+  } catch (error) {
+    return serverError(res, error);
+  }
+}
+
 // // CREATE a new notification controller
 // exports.createUserNotification = async (req, res) => {
 //   try {

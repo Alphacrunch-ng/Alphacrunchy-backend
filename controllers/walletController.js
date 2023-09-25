@@ -10,6 +10,7 @@ const { operations } = require('../utils/constants');
 const { createTransaction } = require('./transactionController');
 const { currencies } = require('../utils/currencies.json');
 const { getCacheData, setCacheData } = require('../utils/cache');
+const { getPaymentBanks } = require('../utils/paymentService');
 
 
 // controller for creating a User wallet
@@ -147,6 +148,12 @@ exports.wallet2WalletTransfer = async (req, res) => {
                 message: 'wallet not found'
             })
         }
+        if( amount > checkWallet.balance){
+            return res.status(400).json({
+                success: false,
+                message: 'insulficient balance'
+            })
+        }
         if (!amount || amount < 1 || !parseFloat(amount)) {
             return res.status(400).json({
                 success: false,
@@ -203,6 +210,62 @@ exports.getWalletById = async (req, res) => {
         return res.status(200).json({
             status: 'success',
             data: wallet
+        });
+    } catch (error) {
+        return serverError(res, error);
+    }
+}
+
+exports.getSupportedBanks = async (req, res) => {
+    const cacheKey = 'supportedbanks';
+    try {
+        // Check if the result is already cached
+        const cachedData = getCacheData(cacheKey);
+        if (cachedData) {
+            return res.status(200).json({
+                data: cachedData,
+            success: true,
+            message: 'Cached result',
+        });
+        }
+        let banks = await getPaymentBanks();
+        if(banks.error){
+            serverError(res, banks.response)
+        }
+
+        setCacheData(cacheKey, banks.response.banks, (60 * 1 * 1000));
+        return res.status(200).json({
+            status: 'success',
+            data: banks.response.banks
+        });
+    } catch (error) {
+        return serverError(res, error);
+    }
+}
+
+// controller for getting a User wallet by wallet id
+exports.checkWalletPin = async (req, res) => {
+    const { pin, wallet_number, user_id} = req.body;
+    try {
+        
+        const checkWallet = await Wallet.findOne({ wallet_number, user_id});
+        if (!checkWallet) {
+            return res.status(404).json({
+                status: 'failed',
+                message: 'wallet not found'
+            });
+        }
+        const wallet = {...checkWallet.toObject()}
+
+        const checkPin = await bcrypt.compare(pin, wallet.wallet_pin);
+        if (!checkPin) {
+            return res.status(400).json({
+                status: 'failed',
+                message: 'wrong wallet pin'
+            });
+        }
+        return res.status(200).json({
+            success: true
         });
     } catch (error) {
         return serverError(res, error);

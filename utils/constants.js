@@ -14,6 +14,7 @@ exports.operations = {
 }
 
 exports.product_name = 'Cambio';
+exports.logo_url = "https://res.cloudinary.com/dkgblnkxm/image/upload/v1694926535/w2wnxtjjbydmtjru2gjg.png"
 
 exports.Status = {
     approved: 'approved',

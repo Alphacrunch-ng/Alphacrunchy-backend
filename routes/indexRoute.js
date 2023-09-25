@@ -28,7 +28,7 @@ router.use('/auth', authRoute);
 router.use('/giftcard', giftCardRoute);
 
 //transaction routes
-router.use('/transaction', auth, transactionRoute);
+router.use('/transaction', transactionRoute);
 
 //admin routes
 router.use('/back-door', auth, authRoles(roles.admin), adminRoute);
