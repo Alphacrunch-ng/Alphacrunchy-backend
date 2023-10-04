@@ -1,5 +1,5 @@
 
-const { getUserTransactions, setTransactionStatus, deleteTransaction, setTransactionInactive, completePayment } = require('../controllers/transactionController');
+const { getUserTransactions, setTransactionStatus, deleteTransaction, setTransactionInactive, completePayment, getTransactions } = require('../controllers/transactionController');
 const { authRoles, auth } = require('../middlewares/auth');
 const { roles } = require('../utils/constants');
 
@@ -18,6 +18,9 @@ const router = require('express').Router();
 router.get('/', (req, res)=>{
     res.send('welcome to notifications sir');
 });
+
+// get all transactions for a user by passing the user id in params
+router.get('/transactions', auth, getTransactions);
 
 // get all transactions for a user by passing the user id in params
 router.get('/transactions/:id', auth, getUserTransactions);

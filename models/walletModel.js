@@ -15,6 +15,9 @@ const walletSchema = new mongoose.Schema({
     wallet_number: {
         type: String
     },
+    accountNumber: {
+        type: String
+    },
     wallet_pin : {
         type: String,
         required: ['true', 'pin is required.']

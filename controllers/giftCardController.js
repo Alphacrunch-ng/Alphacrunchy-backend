@@ -9,7 +9,7 @@ const { serverError } = require('../utils/services.js');
 const GiftCardTransaction = require('../models/giftcardTransactionModel');
 const mongoose = require('mongoose');
 const { createTransaction } = require('./transactionController');
-const { Status } = require('../utils/constants');
+const { Status, operations } = require('../utils/constants');
 const { getCacheData, setCacheData } = require('../utils/cache');
 const { currencies } = require('../utils/currencies.json')
 const ObjectId = mongoose.Types.ObjectId;
@@ -66,7 +66,7 @@ exports.createGiftCardTransaction = async (req, res) => {
         const check = await Wallet.findById(receiverWalletId);
         if(check !== null){
             //create transactiondocument
-            const transaction = await createTransaction(check.user_id, description, amount);
+            const transaction = await createTransaction(check.user_id, description, amount, operations.sellGiftcard);
             // create a new GiftCardTransaction document
             const giftcardTransaction = await GiftCardTransaction.create({
                 reciever_wallet_number: check.wallet_number,
@@ -235,7 +235,7 @@ exports.getUserGiftCardTransactions = async (req, res) => {
     }
 }
 
-// controller for getting a user's giftcard transactions
+// controller for getting all giftcard transactions
 exports.getAllGiftCardTransactions = async (req, res) => {
     try {
         const check = await GiftCardTransaction.find();
@@ -257,45 +257,48 @@ exports.getAllGiftCardTransactions = async (req, res) => {
 
 // approving a submitted giftcard by id
 exports.setTransactionGiftCardState = async (req, res) => {
-    const {id} = req.params;
-    const {card_id, state} = req.body;
+  const { id } = req.params;
+  const { card_id, state } = req.body;
 
-    if (!['approved','pending', 'failed'].includes(state)) {
-        return res.status(400).json({
-            success: false,
-            message: `invalid state`
-        });
+  if (!['approved', 'pending', 'failed'].includes(state)) {
+    return res.status(400).json({
+      success: false,
+      message: `invalid state`,
+    });
+  }
+
+  try {
+    // Use Mongoose's findOneAndUpdate method to trigger pre-hooks
+    const result = await GiftCardTransaction.findOneAndUpdate(
+      {
+        _id: ObjectId(id),
+        'cards._id': ObjectId(card_id),
+      },
+      {
+        $set: {
+          'cards.$.state': state,
+        },
+      },
+      { new: true }
+    );
+
+    if (!result) {
+      return res.status(404).json({
+        success: false,
+        message: 'Gift card transaction or card not found',
+      });
     }
-    try {
-        GiftCardTransaction.updateOne(
-            {
-              _id: ObjectId(id),
-              'cards._id': ObjectId(card_id)
-            },
-            {
-              $set: {
-                'cards.$.state': state
-              }
-            },
-            function(err, result) {
-              if (err) {
-                console.log(err);
-                return serverError(res, err);
-              } else {
-                console.log(result);
-                return res.status(200).json({
-                    data: result,
-                    success: true,
-                    message: `Successfully ${state} card state`
-                });
-              }
-            }
-          );
-          
-    } catch (error) {
-        return serverError(res, error);
-    }
-}
+
+    return res.status(200).json({
+      data: result,
+      success: true,
+      message: `Successfully ${state} card state`,
+    });
+  } catch (error) {
+    return serverError(res, error);
+  }
+};
+
 
 // temporarily delete a giftcard
 exports.setGiftCardInactive = async (req, res) => {

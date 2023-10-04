@@ -38,6 +38,7 @@ const walletTransactionSchema = new mongoose.Schema({
             values: ['pending', 'successful', 'failed'],
             message: "status can either be 'pending' or 'successful' or 'failed'",
         },
+        default: 'pending'
     },
     active : {
         type: Boolean,

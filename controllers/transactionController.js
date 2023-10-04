@@ -20,6 +20,67 @@ exports.getUserTransactions = async (req, res) => {
   }
 };
 
+// GET all transactions by day date should be in ISO format eg. Format: YYYY-MM-DD Example: "2023-09-15" (assuming today is September 15, 2023)
+exports.getTransactions = async (req, res) => {
+  try {
+      const transactions = await Transaction.find().sort({ createdAt: -1 });
+      return res.status(200).json({
+        data: transactions,
+        success: true,
+        message: 'Successfully retrieved transactions for the today.',
+      });
+    }
+    catch (error) {
+      return serverError(res, error);
+    }
+  }
+
+// GET all transactions by day date should be in ISO format eg. Format: YYYY-MM-DD Example: "2023-09-15" (assuming today is September 15, 2023)
+exports.getTransactionsByDay = async (req, res) => {
+  try {
+    const { date } = req.query; // Assuming date is passed as a query parameter
+    if (!date) {
+      // if no date, then it would return the result for today
+      const targetDate = new Date(Date.now());
+
+      // Set the start and end date for the specified day
+      targetDate.setHours(0, 0, 0, 0); // Start of the day
+      const nextDay = new Date(targetDate);
+      nextDay.setDate(nextDay.getDate() + 1); // End of the day
+
+      const transactions = await Transaction.find({
+        createdAt: { $gte: targetDate, $lt: nextDay },
+      }).sort({ createdAt: -1 });
+      return res.status(200).json({
+        data: transactions,
+        success: true,
+        message: 'Successfully retrieved transactions for the today.',
+      });
+    }
+
+    // Convert the date to a JavaScript Date object (assuming date is in ISO format)
+    const targetDate = new Date(date);
+
+    // Set the start and end date for the specified day
+    targetDate.setHours(0, 0, 0, 0); // Start of the day
+    const nextDay = new Date(targetDate);
+    nextDay.setDate(nextDay.getDate() + 1); // End of the day
+
+    const transactions = await Transaction.find({
+      createdAt: { $gte: targetDate, $lt: nextDay },
+    }).sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      data: transactions,
+      success: true,
+      message: 'Successfully retrieved transactions for the specified day.',
+    });
+  } catch (error) {
+    return serverError(res, error);
+  }
+};
+
+
 
 exports.setTransactionStatus = async (req, res) => {
   try {

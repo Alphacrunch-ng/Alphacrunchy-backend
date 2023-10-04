@@ -125,3 +125,38 @@ exports.populateUserId = async (next) => {
 
     next()
 }
+
+exports.updateGiftcardTransactionStatus = async function (next) {
+    // Check if all cards are approved
+    const allCardsApproved = this.cards.every((card) => card.state === Status.approved);
+    const allCardsFailed = this.cards.every((card) => card.state === Status.failed);
+  
+    // Set the status to approved if all cards are approved
+    if (allCardsApproved) {
+      this.status = Status.approved;
+    }
+    else if (allCardsFailed) {
+        this.status = Status.failed;
+    }
+  
+    // Continue with the save operation
+    next();
+  }
+
+exports.checkAndUpdateGiftcardTransactionStatus = async function(next){
+    // Check if the update includes changes to card statuses
+    const updatedCards = this._update.$set && this._update.$set.cards;
+    if (updatedCards) {
+        const allCardsApproved = updatedCards.every((card) => card.state === Status.approved);
+        const allCardsFailed = this.cards.every((card) => card.state === Status.failed);
+        // Set the status to approved if all cards are approved
+        if (allCardsApproved) {
+            this._update.$set.status = Status.approved;
+        } else if (allCardsFailed) {
+            this._update.$set.status = Status.failed;
+        }
+    }
+
+    // Continue with the update operation
+    next();
+}

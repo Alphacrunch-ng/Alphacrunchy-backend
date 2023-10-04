@@ -10,7 +10,8 @@ exports.operations = {
     requestResetPassword: 'Request Reset Password',
     debit: 'Debit',
     credit: 'Credit',
-    transfer: 'Transfer'
+    transfer: 'Transfer',
+    sellGiftcard: 'Sell Giftcard'
 }
 
 exports.product_name = 'Cambio';

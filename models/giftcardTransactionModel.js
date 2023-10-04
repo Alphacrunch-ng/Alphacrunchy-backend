@@ -3,7 +3,7 @@
 // importing mongoose
 const mongoose = require('mongoose');
 const { Status, CardTypes } = require('../utils/constants');
-const { modifiedAt, sum } = require('./hooks');
+const { modifiedAt, sum, updateGiftcardTransactionStatus, checkAndUpdateGiftcardTransactionStatus } = require('./hooks');
 
 const cardItemSchema = new mongoose.Schema({
     card_item : {
@@ -95,6 +95,10 @@ const giftcardTransactionSchema = new mongoose.Schema({
 
 //setting totals to current cards after every update
 giftcardTransactionSchema.pre('save', sum);
+
+// check each card statuses and sets to approve if all are approved and fail if all are fail
+giftcardTransactionSchema.pre('save', updateGiftcardTransactionStatus);
+giftcardTransactionSchema.pre('findOneAndUpdate', checkAndUpdateGiftcardTransactionStatus);
 
 //setting modifiedAt to current time after every update
 giftcardTransactionSchema.pre('save', modifiedAt);
