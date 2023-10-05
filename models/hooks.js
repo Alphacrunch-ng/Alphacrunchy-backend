@@ -130,7 +130,7 @@ exports.updateGiftcardTransactionStatus = async function (next) {
     // Check if all cards are approved
     const allCardsApproved = this.cards.every((card) => card.state === Status.approved);
     const allCardsFailed = this.cards.every((card) => card.state === Status.failed);
-  
+    
     // Set the status to approved if all cards are approved
     if (allCardsApproved) {
       this.status = Status.approved;
@@ -148,7 +148,7 @@ exports.checkAndUpdateGiftcardTransactionStatus = async function(next){
     const updatedCards = this._update.$set && this._update.$set.cards;
     if (updatedCards) {
         const allCardsApproved = updatedCards.every((card) => card.state === Status.approved);
-        const allCardsFailed = this.cards.every((card) => card.state === Status.failed);
+        const allCardsFailed = updatedCards.every((card) => card.state === Status.failed);
         // Set the status to approved if all cards are approved
         if (allCardsApproved) {
             this._update.$set.status = Status.approved;

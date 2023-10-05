@@ -4,6 +4,12 @@ exports.roles = {
     client: 'CLIENT'
 }
 
+exports.transactionTypes = {
+    wallet: 'wallet',
+    giftcard: 'giftcard',
+    crypto: 'crypto'
+}
+
 exports.operations = {
     changedWalletPin: 'Changed Wallet Pin',
     changedPassword: 'Changed Password',

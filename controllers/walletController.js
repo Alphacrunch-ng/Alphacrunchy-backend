@@ -7,7 +7,7 @@ const Wallet = require('../models/walletModel.js');
 const WalletTransaction = require('../models/walletTransactionModel')
 const { serverError } = require('../utils/services.js');
 const { createNotification } = require('./notificationController');
-const { operations } = require('../utils/constants');
+const { operations, transactionTypes } = require('../utils/constants');
 const { createTransaction } = require('./transactionController');
 const { currencies } = require('../utils/currencies.json');
 const { getCacheData, setCacheData } = require('../utils/cache');
@@ -20,7 +20,7 @@ const seerInstance = new Seerbit();
 
 // seerInstance.getBanks()
 
-const createWalletTransaction = async (sender_wallet_number, reciever_wallet_number, amount, description, transaction_number, state) =>{
+const createWalletTransaction = async (sender_wallet_number, reciever_wallet_number, amount, description, transaction_number) =>{
     try {
         const walletTransaction = await WalletTransaction.create({sender_wallet_number, reciever_wallet_number, amount, description, transaction_number})
         return walletTransaction;
@@ -72,7 +72,6 @@ exports.createWallet = async (req, res) => {
 // credit a users wallet
 exports.creditWallet = async (req, res) => {
     const {wallet_number, amount} = req.body;
-    
     try {
         const checkWallet = await Wallet.findOne({ wallet_number});
         const description = `${amount} credited to wallet`;
@@ -90,7 +89,7 @@ exports.creditWallet = async (req, res) => {
         }
         const creditWallet = await Wallet.findOneAndUpdate({wallet_number},  { $inc: { balance: amount } }, { new: true }).select("-wallet_pin");
 
-        const creditTransaction = await createTransaction(checkWallet.user_id, description, amount, operations.credit);
+        const creditTransaction = await createTransaction(checkWallet.user_id, description, amount, operations.credit, transactionTypes.wallet);
         const walletTransaction = await createWalletTransaction(wallet_number, wallet_number, amount, description, creditTransaction.transaction_number)
         await createNotification(checkWallet.user_id, `credited with ${amount}`);
         
@@ -127,7 +126,7 @@ exports.debitWallet = async (req, res) => {
             })
         }
         const debitWallet = await Wallet.findOneAndUpdate({wallet_number},  { $inc: { balance: -amount } }, { new: true }).select("-wallet_pin");
-        const debitTransaction = await createTransaction(checkWallet.user_id, description, amount, operations.debit);
+        const debitTransaction = await createTransaction(checkWallet.user_id, description, amount, operations.debit, transactionTypes.wallet);
 
         const walletTransaction = await createWalletTransaction(wallet_number, wallet_number, amount, description, debitTransaction.transaction_number);
         await createNotification(checkWallet.user_id, `debited of ${amount}`);
@@ -183,13 +182,13 @@ exports.wallet2WalletTransfer = async (req, res) => {
 
         //debit the sender
         const debitWallet = await Wallet.findOneAndUpdate({wallet_number},  { $inc: { balance: -amount } }, { new: true }).select("-wallet_pin");
-        const debitTransaction = await createTransaction(checkWallet.user_id, description, amount, operations.debit);
+        const debitTransaction = await createTransaction(checkWallet.user_id, description, amount, operations.debit, transactionTypes.wallet);
         let walletTransaction = await createWalletTransaction(wallet_number, reciever_wallet_number, amount, description, debitTransaction.transaction_number);
         console.log(await createNotification(checkWallet.user_id._id, `debited of ${amount}`));
 
         //credit the reciever
         await Wallet.findOneAndUpdate({reciever_wallet_number},  { $inc: { balance: amount } }, { new: true }).select("-wallet_pin");
-        const creditTransaction = await createTransaction(checkRecieverWallet.user_id, description, amount, operations.credit);
+        const creditTransaction = await createTransaction(checkRecieverWallet.user_id, description, amount, operations.credit, transactionTypes.wallet);
         walletTransaction = await createWalletTransaction(wallet_number, reciever_wallet_number, amount, description, creditTransaction.transaction_number);
         console.log(await createNotification(checkRecieverWallet.user_id._id, `credited with ${amount}`));
 

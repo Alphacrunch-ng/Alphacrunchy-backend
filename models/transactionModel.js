@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { Status } = require('../utils/constants');
+const { Status, transactionTypes } = require('../utils/constants');
 const { modifiedAt, setTransactionNumber } = require('./hooks');
 
 const transactionSchema = new mongoose.Schema({
@@ -10,6 +10,13 @@ const transactionSchema = new mongoose.Schema({
   },
   transaction_number: {
     type: String
+  },
+  transaction_type : {
+    type: String,
+    enum: {
+        values: Object.values(transactionTypes),
+        message: "transaction type can either be 'wallet', 'giftcard', or 'crypto'",
+    }
   },
   description: {
     type: String,
@@ -27,7 +34,7 @@ const transactionSchema = new mongoose.Schema({
         message: "status can either be 'approved', 'pending', 'successful' or 'failed'",
     },
     default: Status.pending
-    },
+  },
   createdAt: {
     type: Date,
     default: Date.now()

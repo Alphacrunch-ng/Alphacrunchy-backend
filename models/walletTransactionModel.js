@@ -7,11 +7,11 @@ const { modifiedAt } = require('./hooks');
 
 const walletTransactionSchema = new mongoose.Schema({
     sender_wallet_number: {
-        type: mongoose.Schema.Types.ObjectId, ref: 'Wallet',
+        type: String,
         required: ['true', 'sender_wallet_number is required.']
     },
     reciever_wallet_number: {
-        type: mongoose.Schema.Types.ObjectId, ref: 'Wallet',
+        type: String,
         required: ['true', 'reciever_wallet_number is required.']
     },
     amount : {

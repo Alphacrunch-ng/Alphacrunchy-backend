@@ -9,7 +9,7 @@ const { serverError } = require('../utils/services.js');
 const GiftCardTransaction = require('../models/giftcardTransactionModel');
 const mongoose = require('mongoose');
 const { createTransaction } = require('./transactionController');
-const { Status, operations } = require('../utils/constants');
+const { Status, operations, transactionTypes } = require('../utils/constants');
 const { getCacheData, setCacheData } = require('../utils/cache');
 const { currencies } = require('../utils/currencies.json')
 const ObjectId = mongoose.Types.ObjectId;
@@ -66,7 +66,7 @@ exports.createGiftCardTransaction = async (req, res) => {
         const check = await Wallet.findById(receiverWalletId);
         if(check !== null){
             //create transactiondocument
-            const transaction = await createTransaction(check.user_id, description, amount, operations.sellGiftcard);
+            const transaction = await createTransaction(check.user_id, description, amount, operations.sellGiftcard, transactionTypes.giftcard);
             // create a new GiftCardTransaction document
             const giftcardTransaction = await GiftCardTransaction.create({
                 reciever_wallet_number: check.wallet_number,
@@ -196,14 +196,38 @@ exports.setGiftCardTransaction = async (req, res) => {
         });
     }
     try {
-        const check = await GiftCardTransaction.findByIdAndUpdate({ _id: req.params.id}, { status }, {new: true});
+        const check = await GiftCardTransaction.findById({ _id: req.params.id});
         if (!check) {
             return res.status(404).json({
                 success: true,
                 message: 'giftcard transaction not found'
             });
         }
-        const giftcard = {...check.toObject()}
+
+        const checkCardsApproved = check.cards.every((card) => card.state === Status.approved)
+        const checkCardsFailed = check.cards.every((card) => card.state === Status.failed)
+        if (checkCardsApproved) {
+            const updated = await GiftCardTransaction.findByIdAndUpdate({ _id: req.params.id}, { status : Status.approved }, {new: true});
+            const giftcard = {...updated.toObject()}
+            return res.status(200).json({
+                message: "all cards are approved so transaction approved",
+                success: true,
+                data: giftcard
+            });
+        }
+        else if (checkCardsFailed) {
+            const updated = await GiftCardTransaction.findByIdAndUpdate({ _id: req.params.id}, { status : Status.failed }, {new: true});
+            const giftcard = {...updated.toObject()}
+            return res.status(200).json({
+                message: "all cards are failed so transaction failed",
+                success: true,
+                data: giftcard
+            });
+        }
+        
+        const updated = await GiftCardTransaction.findByIdAndUpdate({ _id: req.params.id}, { status }, {new: true});
+
+        const giftcard = {...updated.toObject()}
         return res.status(200).json({
             success: true,
             data: giftcard

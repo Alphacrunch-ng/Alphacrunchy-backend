@@ -1,7 +1,9 @@
 const Transaction = require('../models/transactionModel');
 const User = require('../models/userModel.js');
+const WalletTransaction = require('../models/walletTransactionModel')
+const GiftCardTransaction = require('../models/giftcardTransactionModel')
 const { serverError } = require('../utils/services');
-const { Status } = require('../utils/constants');
+const { Status, transactionTypes } = require('../utils/constants');
 const { transactionMailer } = require('../utils/nodeMailer');
 
 // GET all notifications for a specific user
@@ -20,10 +22,49 @@ exports.getUserTransactions = async (req, res) => {
   }
 };
 
-// GET all transactions by day date should be in ISO format eg. Format: YYYY-MM-DD Example: "2023-09-15" (assuming today is September 15, 2023)
-exports.getTransactions = async (req, res) => {
+// GET a transaction by id
+exports.getTransactionById = async (req, res) => {
+  const { id } = req.params;
+  let transaction = {}
   try {
-      const transactions = await Transaction.find().sort({ createdAt: -1 });
+      const check = await Transaction.findById(id);
+
+      if (!check) {
+        return res.status(404).json({
+          success: false,
+          message: 'transaction not found',
+        });
+      }
+      transaction = {...check.toObject()};
+
+      if (check.transaction_type === transactionTypes.wallet) {
+        const transaction_details = await WalletTransaction.findOne({transaction_number : check.transaction_number});
+        transaction.transaction_details = transaction_details;
+
+      } else if (check.transaction_type === transactionTypes.giftcard) {
+        const transaction_details = await GiftCardTransaction.findOne({transaction_number : check.transaction_number});
+        transaction.transaction_details = transaction_details;
+      }
+
+      return res.status(200).json({
+        data: transaction,
+        success: true,
+        message: 'Successfully retrieved transaction.',
+      });
+    }
+    catch (error) {
+      return serverError(res, error);
+    }
+  }
+
+// GET all transactions
+exports.getTransactions = async (req, res) => {
+  const {pageSize, page} = req.params;
+  try {
+      const transactions = await Transaction.find().sort({ createdAt: -1 })
+                                                  .limit(pageSize? +pageSize : 16 )
+                                                  .skip(page? (+page - 1) * +pageSize : 0)
+                                                  .exec();
       return res.status(200).json({
         data: transactions,
         success: true,
@@ -174,14 +215,14 @@ exports.deleteTransaction = async (req, res) => {
 
 //Services 
 //create notification service
-exports.createTransaction = async (user_id, description, amount , operation)=> {
+exports.createTransaction = async (user_id, description, amount , operation, transaction_type)=> { // everything here is required
     try {
         const checkUser = await User.findOne({ _id: user_id}).select("-password");
         if (!checkUser) {
           throw new Error("user_id not found");
       }
         transactionMailer(checkUser.email, operation, amount, description)
-        const newTransaction = new Transaction({ user_id, description, amount });
+        const newTransaction = new Transaction({ user_id, description, amount, transaction_type });
         const saveTransaction = await newTransaction.save();
         return saveTransaction;
     } catch (error) {
