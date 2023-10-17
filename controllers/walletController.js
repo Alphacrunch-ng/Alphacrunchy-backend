@@ -14,7 +14,7 @@ const { getCacheData, setCacheData } = require('../utils/cache');
 const { getPaymentBanks } = require('../utils/paymentService');
 const Seerbit = require('../utils/apiServices/initiateService');
 
-const seerInstance = new Seerbit();
+// const seerInstance = new Seerbit();
 
 // seerInstance.getToken(process.env.SEERBITPOCKETEMAIL, process.env.SEERBITPOCKETPASSWORD)
 

@@ -1,5 +1,5 @@
 
-const { getUserTransactions, setTransactionStatus, deleteTransaction, setTransactionInactive, completePayment, getTransactions, getTransactionById } = require('../controllers/transactionController');
+const { getUserTransactions, setTransactionStatus, deleteTransaction, setTransactionInactive, completePayment, getTransactions, getTransactionById, getTransactionsByDay } = require('../controllers/transactionController');
 const { authRoles, auth } = require('../middlewares/auth');
 const { roles } = require('../utils/constants');
 
@@ -23,6 +23,9 @@ router.get('/', (req, res)=>{
 router.get('/transactions', auth, getTransactions);
 
 // get all transactions for a user by passing the user id in params
+router.get('/transactions-by-date', auth, getTransactionsByDay);
+
+// get all transactions for a user by passing the user id in params
 router.get('/transactions/:id', auth, getUserTransactions);
 
 // get a transaction 
@@ -32,7 +35,7 @@ router.get('/:id', auth, getTransactionById);
 router.patch('/:id', auth, setTransactionStatus);
 
 // complete paymenet
-router.post('/complete-payment', completePayment);
+router.post('/deposit', completePayment);
 
 //Permanently delete a transaction by id 
 router.delete('/delete/:id', auth, authRoles(roles.admin), deleteTransaction );
