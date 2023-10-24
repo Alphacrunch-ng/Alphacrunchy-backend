@@ -1,19 +1,61 @@
 
-const PagaCollectClient = require('paga-collect');
+const axios = require('axios');
+const querystring = require('querystring');
 
-
-const pagaCollectClient = new PagaCollectClient()
-    .setClientId(process.env.PUBLICKEY)
-    .setPassword(process.env.SECRET)
-    .setApiKey(process.env.APIHASHKEY)
-    .setTest(true)
-    .build();
+const marabaseUrl = process.env.MARABASEURL;
+const encrypt_key = process.env.ENC_KEY
 
 exports.getPaymentBanks = async () => {
-    const result = await pagaCollectClient.getBanks({referenceNumber:'529383853031111'})
-    return {    
-        error: result.error, 
-        response: result.response
+    const config = {
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+    }
+    const url = marabaseUrl+"/getbanks";
+    const formData = {
+        enc_key: encrypt_key
+    }
+    const data = querystring.stringify(formData);
+    try {
+        const result = await axios.post(url, data, config)
+        return {    
+            error: result.error, 
+            response: result.data
+        }
+    } catch (error) {
+        return {    
+            error: result.error, 
+            response: result.data
+        }
+    }
+
+}
+
+//validate the provided bank
+exports.resolveBank = async (bankCode, accountNumber) => {
+    const config = {
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+    }
+    const url = marabaseUrl+"/resolvebank";
+    const formData = {
+        enc_key: encrypt_key,
+        bank_code: bankCode,
+        account_number: accountNumber
+    }
+    const data = querystring.stringify(formData);
+    try {
+        const result = await axios.post(url, data, config)
+        return {    
+            error: result.error, 
+            response: result.data
+        }
+    } catch (error) {
+        return {    
+            error: result.error, 
+            response: result.data
+        }
     }
 
 }

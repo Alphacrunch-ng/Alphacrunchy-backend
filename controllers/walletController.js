@@ -7,11 +7,11 @@ const Wallet = require('../models/walletModel.js');
 const WalletTransaction = require('../models/walletTransactionModel')
 const { serverError } = require('../utils/services.js');
 const { createNotification } = require('./notificationController');
-const { operations, transactionTypes } = require('../utils/constants');
+const { operations, transactionTypes, Status } = require('../utils/constants');
 const { createTransaction } = require('./transactionController');
 const { currencies } = require('../utils/currencies.json');
 const { getCacheData, setCacheData } = require('../utils/cache');
-const { getPaymentBanks } = require('../utils/paymentService');
+const { getPaymentBanks, resolveBank } = require('../utils/paymentService');
 const Seerbit = require('../utils/apiServices/initiateService');
 
 // const seerInstance = new Seerbit();
@@ -73,30 +73,25 @@ exports.createWallet = async (req, res) => {
 exports.creditWallet = async (req, res) => {
     const {wallet_number, amount} = req.body;
     try {
-        const checkWallet = await Wallet.findOne({ wallet_number});
-        const description = `${amount} credited to wallet`;
-        if (!checkWallet) {
-            return res.status(404).json({
-                success: false,
-                message: 'wallet not found'
-            })
-        }
         if (!amount || amount < 1 || !parseFloat(amount)) {
             return res.status(400).json({
                 success: false,
                 message: 'invalid amount'
             })
         }
-        const creditWallet = await Wallet.findOneAndUpdate({wallet_number},  { $inc: { balance: amount } }, { new: true }).select("-wallet_pin");
-
-        const creditTransaction = await createTransaction(checkWallet.user_id, description, amount, operations.credit, transactionTypes.wallet);
-        const walletTransaction = await createWalletTransaction(wallet_number, wallet_number, amount, description, creditTransaction.transaction_number)
-        await createNotification(checkWallet.user_id, `credited with ${amount}`);
-        
+        const checkWallet = await Wallet.findOne({ wallet_number});
+        if (!checkWallet) {
+            return res.status(404).json({
+                success: false,
+                message: 'wallet not found'
+            })
+        }
+        const { creditWallet, creditTransaction, walletTransaction} = await this.creditWalletHelper(wallet_number, amount)
         const wallets = await Wallet.find({user_id: creditWallet.user_id})
                                 .select("-wallet_pin").exec();
         return res.status(200).json({
             data: wallets,
+            transaction:{creditTransaction, walletTransaction},
             success: true,
             message: 'successfully credited wallet'
         });
@@ -250,15 +245,27 @@ exports.getSupportedBanks = async (req, res) => {
         });
         }
         let banks = await getPaymentBanks();
-        // seerInstance.getBanks()
         if(banks.error){
-            serverError(res, banks.response)
+            serverError(res, banks)
         }
 
-        setCacheData(cacheKey, banks.response.banks, (60 * 1 * 1000));
+        setCacheData(cacheKey, banks.response.data?.banks, (60 * 1 * 1000));
         return res.status(200).json({
             status: 'success',
-            data: banks.response.banks
+            data: banks.response.data?.banks
+        });
+    } catch (error) {
+        return serverError(res, error);
+    }
+}
+
+exports.checkBankAccount = async(req, res) => {
+    const {bank_code, account_number} = req.body;
+    try {
+        const bankDetails = await resolveBank(bank_code, account_number)
+        return res.status(200).json({
+            status: 'success',
+            data: bankDetails.response.data
         });
     } catch (error) {
         return serverError(res, error);
@@ -353,5 +360,21 @@ exports.getWallets = async (request, response) => {
           
     } catch (error) {
         return serverError(response, error);
+    }
+}
+
+
+exports.creditWalletHelper = async (wallet_number, amount) => {
+    try {
+        const description = `${amount} credited to wallet`;
+        const creditWallet = await Wallet.findOneAndUpdate({wallet_number},  { $inc: { balance: amount } }, { new: true }).select("-wallet_pin");
+
+        const creditTransaction = await createTransaction(creditWallet.user_id, description, amount, operations.credit, transactionTypes.wallet, Status.successful);
+        const walletTransaction = await createWalletTransaction(wallet_number, wallet_number, amount, description, creditTransaction.transaction_number)
+        await createNotification(creditWallet.user_id, `credited with ${amount}`);
+
+        return { creditWallet, creditTransaction, walletTransaction };
+    } catch (error) {
+        throw error;
     }
 }

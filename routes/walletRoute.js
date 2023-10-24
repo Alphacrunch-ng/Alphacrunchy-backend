@@ -1,6 +1,6 @@
 
 const { changeWalletPin } = require('../controllers/authController');
-const { getWalletById, setUserWalletInactive, createWallet, getWallets, creditWallet, debitWallet, wallet2WalletTransfer, checkWalletPin, getSupportedBanks } = require('../controllers/walletController');
+const { getWalletById, setUserWalletInactive, createWallet, getWallets, creditWallet, debitWallet, wallet2WalletTransfer, checkWalletPin, getSupportedBanks, checkBankAccount } = require('../controllers/walletController');
 
 
 
@@ -22,6 +22,9 @@ router.get('/', (req, res)=>{
 
 // Get supported banks
 router.get('/banks', getSupportedBanks)
+
+// check user bank to resolve name
+router.get('/check-bank', checkBankAccount)
 
 // get user wallets by user id
 router.get('/wallets/:id', getWallets);

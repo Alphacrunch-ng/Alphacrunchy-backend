@@ -5,6 +5,7 @@ const GiftCardTransaction = require('../models/giftcardTransactionModel')
 const { serverError } = require('../utils/services');
 const { Status, transactionTypes } = require('../utils/constants');
 const { transactionMailer } = require('../utils/nodeMailer');
+const { creditWalletHelper } = require('./walletController');
 
 // GET all notifications for a specific user
 exports.getUserTransactions = async (req, res) => {
@@ -178,8 +179,41 @@ exports.setTransactionInactive = async (req, res) => {
 };
 
 exports.completePayment = async (req, res) => {
-  console.log(req.body);
+  const {
+    account_number,
+    transaction_amount, 
+    expected_amount,
+    settled_amount,
+    merchant_ref, //wallet number is passed from frontend as merchant ref
+    msft_ref,
+    source_account_number,
+    source_account_name,
+    source_bank_name,
+    channel,
+    status,
+    transaction_type,
+    ipaddress,
+    created_at } = req.body;
+
+    console.log(req.body);
+    const wallet_number = merchant_ref;
+    const hash = req.header('verification-hash');
+
+    console.log(hash);
+    const enc_key = process.env.ENC_KEY;
   try {
+    if (!hash || (hash !== enc_key)) {
+      return res.status(401).json({
+        success: false,
+      });
+    }
+    if (status !== "success") {
+      return res.status(400).json({
+        success: false,
+      });
+    }
+    const result = await creditWalletHelper(wallet_number, settled_amount);
+    console.log(result);
     return res.status(200);
   } catch (error) {
     return serverError(res, error);
@@ -215,14 +249,14 @@ exports.deleteTransaction = async (req, res) => {
 
 //Services 
 //create notification service
-exports.createTransaction = async (user_id, description, amount , operation, transaction_type)=> { // everything here is required
+exports.createTransaction = async (user_id, description, amount , operation, transaction_type, status)=> { // everything here is required
     try {
         const checkUser = await User.findOne({ _id: user_id}).select("-password");
         if (!checkUser) {
           throw new Error("user_id not found");
       }
         transactionMailer(checkUser.email, operation, amount, description)
-        const newTransaction = new Transaction({ user_id, description, amount, transaction_type });
+        const newTransaction = new Transaction({ user_id, description, amount, transaction_type, status: status? status : "pending" });
         const saveTransaction = await newTransaction.save();
         return saveTransaction;
     } catch (error) {
