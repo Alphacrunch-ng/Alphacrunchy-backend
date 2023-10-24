@@ -197,7 +197,7 @@ exports.completePayment = async (req, res) => {
 
     console.log(req.body);
     const wallet_number = merchant_ref;
-    const hash = req.header('verification-hash');
+    const hash = req.header('Verification-hash');
 
     console.log(hash);
     const enc_key = process.env.ENC_KEY;
