@@ -20,9 +20,9 @@ const Seerbit = require('../utils/apiServices/initiateService');
 
 // seerInstance.getBanks()
 
-const createWalletTransaction = async (sender_wallet_number, reciever_wallet_number, amount, description, transaction_number) =>{
+const createWalletTransaction = async (sender_wallet_number, reciever_wallet_number, amount, description, transaction_number, reciever_acn) =>{
     try {
-        const walletTransaction = await WalletTransaction.create({sender_wallet_number, reciever_wallet_number, amount, description, transaction_number})
+        const walletTransaction = await WalletTransaction.create({sender_wallet_number, reciever_wallet_number, amount, description, transaction_number, reciever_acn})
         return walletTransaction;
     } catch (error) {
         throw error;
