@@ -196,10 +196,13 @@ exports.completePayment = async (req, res) => {
     created_at } = req.body;
 
     console.log(req.body);
+
+    const reciever_acn = account_number;
+    const transaction_ref = msft_ref;
     const wallet_number = merchant_ref;
     const hash = req.header('Verification-Hash');
     const enc_key = process.env.ENC_KEY;
-    
+
     console.log(hash, (hash !== enc_key));
   try {
     if (!hash || (hash !== enc_key)) {
@@ -212,7 +215,7 @@ exports.completePayment = async (req, res) => {
         success: false,
       });
     }
-    const result = await creditWalletHelper(wallet_number, settled_amount);
+    const result = await creditWalletHelper(wallet_number, settled_amount, transaction_ref, reciever_acn);
     console.log(result);
     return res.status(200);
   } catch (error) {
@@ -249,14 +252,19 @@ exports.deleteTransaction = async (req, res) => {
 
 //Services 
 //create notification service
-exports.createTransaction = async (user_id, description, amount , operation, transaction_type, status)=> { // everything here is required
+exports.createTransaction = async (user_id, description, amount , operation, transaction_type, status, transaction_number)=> { // everything here is required
     try {
         const checkUser = await User.findOne({ _id: user_id}).select("-password");
         if (!checkUser) {
           throw new Error("user_id not found");
       }
         transactionMailer(checkUser.email, operation, amount, description)
-        const newTransaction = new Transaction({ user_id, description, amount, transaction_type, status: status? status : "pending" });
+        
+        const newTransaction = transaction_number? 
+        new Transaction({ user_id, description, amount, transaction_type, status: status? status : "pending" , transaction_number}) 
+        : 
+        new Transaction({ user_id, description, amount, transaction_type, status: status? status : "pending" });
+
         const saveTransaction = await newTransaction.save();
         return saveTransaction;
     } catch (error) {

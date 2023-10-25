@@ -66,7 +66,7 @@ exports.set2FA = async function(next){
 
 exports.setTransactionNumber = async function(next){
     try {
-        if (this.isNew) {
+        if (this.isNew && !this.transaction_number) {
             this.transaction_number = createWalletNumber(11);
         }
         next();

@@ -21,6 +21,10 @@ const walletTransactionSchema = new mongoose.Schema({
     description: {
         type: String,
     },
+    reciever_acn: { // recievers account number last four digit for payout from wallet eg. 6789. LEAVE EMPTY FOR INTERNAL TRANSFERS
+        type: String,
+        default: ""
+    },
     transaction_number: {
         type: String,
     },

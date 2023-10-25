@@ -1,6 +1,8 @@
 
 const { changeWalletPin } = require('../controllers/authController');
 const { getWalletById, setUserWalletInactive, createWallet, getWallets, creditWallet, debitWallet, wallet2WalletTransfer, checkWalletPin, getSupportedBanks, checkBankAccount } = require('../controllers/walletController');
+const { authRoles } = require('../middlewares/auth');
+const { roles } = require('../utils/constants');
 
 
 
@@ -34,10 +36,10 @@ router.get('/:id', getWalletById)
 
 
 //credit a user wallet
-router.post('/credit', creditWallet)
+router.post('/credit', authRoles(roles.admin, roles.staff), creditWallet)
 
 //debit a user wallet 
-router.post('/debit', debitWallet)
+router.post('/debit', authRoles(roles.admin, roles.staff), debitWallet)
 
 //debit a user wallet 
 router.post('/check-pin', checkWalletPin)
