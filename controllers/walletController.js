@@ -19,6 +19,20 @@ const Seerbit = require('../utils/apiServices/initiateService');
 // seerInstance.getToken(process.env.SEERBITPOCKETEMAIL, process.env.SEERBITPOCKETPASSWORD)
 
 // seerInstance.getBanks()
+exports.creditWalletHelper = async (wallet_number, amount, transaction_number, reciever_acn) => {
+    try {
+        const description = `${amount} credited to wallet`;
+        const creditWallet = await Wallet.findOneAndUpdate({wallet_number},  { $inc: { balance: amount } }, { new: true }).select("-wallet_pin");
+
+        const creditTransaction = await createTransaction(creditWallet.user_id, description, amount, operations.credit, transactionTypes.wallet, Status.successful, transaction_number);
+        const walletTransaction = await createWalletTransaction(wallet_number, wallet_number, amount, description, creditTransaction.transaction_number, reciever_acn)
+        await createNotification(creditWallet.user_id, `credited with ${amount}`);
+
+        return { creditWallet, creditTransaction, walletTransaction };
+    } catch (error) {
+        throw error;
+    }
+}
 
 const createWalletTransaction = async (sender_wallet_number, reciever_wallet_number, amount, description, transaction_number, reciever_acn) =>{
     try {
@@ -364,17 +378,3 @@ exports.getWallets = async (request, response) => {
 }
 
 
-exports.creditWalletHelper = async (wallet_number, amount, transaction_number, reciever_acn) => {
-    try {
-        const description = `${amount} credited to wallet`;
-        const creditWallet = await Wallet.findOneAndUpdate({wallet_number},  { $inc: { balance: amount } }, { new: true }).select("-wallet_pin");
-
-        const creditTransaction = await createTransaction(creditWallet.user_id, description, amount, operations.credit, transactionTypes.wallet, Status.successful, transaction_number);
-        const walletTransaction = await createWalletTransaction(wallet_number, wallet_number, amount, description, creditTransaction.transaction_number, reciever_acn)
-        await createNotification(creditWallet.user_id, `credited with ${amount}`);
-
-        return { creditWallet, creditTransaction, walletTransaction };
-    } catch (error) {
-        throw error;
-    }
-}
