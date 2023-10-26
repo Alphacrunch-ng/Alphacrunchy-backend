@@ -201,11 +201,11 @@ exports.completePayment = async (req, res) => {
     const transaction_ref = msft_ref;
     const wallet_number = merchant_ref;
     const hash = req.header('Verification-Hash');
-    const enc_key = process.env.ENC_KEY;
+    const marahash = process.env.MARASECRETHASH;
 
-    console.log(hash, (hash !== enc_key));
+    console.log(hash, (hash !== marahash));
   try {
-    if (!hash || (hash !== enc_key)) {
+    if (!hash || (hash !== marahash)) {
       return res.status(401).json({
         success: false,
       });
