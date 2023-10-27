@@ -34,7 +34,7 @@ const port = process.env.PORT || 5001;
 //middlewares
 app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(spec));
 app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use('/',express.static('public'));
 const logDirectory = path.join(__dirname, 'log');
 // ensure log directory exists
