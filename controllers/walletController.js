@@ -1,8 +1,5 @@
 
 const bcrypt = require('bcrypt');
-const Notification = require('../models/notificationModel');
-const User = require('../models/userModel.js');
-const { getIo } = require('../utils/socket.js');
 const Wallet = require('../models/walletModel.js');
 const WalletTransaction = require('../models/walletTransactionModel')
 const { serverError } = require('../utils/services.js');
@@ -12,13 +9,8 @@ const { createTransaction } = require('./transactionController');
 const { currencies } = require('../utils/currencies.json');
 const { getCacheData, setCacheData } = require('../utils/cache');
 const { getPaymentBanks, resolveBank } = require('../utils/paymentService');
-const Seerbit = require('../utils/apiServices/initiateService');
 
-// const seerInstance = new Seerbit();
 
-// seerInstance.getToken(process.env.SEERBITPOCKETEMAIL, process.env.SEERBITPOCKETPASSWORD)
-
-// seerInstance.getBanks()
 exports.creditWalletHelper = async (wallet_number, amount, transaction_number, reciever_acn) => {
     try {
         const description = `${amount} credited to wallet`;
@@ -378,3 +370,46 @@ exports.getWallets = async (request, response) => {
 }
 
 
+exports.completePayment = async (req, res) => {
+    const {
+      account_number,
+      transaction_amount, 
+      expected_amount,
+      settled_amount,
+      merchant_ref, //wallet number is passed from frontend as merchant ref
+      msft_ref,
+      source_account_number,
+      source_account_name,
+      source_bank_name,
+      channel,
+      status,
+      transaction_type,
+      ipaddress,
+      created_at } = req.body;
+  
+      const reciever_acn = account_number;
+      const transaction_ref = msft_ref;
+      const wallet_number = merchant_ref;
+      const hash = req.header('Verification-Hash');
+      const marahash = process.env.MARASECRETHASH;
+  
+    try {
+      if (!hash || (hash !== marahash)) {
+        return res.status(401).json({
+          success: false,
+        });
+      }
+      if (status !== "success") {
+        return res.status(400).json({
+          success: false,
+        });
+      }
+      const result = await this.creditWalletHelper(wallet_number, settled_amount, transaction_ref, reciever_acn);
+      return res.status(200).json({
+        status: 'success',
+        data: result
+    })
+    } catch (error) {
+      return serverError(res, error);
+    }
+  }

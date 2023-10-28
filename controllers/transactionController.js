@@ -5,7 +5,6 @@ const GiftCardTransaction = require('../models/giftcardTransactionModel')
 const { serverError } = require('../utils/services');
 const { Status, transactionTypes } = require('../utils/constants');
 const { transactionMailer } = require('../utils/nodeMailer');
-const { creditWalletHelper } = require('./walletController');
 
 // GET all notifications for a specific user
 exports.getUserTransactions = async (req, res) => {
@@ -178,50 +177,7 @@ exports.setTransactionInactive = async (req, res) => {
   }
 };
 
-exports.completePayment = async (req, res) => {
-  const {
-    account_number,
-    transaction_amount, 
-    expected_amount,
-    settled_amount,
-    merchant_ref, //wallet number is passed from frontend as merchant ref
-    msft_ref,
-    source_account_number,
-    source_account_name,
-    source_bank_name,
-    channel,
-    status,
-    transaction_type,
-    ipaddress,
-    created_at } = req.body;
 
-    console.log(req.body);
-
-    const reciever_acn = account_number;
-    const transaction_ref = msft_ref;
-    const wallet_number = merchant_ref;
-    const hash = req.header('Verification-Hash');
-    const marahash = process.env.MARASECRETHASH;
-
-    console.log(hash, (hash !== marahash));
-  try {
-    if (!hash || (hash !== marahash)) {
-      return res.status(401).json({
-        success: false,
-      });
-    }
-    if (status !== "success") {
-      return res.status(400).json({
-        success: false,
-      });
-    }
-    const result = await creditWalletHelper(wallet_number, settled_amount, transaction_ref, reciever_acn);
-    console.log(result);
-    return res.status(200);
-  } catch (error) {
-    return serverError(res, error);
-  }
-}
 
 // // CREATE a new notification controller
 // exports.createUserNotification = async (req, res) => {

@@ -1,5 +1,6 @@
 
-const { getUserTransactions, setTransactionStatus, deleteTransaction, setTransactionInactive, completePayment, getTransactions, getTransactionById, getTransactionsByDay } = require('../controllers/transactionController');
+const { getUserTransactions, setTransactionStatus, deleteTransaction, setTransactionInactive, getTransactions, getTransactionById, getTransactionsByDay } = require('../controllers/transactionController');
+const { completePayment } = require('../controllers/walletController');
 const { authRoles, auth } = require('../middlewares/auth');
 const { roles } = require('../utils/constants');
 
