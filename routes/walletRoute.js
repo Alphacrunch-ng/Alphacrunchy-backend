@@ -23,16 +23,16 @@ router.get('/', (req, res)=>{
 });
 
 // Get supported banks
-router.get('/banks', getSupportedBanks)
+router.get('/banks', getSupportedBanks);
 
 // check user bank to resolve name
-router.get('/check-bank', checkBankAccount)
+router.post('/check-bank', checkBankAccount);
 
 // get user wallets by user id
 router.get('/wallets/:id', getWallets);
 
 // Get user wallet By wallet ID
-router.get('/:id', getWalletById)
+router.get('/:id', getWalletById);
 
 
 //credit a user wallet
