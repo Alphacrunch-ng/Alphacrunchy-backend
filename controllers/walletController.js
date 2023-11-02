@@ -8,7 +8,9 @@ const { operations, transactionTypes, Status } = require('../utils/constants');
 const { createTransaction } = require('./transactionController');
 const { currencies } = require('../utils/currencies.json');
 const { getCacheData, setCacheData } = require('../utils/cache');
-const { getPaymentBanks, resolveBank } = require('../utils/paymentService');
+const { getPaymentBanks, resolveBank, transferToBank } = require('../utils/paymentService');
+const FormData = require('form-data');
+const { default: axios } = require('axios');
 
 
 exports.creditWalletHelper = async (wallet_number, amount, transaction_number, reciever_acn) => {
@@ -21,6 +23,21 @@ exports.creditWalletHelper = async (wallet_number, amount, transaction_number, r
         await createNotification(creditWallet.user_id, `credited with ${amount}`);
 
         return { creditWallet, creditTransaction, walletTransaction };
+    } catch (error) {
+        throw error;
+    }
+}
+
+exports.debitWalletHelper = async (wallet_number, amount, transaction_number, reciever_acn) => {
+    try {
+        const description = `${amount} debited from wallet`;
+        const debitWallet = await Wallet.findOneAndUpdate({wallet_number},  { $inc: { balance: -amount } }, { new: true }).select("-wallet_pin");
+
+        const debitTransaction = await createTransaction(debitWallet.user_id, description, amount, operations.debit, transactionTypes.wallet, Status.successful, transaction_number);
+        const walletTransaction = await createWalletTransaction(wallet_number, wallet_number, amount, description, debitTransaction.transaction_number, reciever_acn)
+        await createNotification(debitWallet.user_id, `debited with ${amount}`);
+
+        return { debitWallet, debitTransaction, walletTransaction };
     } catch (error) {
         throw error;
     }
@@ -268,11 +285,18 @@ exports.getSupportedBanks = async (req, res) => {
 exports.checkBankAccount = async(req, res) => {
     const {bank_code, account_number} = req.body;
     try {
-        const bankDetails = await resolveBank(bank_code, account_number)
-        return res.status(200).json({
-            status: 'success',
-            data: bankDetails.response.data
-        });
+        const bankDetails = await resolveBank(bank_code, account_number);
+        if ( bankDetails.response.status === true ) {
+            return res.status(200).json({
+                success: true,
+                data: bankDetails.response.data
+            });
+        }
+        return res.status(400).json({
+            success: false,
+            data: bankDetails.response.message
+         });
+        
     } catch (error) {
         return serverError(res, error);
     }
@@ -369,14 +393,14 @@ exports.getWallets = async (request, response) => {
     }
 }
 
-
+// credit account webhook
 exports.completePayment = async (req, res) => {
     const {
       account_number,
       transaction_amount, 
       expected_amount,
       settled_amount,
-      merchant_ref, //wallet number is passed from frontend as merchant ref
+      merchant_ref, // wallet number is passed from frontend as merchant ref
       msft_ref,
       source_account_number,
       source_account_name,
@@ -413,3 +437,46 @@ exports.completePayment = async (req, res) => {
       return serverError(res, error);
     }
   }
+
+// debit wallet to pay to bank
+exports.paymentToBank = async (req, res) => {
+    const { bank_code, account_number, amount, wallet_number } = req.body;
+   
+    try {
+        const checkWallet = await Wallet.findOne({ wallet_number});
+        if (!checkWallet) {
+            return res.status(404).json({
+                success: false,
+                message: 'wallet not found'
+            });
+        }
+        if (amount > checkWallet.balance) {
+            return res.status(404).json({
+                success: false,
+                message: 'wallet not found'
+            });
+        }
+        const { response, error} = await transferToBank(bank_code, account_number, checkWallet.wallet_number, amount);
+
+        if (error !== null || response.status === "fail") {
+            return res.status(500).json({
+                success: false,
+                message: error.message
+            });
+        }
+        if (response?.status === "success") {
+            const { debitWallet, debitTransaction, walletTransaction } = await this.debitWalletHelper(wallet_number, amount, response.data?.transactionRef, account_number);
+            const wallets = await Wallet.find({user_id: debitWallet.user_id})
+                                .select("-wallet_pin").exec();
+            return res.status(200).json({
+                data: wallets,
+                transaction:{debitTransaction, walletTransaction},
+                success: true,
+                message: 'successfully debited wallet'
+            });
+        }
+    } catch (error) {
+        return serverError(res, error);
+    }
+    
+}
