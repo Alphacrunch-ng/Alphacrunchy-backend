@@ -451,13 +451,13 @@ exports.paymentToBank = async (req, res) => {
             });
         }
         if (amount > checkWallet.balance) {
-            return res.status(404).json({
+            return res.status(400).json({
                 success: false,
                 message: 'insufficient funds in wallet'
             });
         }
         const { response, error} = await transferToBank(bank_code, account_number, checkWallet.wallet_number, amount);
-
+        
         if (error !== null || response.status === "fail") {
             return res.status(500).json({
                 success: false,
