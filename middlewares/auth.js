@@ -2,7 +2,7 @@ const JWT = require('jsonwebtoken');
 
 exports.auth = async (req, res, next) => {
     try {
-        const token = req.header('Authorization').replace('Bearer ', '');
+        const token = req.header('Authorization')?.replace('Bearer ', '');
         const decoded = JWT.verify(token, process.env.JWT_SECRET, {
             issuer: process.env.JWT_ISSUER,
             audience: process.env.JWT_AUDIENCE,

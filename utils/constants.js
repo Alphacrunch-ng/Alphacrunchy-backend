@@ -21,6 +21,8 @@ exports.operations = {
 }
 
 exports.product_name = 'Cambio';
+exports.frontend_link = "https://cambio.ng"
+exports.backend_link = "https://aphacrunch-api.onrender.com"
 exports.logo_url = "https://res.cloudinary.com/dkgblnkxm/image/upload/v1694926535/w2wnxtjjbydmtjru2gjg.png"
 
 exports.Status = {

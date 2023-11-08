@@ -1,5 +1,5 @@
 
-const { getUserTransactions, setTransactionStatus, deleteTransaction, setTransactionInactive, getTransactions, getTransactionById, getTransactionsByDay } = require('../controllers/transactionController');
+const { getUserTransactions, setTransactionStatus, deleteTransaction, setTransactionInactive, getTransactions, getTransactionById, getTransactionsByDay, generatePaymentLink } = require('../controllers/transactionController');
 const { completePayment } = require('../controllers/walletController');
 const { authRoles, auth } = require('../middlewares/auth');
 const { roles } = require('../utils/constants');
@@ -31,6 +31,9 @@ router.get('/transactions/:id', auth, getUserTransactions);
 
 // get a transaction 
 router.get('/:id', auth, getTransactionById);
+
+// get a transaction 
+router.post('/get-payment-link', auth, generatePaymentLink);
 
 // Set user transaction status
 router.patch('/:id', auth, setTransactionStatus);

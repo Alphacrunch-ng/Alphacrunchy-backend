@@ -5,6 +5,7 @@ const GiftCardTransaction = require('../models/giftcardTransactionModel')
 const { serverError } = require('../utils/services');
 const { Status, transactionTypes } = require('../utils/constants');
 const { transactionMailer } = require('../utils/nodeMailer');
+const { getPaymentLink } = require('../utils/paymentService');
 
 // GET all notifications for a specific user
 exports.getUserTransactions = async (req, res) => {
@@ -21,6 +22,37 @@ exports.getUserTransactions = async (req, res) => {
     return serverError(res, error);
   }
 };
+
+exports.generatePaymentLink = async (req, res) => {
+  // Extract necessary data from req.body or any other source
+  const {
+    wallet_number,
+    amount,
+    phoneNumber,
+    email,
+    fullName,
+  } = req.body;
+
+  try {
+    // Call the getPaymentLink function with the required parameters
+    const response = await getPaymentLink( wallet_number, amount, phoneNumber, email, fullName);
+
+    const data = response.data;
+
+    if (data.status === 'success' && data.url) {
+      // Send the payment URL back to the client
+      return res.status(200).json({ 
+        success: true, 
+        url: data.url 
+      });
+    } else {
+      return serverError(res, error);
+    }
+  } catch (error) {
+    return serverError(res, error);
+  }
+};
+
 
 // GET a transaction by id
 exports.getTransactionById = async (req, res) => {

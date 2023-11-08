@@ -1,7 +1,7 @@
 
 const axios = require('axios');
 const querystring = require('querystring');
-const { product_name } = require('./constants');
+const { product_name, frontend_link, backend_link } = require('./constants');
 const FormData = require('form-data');
 
 const marabaseUrl = process.env.MARABASEURL;
@@ -107,3 +107,32 @@ exports.transferToBank = async (bankCode, accountNumber, wallet_number, amount) 
 exports.createdVirtualAccount = () => {
     
 }
+
+exports.getPaymentLink = async (wallet_number, amount, phoneNumber, email, fullName) => {
+    const url = "https://checkout.marasoftpay.live/initiate_transaction";
+    const payload = {
+            data: {
+            "public_key":  process.env.MARAPUBK,
+            "request_type": "live",
+            "merchant_tx_ref": wallet_number,
+            "redirect_url": `${frontend_link}/dashboard/wallet`,
+            "name": fullName,
+            "email_address": email,
+            "phone_number": phoneNumber,
+            "amount": amount,
+            "currency": "NGN",
+            "user_bear_charge": "no",
+            "preferred_payment_option": "card",
+            "description": "Deposit to wallet",
+            "webhook_url": `${backend_link}/transaction/deposit`
+        }
+    }
+  
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    };
+  
+    return axios.post(url, payload, config);
+  }

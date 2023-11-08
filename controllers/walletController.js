@@ -453,7 +453,7 @@ exports.paymentToBank = async (req, res) => {
         if (amount > checkWallet.balance) {
             return res.status(404).json({
                 success: false,
-                message: 'wallet not found'
+                message: 'insufficient funds in wallet'
             });
         }
         const { response, error} = await transferToBank(bank_code, account_number, checkWallet.wallet_number, amount);
