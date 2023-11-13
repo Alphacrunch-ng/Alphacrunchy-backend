@@ -480,8 +480,13 @@ exports.paymentToBank = async (req, res) => {
             });
         }
         if (error) {
+            const description = `${amount} debited from wallet`;
+            const failedTransaction = await createTransaction(checkWallet.user_id, description, amount, operations.debit, transactionTypes.wallet, Status.failed);
+
+            const walletTransaction = await createWalletTransaction(wallet_number, wallet_number, amount, description, failedTransaction.transaction_number, account_number)
             return res.status(500).json({
                 success: false,
+                walletTransaction,
                 message: error?.message
             });
         }
