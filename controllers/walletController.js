@@ -164,20 +164,24 @@ exports.debitWallet = async (req, res) => {
 // debit a users wallet
 exports.wallet2WalletTransfer = async (req, res) => {
     const {wallet_number, amount, reciever_wallet_number } = req.body;
+    console.log(wallet_number, amount, reciever_wallet_number);
     
     try {
         const checkWallet = await Wallet.findOne({ wallet_number}).populate({
             path: "user_id",
             select: "fullName _id"
         });
-        const checkRecieverWallet = await Wallet.findOne({ wallet_number}).populate({
+        const checkRecieverWallet = await Wallet.findOne({wallet_number: reciever_wallet_number }).populate({
             path: "user_id",
             select: "fullName _id"
         });
 
         const debitDescription = `${amount} debited from wallet to ${checkRecieverWallet.user_id.fullName}: ${checkRecieverWallet.wallet_number}.`;
 
+        
         const creditDescription = `${amount} credited to wallet from ${checkWallet.user_id.fullName}: ${checkWallet.wallet_number}.`;
+
+        console.log(checkWallet.wallet_number, checkRecieverWallet.wallet_number, debitDescription, creditDescription);
 
         if (!checkWallet || !checkRecieverWallet) {
             return res.status(404).json({
@@ -200,18 +204,24 @@ exports.wallet2WalletTransfer = async (req, res) => {
 
         //debit the sender
         const debitWallet = await Wallet.findOneAndUpdate({wallet_number},  { $inc: { balance: -amount } }, { new: true }).select("-wallet_pin");
-        const debitTransaction = await createTransaction(checkWallet.user_id, description, amount, operations.debit, transactionTypes.wallet);
-        let walletTransaction = await createWalletTransaction(wallet_number, reciever_wallet_number, amount, description, debitTransaction.transaction_number);
-        console.log(await createNotification(checkWallet.user_id._id, `debited of ${amount}`));
+        const debitTransaction = await createTransaction(checkWallet.user_id, debitDescription, amount, operations.debit, transactionTypes.wallet);
+        let walletTransaction = await createWalletTransaction(wallet_number, reciever_wallet_number, amount, debitDescription, debitTransaction.transaction_number);
+        await createNotification(checkWallet.user_id._id, `debited of ${amount}`);
 
         //credit the reciever
-        await Wallet.findOneAndUpdate({reciever_wallet_number},  { $inc: { balance: amount } }, { new: true }).select("-wallet_pin");
-        const creditTransaction = await createTransaction(checkRecieverWallet.user_id, description, amount, operations.credit, transactionTypes.wallet);
-        walletTransaction = await createWalletTransaction(wallet_number, reciever_wallet_number, amount, description, creditTransaction.transaction_number);
-        console.log(await createNotification(checkRecieverWallet.user_id._id, `credited with ${amount}`));
+        const recievingWallet = await Wallet.findOneAndUpdate({ wallet_number:reciever_wallet_number},  { $inc: { balance: amount } }, { new: true }).select("-wallet_pin").populate({
+            path: "user_id",
+            select: "fullName _id"
+        });;
+        const creditTransaction = await createTransaction(checkRecieverWallet.user_id, creditDescription, amount, operations.credit, transactionTypes.wallet);
+        walletTransaction = await createWalletTransaction(wallet_number, reciever_wallet_number, amount, creditDescription, creditTransaction.transaction_number);
+        await createNotification(checkRecieverWallet.user_id._id, `credited with ${amount}`);
 
+        const wallets = await Wallet.find({user_id: checkWallet.user_id}).select("-wallet_pin").exec();
         return res.status(200).json({
-            data: debitWallet,
+            data: wallets,
+            recievingWallet,
+            walletTransaction,
             success: true,
             message: 'successfully transfered funds'
         });
@@ -458,12 +468,6 @@ exports.paymentToBank = async (req, res) => {
         }
         const { response, error} = await transferToBank(bank_code, account_number, checkWallet.wallet_number, amount);
         
-        if (error !== null || response.status === "fail") {
-            return res.status(500).json({
-                success: false,
-                message: error.message
-            });
-        }
         if (response?.status === "success") {
             const { debitWallet, debitTransaction, walletTransaction } = await this.debitWalletHelper(wallet_number, amount, response.data?.transactionRef, account_number);
             const wallets = await Wallet.find({user_id: debitWallet.user_id})
@@ -473,6 +477,12 @@ exports.paymentToBank = async (req, res) => {
                 transaction:{debitTransaction, walletTransaction},
                 success: true,
                 message: 'successfully debited wallet'
+            });
+        }
+        if (error) {
+            return res.status(500).json({
+                success: false,
+                message: error?.message
             });
         }
     } catch (error) {
