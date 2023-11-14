@@ -143,8 +143,19 @@ exports.debitWallet = async (req, res) => {
                 message: 'invalid amount'
             })
         }
+        if (amount > checkWallet.balance) {
+            const description = `${amount} debited from wallet`;
+            const failedTransaction = await createTransaction(checkWallet.user_id, description, amount, operations.debit, transactionTypes.wallet, Status.failed);
+
+            const walletTransaction = await createWalletTransaction(wallet_number, wallet_number, amount, description, failedTransaction.transaction_number, account_number)
+            return res.status(400).json({
+                success: false,
+                transaction:{failedTransaction, walletTransaction},
+                message: 'insufficient funds in wallet'
+            });
+        }
         const debitWallet = await Wallet.findOneAndUpdate({wallet_number},  { $inc: { balance: -amount } }, { new: true }).select("-wallet_pin");
-        const debitTransaction = await createTransaction(checkWallet.user_id, description, amount, operations.debit, transactionTypes.wallet);
+        const debitTransaction = await createTransaction(checkWallet.user_id, description, amount, operations.debit, transactionTypes.wallet, Status.successful);
 
         const walletTransaction = await createWalletTransaction(wallet_number, wallet_number, amount, description, debitTransaction.transaction_number);
         await createNotification(checkWallet.user_id, `debited of ${amount}`);
@@ -153,6 +164,7 @@ exports.debitWallet = async (req, res) => {
 
         return res.status(200).json({
             data: wallets,
+            transaction:{debitTransaction, walletTransaction},
             success: true,
             message: 'successfully debited wallet'
         });
