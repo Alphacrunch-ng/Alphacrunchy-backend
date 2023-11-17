@@ -67,6 +67,12 @@ const userSchema = new mongoose.Schema({
     otp:{
         type: String
     },
+    kycLevel: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 3
+    },
     verified : {
         type: Boolean,
         default: false
