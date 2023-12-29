@@ -21,6 +21,7 @@ router.get('/', (req, res) => {
     res.send("<h1>Alphacrunch Finance</h1>");
 });
 
+
 //admin routes
 router.use('/auth', authRoute);
 

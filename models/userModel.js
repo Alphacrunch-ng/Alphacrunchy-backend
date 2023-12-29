@@ -15,7 +15,9 @@ const userSchema = new mongoose.Schema({
     email : {
         type: String,
         required: ['true', 'email is required.'],
-        validate: [isEmail, 'please enter a valid email']
+        validate: [isEmail, 'please enter a valid email'],
+        index: true,
+        unique: true,
     },
     sex: {
         type: String,
@@ -71,7 +73,7 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 0,
         min: 0,
-        max: 3
+        max: 2
     },
     verified : {
         type: Boolean,

@@ -1,6 +1,7 @@
 
 const User = require('../models/userModel.js');
 const cloudinary = require('../middlewares/cloudinary.js');
+const UserKYCVerification = require('../models/userKYCVerificationModel')
 const { serverError } = require('../utils/services.js');
 const { roles } = require('../utils/constants.js');
 
@@ -224,4 +225,21 @@ exports.setUserRole = async (request, response) => {
     } catch (error) {
         return serverError(res, error);
     }
+}
+
+exports.kycCallBack = async (req, res) => {
+    const { kycResult } = req.body;
+    console.log(kycResult);
+    const userKyc = await UserKYCVerification.create(kycResult);
+
+    if(kycResult.ResultCode === "1012"){
+        // update the user's KYC status to approved in the database and send an email notification
+        const user = await User.findByIdAndUpdate(userKyc.PartnerParams.user_id, { kycLevel : 2}, { new : true});
+        return res.status(200).json({
+            success: true
+        });
+    }
+    return res.status(400).json({
+        success: false
+    });
 }

@@ -1,4 +1,4 @@
-const { setInActiveUser, getUserById, updateUser, getUsers, getUserByEmail, deleteUserProfilePicture } = require('../controllers/usersController');
+const { setInActiveUser, getUserById, updateUser, getUsers, getUserByEmail, deleteUserProfilePicture, kycCallBack } = require('../controllers/usersController');
 const upload = require('../middlewares/multer');
 
 
@@ -27,6 +27,9 @@ router.get('/email', getUserByEmail)
 
 // Get user By ID
 router.get('/:id', getUserById)
+
+// KYC callback
+router.post('/kyc/callback', kycCallBack);
 
 // Update user By ID
 router.put('/:id', upload.single('profile_pic') , updateUser)

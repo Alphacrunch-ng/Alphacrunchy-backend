@@ -109,7 +109,8 @@ exports.normalizeEmail = async function(next){
         if (this.isNew) {
             // hash password
             const lowerCaseEmail = this.email.toLowerCase();
-            this.email = lowerCaseEmail;
+            let normalizedEmail = lowerCaseEmail.replace(/[^\w\s@.]/gi, '');
+            this.email = normalizedEmail;
         }
         next();
     } catch (error) {
