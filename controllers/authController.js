@@ -50,7 +50,7 @@ exports.loggingIn = async (request, response) => {
     const {email, password} = request.body;
     try {
         const user = await User.findOne({ email: email });
-        const checkWallets = await Wallet.find({user_id: user._id}).select("-wallet_pin");
+        
         if (user) {
             const isPasswordMatching = await bcrypt.compare(password, user.password);
             
@@ -111,7 +111,7 @@ exports.loggingIn = async (request, response) => {
                     });
                     user.password = "";
                     const today = new Date();
-
+                    const checkWallets = await Wallet.find({user_id: user._id}).select("-wallet_pin");
                     return response.status(200).json({
                         data: user,
                         wallets: checkWallets,

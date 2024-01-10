@@ -17,7 +17,11 @@ exports.operations = {
     debit: 'Debit',
     credit: 'Credit',
     transfer: 'Transfer',
-    sellGiftcard: 'Sell Giftcard'
+    sellGiftcard: 'Sell Giftcard',
+    basicKycSuccess: "Basic KYC Success",
+    basicKycFailed: "Basic KYC Failed",
+    biometricKycSuccess: "Biometric KYC success",
+    biometricKycFailed: "Biometric KYC failed"
 }
 
 exports.product_name = 'Cambio';

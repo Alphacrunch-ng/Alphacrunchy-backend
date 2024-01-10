@@ -3,7 +3,9 @@ const User = require('../models/userModel.js');
 const cloudinary = require('../middlewares/cloudinary.js');
 const UserKYCVerification = require('../models/userKYCVerificationModel')
 const { serverError } = require('../utils/services.js');
-const { roles } = require('../utils/constants.js');
+const { roles, operations } = require('../utils/constants.js');
+const { noticeMailer } = require('../utils/nodeMailer.js');
+const { createNotification } = require('./notificationController.js');
 
 // controller for getting a User by Id
 exports.getUserById = async (req, res) => {
@@ -235,6 +237,18 @@ exports.kycCallBack = async (req, res) => {
     if(kycResult.ResultCode === "1012"){
         // update the user's KYC status to approved in the database and send an email notification
         const user = await User.findByIdAndUpdate(userKyc.PartnerParams.user_id, { kycLevel : 2}, { new : true});
+
+        await createNotification(user._id, operations.biometricKycSuccess)
+        noticeMailer(user.email, operations.biometricKycSuccess)
+        return res.status(200).json({
+            success: true
+        });
+    }
+    if(kycResult.ResultCode === "1020" || kycResult.ResultCode === "1021"){
+        // update the user's KYC status to approved in the database and send an email notification
+        const user = await User.findByIdAndUpdate(userKyc.PartnerParams.user_id, { kycLevel : 1}, { new : true});
+        await createNotification(user._id, operations.basicKycSuccess)
+        noticeMailer(user.email, operations.basicKycSuccess)
         return res.status(200).json({
             success: true
         });
