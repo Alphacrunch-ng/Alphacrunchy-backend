@@ -107,7 +107,6 @@ exports.setRole = async function(next){
 exports.normalizeEmail = async function(next){
     try {
         if (this.isNew) {
-            // hash password
             const lowerCaseEmail = this.email.toLowerCase();
             let normalizedEmail = lowerCaseEmail.replace(/[^\w\s@.]/gi, '');
             this.email = normalizedEmail;

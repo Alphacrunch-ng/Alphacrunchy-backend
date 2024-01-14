@@ -1,4 +1,4 @@
-const { registration, loggingIn, confirmUserEmail, requstResetPassword, resetPassword, resetPin, changePassword, requestOtp, setup2Factor, twoFactorLoggingIn } = require('../controllers/authController');
+const { registration, loggingIn, confirmUserEmail, requstResetPassword, resetPassword, resetPin, changePassword, requestOtp, setup2Factor, twoFactorLoggingIn, getKycKey } = require('../controllers/authController');
 const { getUserByEmail } = require('../controllers/usersController');
 const { createWallet } = require('../controllers/walletController');
 const {auth } = require('../middlewares/auth');
@@ -45,5 +45,7 @@ router.post('/change-password', auth, changePassword)
 
 // Create user wallet
 router.post('/wallet/create', auth, createWallet)
+
+router.post('/kyc-signature', auth, getKycKey);
 
 module.exports = router;

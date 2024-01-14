@@ -544,3 +544,27 @@ exports.changePassword = async (request, response) => {
         return serverError(response, error);
     }
 }
+
+exports.getKycKey = async (req, res) => {
+    const { environment } = req.body;
+    let api_key;
+    switch (environment) {
+        case 'sandbox':
+            api_key = process.env.API_SIGNATURE_SANDBOX;
+            res.status(200).json({
+                data: api_key
+            });
+            break;
+        case 'live':
+            api_key = process.env.API_SIGNATURE_LIVE;
+            res.status(200).json({
+                data: api_key
+            });
+            break;
+        default:
+            res.status(400).json({
+                message: "No environment given",
+                success: false
+            });
+    }
+}
