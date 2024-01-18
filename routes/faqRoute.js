@@ -1,4 +1,10 @@
 const router = require("express").Router();
+const {
+  askFaqQuestion,
+  answerFaqQuestion,
+  getFaqQuestions,
+  archiveFaqQuestion,
+} = require("../controllers/faqController");
 /**
  * @swagger
  * components:
@@ -9,7 +15,7 @@ const router = require("express").Router();
 router.post("/ask-question", askFaqQuestion);
 
 // answer question
-router.post("/answer-question", answerFaqQuestion);
+router.put("/answer-question", answerFaqQuestion);
 
 // get questions
 router.get("/questions", getFaqQuestions);

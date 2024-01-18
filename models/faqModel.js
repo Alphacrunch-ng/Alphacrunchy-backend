@@ -30,6 +30,10 @@ const faqSchema = new mongoose.Schema(
       },
       default: "General",
     },
+    status: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
@@ -37,5 +41,3 @@ const faqSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model("FAQ", faqSchema);
-
-module.exports = FAQ;
