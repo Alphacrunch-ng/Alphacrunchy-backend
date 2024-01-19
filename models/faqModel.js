@@ -30,7 +30,11 @@ const faqSchema = new mongoose.Schema(
       },
       default: "General",
     },
-    status: {
+    answered: {
+      type: Boolean,
+      default: false,
+    },
+    archived: {
       type: Boolean,
       default: false,
     },
