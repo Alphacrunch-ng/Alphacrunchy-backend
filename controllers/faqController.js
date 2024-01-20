@@ -1,12 +1,11 @@
 const FAQ = require("../models/faqModel");
 const { serverError } = require("../utils/services.js");
 const { roles } = require("../utils/constants");
-const { getCacheData, setCacheData } = require("../utils/cache");
 
 exports.askFaqQuestion = async (req, res) => {
-  const { fullName, email, question } = req.body;
+  const { fullName, email, question, category } = req.body;
   try {
-    const data = new FAQ({ fullName, email, question });
+    const data = new FAQ({ fullName, email, question, category });
     await data.save();
     res.status(201).json({ message: "Question created successfully", data });
   } catch (err) {
