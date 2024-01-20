@@ -27,7 +27,7 @@ const faqSchema = new mongoose.Schema(
       enum: {
         values: ["giftcards", "crypto", "wallet", "others"],
         message:
-          "category can either be 'giftcards' or 'crypto' or 'wallet' or 'others'",
+          "category can either be 'giftcards', 'crypto', 'wallet' or 'others'",
       },
     },
     answered: {
