@@ -6,6 +6,8 @@ const { serverError, createOtp, formatEmail } = require('../utils/services.js');
 const { operations } = require('../utils/constants.js');
 const jwt = require('jsonwebtoken');
 const { sendSmsOtp } = require('../utils/smsService.js');
+let crypto = require('crypto');
+
 
 // controller for signing up
 exports.registration = async (req, res) => {
@@ -18,7 +20,7 @@ exports.registration = async (req, res) => {
             });
         }
         else {
-            const { fullName, email, phoneNumber, password, country } = req.body;
+            const { fullName, email, phoneNumber, password, sex, country, state, city } = req.body;
             const otp = createOtp();
             const hashedOtp = await bcrypt.hash(otp.toString(), 10);
             var user = await User.create({
@@ -546,19 +548,29 @@ exports.changePassword = async (request, response) => {
 }
 
 exports.getKycKey = async (req, res) => {
+    let timestamp = new Date().toISOString();
+    let api_key = process.env.API_SIGNATURE_LIVE;
+    let partner_id = process.env.PARTNER_ID;
+    let hmac = crypto.createHmac('sha256', api_key);
+
+    hmac.update(timestamp, 'utf8');
+    hmac.update(partner_id, 'utf8');
+    hmac.update("sid_request", 'utf8');
+
+    let signature = hmac.digest().toString('base64');
     const { environment } = req.body;
-    let api_key;
     switch (environment) {
         case 'sandbox':
-            api_key = process.env.API_SIGNATURE_SANDBOX;
             res.status(200).json({
-                data: api_key
+                data: process.env.API_SIGNATURE_SANDBOX,
+                message: "Your Signature API Key"
             });
             break;
         case 'live':
-            api_key = process.env.API_SIGNATURE_LIVE;
             res.status(200).json({
-                data: api_key
+                data: process.env.API_SIGNATURE_LIVE,
+                message: "Your Signature API Key",
+                signature
             });
             break;
         default:
