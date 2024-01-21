@@ -25,10 +25,10 @@ const faqSchema = new mongoose.Schema(
       type: String,
       required: true,
       enum: {
-        values: ["General", "Billing", "Technical"],
-        message: "category can either be 'general' or 'billing' or 'technical'",
+        values: ["giftcards", "crypto", "wallet", "others"],
+        message:
+          "category can either be 'giftcards', 'crypto', 'wallet' or 'others'",
       },
-      default: "General",
     },
     answered: {
       type: Boolean,
