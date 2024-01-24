@@ -123,6 +123,39 @@ exports.transactionMailer = (email, operation, amount, description) => {
   transportSender(mailOptions);
 };
 
+exports.loginNotificationMailer = (name, email, deviceInfo, ipAddress) => {
+  const message = `
+      <table style="width:100%; max-width:600px; margin:0 auto; font-family: 'Arial', sans-serif; background-color: #f5f5f5; color: #333; padding: 20px; border-collapse: collapse;">
+        <tr>
+          <td>
+            <h1 style="color: #007BFF; margin-bottom: 20px;">Welcome back to ${product_name}, ${name}!</h1>
+            <p>Your account has been accessed recently. Here are the details:</p>
+            <ul style="list-style: none; padding: 0;">
+              <li style="margin-bottom: 10px;"><strong>Device Information:</strong> ${deviceInfo}</li>
+              <li style="margin-bottom: 10px;"><strong>IP Address:</strong> ${ipAddress}</li>
+              <li style="margin-bottom: 10px;"><strong>Location:</strong> ${resolvedLocation(
+                ipAddress
+              )}</li>
+            </ul>
+            <p>If this was you, no further action is required. If you didn't recognize this login, please secure your account.</p>
+          </td>
+        </tr>
+      </table>
+  `;
+
+  // Setup email data with unicode symbols
+  let mailOptions = {
+    from: `"${product_name}" <${process.env.SENDER_EMAIL}>`, // Sender address
+    to: `${email}`, // Recipient address
+    subject: "Login Notification", // Email subject
+    text: `Welcome back, ${name}! Your account has been accessed recently.`, // Plain text body
+    html: message, // HTML body
+  };
+
+  // Create reusable transporter object using the default SMTP transport
+  transportSender(mailOptions);
+};
+
 const transportSender = (mailOptions) => {
   // create reusable transporter object using the default smtp transport
   let transport = nodemailer.createTransport({
