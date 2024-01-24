@@ -9,6 +9,7 @@ require('dotenv').config();
 const swaggerJsDoc = require('swagger-jsdoc');
 const mongodb = require('./utils/db.js');
 const rfs = require('rotating-file-stream');
+const useragent = require('express-useragent');
 
 const indexRoute = require('./routes/indexRoute');
 const options = require('./utils/swaggerOptions');
@@ -56,6 +57,8 @@ if (process.env.NODE_ENV === 'production'){
     app.use(morgan("combined",{ stream: accessLogStream }));
     app.use(morgan('dev'));
 }
+// Middleware to parse user-agent information
+app.use(useragent.express());
 
 
 

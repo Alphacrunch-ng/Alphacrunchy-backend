@@ -7,6 +7,8 @@ const { operations } = require('../utils/constants.js');
 const jwt = require('jsonwebtoken');
 const { sendSmsOtp } = require('../utils/smsService.js');
 let crypto = require('crypto');
+const { authEvents } = require('../utils/events/emitters.js');
+const { events } = require('../utils/events/eventConstants.js');
 
 
 // controller for signing up
@@ -113,6 +115,9 @@ exports.loggingIn = async (request, response) => {
                     });
                     user.password = "";
                     const today = new Date();
+                    let ip = request.ip;
+                    let device = request.useragent;
+                    authEvents.emit(events.USER_LOGGED_IN, {user, ip, device})
                     const checkWallets = await Wallet.find({user_id: user._id}).select("-wallet_pin");
                     return response.status(200).json({
                         data: user,

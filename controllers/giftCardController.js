@@ -10,8 +10,8 @@ const mongoose = require("mongoose");
 const { createTransaction } = require("./transactionController");
 const { Status, operations, transactionTypes } = require("../utils/constants");
 const { getCacheData, setCacheData } = require("../utils/cache");
-const { currencies } = require("../utils/currencies.json");
 const ObjectId = mongoose.Types.ObjectId;
+
 
 // ------------GIFTCARD-MANAGEMENT----------- //
 
@@ -419,7 +419,7 @@ exports.setGiftCardInactive = async (req, res) => {
 exports.getAllGiftCards = async (req, res) => {
   const { pageSize, page, active } = req.params;
   const cacheKey = "allgiftcards";
-
+  
   try {
     // Check if the result is already cached
     const cachedData = getCacheData(cacheKey);

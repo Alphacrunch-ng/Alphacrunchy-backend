@@ -52,7 +52,7 @@ exports.phoneFormater = (phone, country) => {
 exports.formatEmail = (email) => {
     let firstPartEmail = email.slice(0,email.indexOf('@'));
     return `${firstPartEmail.slice(0,3)}***${email.slice(email.indexOf('@'))}`
-   }
+}
 
 // For Populating the rates => 
 //    giftcards.forEach((giftcard)=>{
