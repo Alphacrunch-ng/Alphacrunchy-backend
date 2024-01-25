@@ -17,7 +17,7 @@ const { connectChat } = require("./utils/services.js");
 const socket = require("./utils/socket.js");
 const { authRoles, auth } = require("./middlewares/auth.js");
 const { roles } = require("./utils/constants.js");
-const { getUserDeviceInfo } = require("./utils/services.js");
+const { getUserDeviceInfo, getUserLocation } = require("./utils/services.js");
 
 const app = express();
 app.use(cors());
@@ -64,11 +64,6 @@ if (process.env.NODE_ENV === "production") {
 }
 // Middleware to parse user-agent information
 app.use(useragent.express());
-
-app.get("/", (req, res) => {
-  console.log(req.useragent);
-  res.json(getUserDeviceInfo(req));
-});
 
 app.get("/logs", auth, authRoles(roles.admin), (req, res) => {
   fs.readdir(logDirectory, (err, files) => {

@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const phones = require("./phone.json");
 const useragent = require("express-useragent");
+const axios = require("axios");
 
 function generateRandomString(length) {
   return crypto
@@ -94,8 +95,11 @@ exports.getUserDeviceInfo = (request) => {
   return deviceInfo;
 };
 
-exports.getUserLocation = (request) => {
+exports.getUserLocation = async (request) => {
   let ip = request.ip;
+  const url = `http://ip-api.com/json/${ip}`;
+  const { data } = await axios.get(url);
+  return { country: data.country, city: data.city };
 };
 
 // For Populating the rates =>
