@@ -89,7 +89,7 @@ exports.getUserDeviceInfo = (request) => {
   const deviceInfo = {
     Browser: request.useragent.browser,
     deviceType: resolveDeviceType(request),
-    deviceName: request.useragent.platform,
+    deviceName: request.useragent.platform, // name &  platform.
   };
 
   return deviceInfo;

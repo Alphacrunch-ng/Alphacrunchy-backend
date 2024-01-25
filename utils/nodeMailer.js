@@ -123,24 +123,36 @@ exports.transactionMailer = (email, operation, amount, description) => {
   transportSender(mailOptions);
 };
 
-exports.loginNotificationMailer = (name, email, deviceInfo, ipAddress) => {
+exports.loginNotificationMailer = async (
+  name,
+  email,
+  deviceInfoFunction,
+  userLocationFunction
+) => {
+  const deviceInfo = await deviceInfoFunction();
+  const userLocation = await userLocationFunction();
   const message = `
-      <table style="width:100%; max-width:600px; margin:0 auto; font-family: 'Arial', sans-serif; background-color: #f5f5f5; color: #333; padding: 20px; border-collapse: collapse;">
-        <tr>
-          <td>
-            <h1 style="color: #007BFF; margin-bottom: 20px;">Welcome back to ${product_name}, ${name}!</h1>
-            <p>Your account has been accessed recently. Here are the details:</p>
-            <ul style="list-style: none; padding: 0;">
-              <li style="margin-bottom: 10px;"><strong>Device Information:</strong> ${deviceInfo}</li>
-              <li style="margin-bottom: 10px;"><strong>IP Address:</strong> ${ipAddress}</li>
-              <li style="margin-bottom: 10px;"><strong>Location:</strong> ${resolvedLocation(
-                ipAddress
-              )}</li>
-            </ul>
-            <p>If this was you, no further action is required. If you didn't recognize this login, please secure your account.</p>
-          </td>
-        </tr>
-      </table>
+<table style="width:100%; max-width:600px; margin:0 auto; font-family: 'Arial', sans-serif; background-color: #f5f5f5; color: #333; padding: 20px; border-collapse: collapse;">
+  <tr>
+    <td>
+      <h1 style="color: #007BFF; margin-bottom: 20px;">Welcome back to ${product_name}, ${name}!</h1>
+      <p>Your account has been accessed recently. Here are the details:</p>
+      <ul style="list-style: none; padding: 0;">
+        <li style="margin-bottom: 10px;">
+          <strong>Device Information:</strong><br/>
+          <span style="margin-right: 10px;"><strong>Browser:</strong> ${deviceInfo.Browser},</span>
+          <span style="margin-right: 10px;"><strong>Device Type:</strong> ${deviceInfo.deviceType},</span>
+          <span><strong>Name of Device:</strong> ${deviceInfo.deviceName}</span>
+        </li>
+        <li style="margin-bottom: 10px;">
+          <strong>Location:</strong> ${userLocation.country}, ${userLocation.city}
+        </li>
+      </ul>
+      <p>If this was you, no further action is required. If you didn't recognize this login, please secure your account.</p>
+    </td>
+  </tr>
+</table>
+
   `;
 
   // Setup email data with unicode symbols
