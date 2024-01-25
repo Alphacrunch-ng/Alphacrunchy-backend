@@ -56,84 +56,10 @@ exports.formatEmail = (email) => {
   return `${firstPartEmail.slice(0, 3)}***${email.slice(email.indexOf("@"))}`;
 };
 
-resolveWebBrowser = (request) => {
-  let {
-    isOpera,
-    isIE,
-    isEdge,
-    isSafari,
-    isFirefox,
-    isWebkit,
-    isChrome,
-    isKonqueror,
-    isOmniWeb,
-    isSeaMonkey,
-    isFlock,
-    isAmaya,
-    isPhantomJS,
-    isEpiphany,
-  } = request.useragent;
-
-  switch (
-    isOpera ||
-    isIE ||
-    isEdge ||
-    isSafari ||
-    isFirefox ||
-    isWebkit ||
-    isChrome ||
-    isKonqueror ||
-    isOmniWeb ||
-    isSeaMonkey ||
-    isFlock ||
-    isAmaya ||
-    isPhantomJS ||
-    isEpiphany
-  ) {
-    case isOpera:
-      return `${"isOpera".slice(2)}`;
-    case isEdge:
-      return `${"isEdge".slice(2)}`;
-    case isSafari:
-      return `${"isSafari".slice(2)}`;
-    case isFirefox:
-      return `${"isFirefox".slice(2)}`;
-    case isWebkit:
-      return `${"isWebkit".slice(2)}`;
-    case isChrome:
-      return `${"isChrome".slice(2)}`;
-    case isKonqueror:
-      return `${"isKonqueror".slice(2)}`;
-    case isOmniWeb:
-      return `${"isOmniWeb".slice(2)}`;
-    case isSeaMonkey:
-      return `${"isSeaMonkey".slice(2)}`;
-    case isFlock:
-      return `${"isFlock".slice(2)}`;
-    case isAmaya:
-      return `${"isAmaya".slice(2)}`;
-    case isPhantomJS:
-      return `${"isPhantomJS".slice(2)}`;
-    case isEpiphany:
-      return `${"isEpiphany".slice(2)}`;
-
-    default:
-      return "Unable to resolve web browser";
-  }
-};
-
 resolveDeviceType = (request) => {
-  const {
-    isMobile,
-    isTablet,
-    isiPad,
-    isiphone,
-    isAndroid,
-    isBlackberry,
-    isDesktop,
-  } = request.useragent;
+  const { isTablet, isiPad, isiphone, isAndroid, isBlackberry, isDesktop } =
+    request.useragent;
   switch (
-    isMobile ||
     isTablet ||
     isiPad ||
     isiphone ||
@@ -141,8 +67,6 @@ resolveDeviceType = (request) => {
     isBlackberry ||
     isDesktop
   ) {
-    case isMobile:
-      return `${"isMobile".slice(2)}`;
     case isDesktop:
       return `${"isDesktop".slice(2)}`;
     case isTablet:
@@ -160,15 +84,18 @@ resolveDeviceType = (request) => {
   }
 };
 
-resolveDeviceName = (request) => {};
 exports.getUserDeviceInfo = (request) => {
-  // console.log(request.useragent);
   const deviceInfo = {
-    Browser: resolveWebBrowser(request),
+    Browser: request.useragent.browser,
     deviceType: resolveDeviceType(request),
+    deviceName: request.useragent.platform,
   };
 
   return deviceInfo;
+};
+
+exports.getUserLocation = (request) => {
+  let ip = request.ip;
 };
 
 // For Populating the rates =>
