@@ -126,11 +126,9 @@ exports.transactionMailer = (email, operation, amount, description) => {
 exports.loginNotificationMailer = async (
   name,
   email,
-  deviceInfoFunction,
-  userLocationFunction
+  deviceInfo,
+  userLocation
 ) => {
-  const deviceInfo = await deviceInfoFunction();
-  const userLocation = await userLocationFunction();
   const message = `
 <table style="width:100%; max-width:600px; margin:0 auto; font-family: 'Arial', sans-serif; background-color: #f5f5f5; color: #333; padding: 20px; border-collapse: collapse;">
   <tr>
