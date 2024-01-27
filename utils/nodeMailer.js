@@ -130,26 +130,27 @@ exports.loginNotificationMailer = async (
   userLocation
 ) => {
   const message = `
-<table style="width:100%; max-width:600px; margin:0 auto; font-family: 'Arial', sans-serif; background-color: #f5f5f5; color: #333; padding: 20px; border-collapse: collapse;">
-    <th><h1 style="color: #007BFF; margin-bottom: 20px;">Welcome back to ${product_name}, ${name}!</h1></th>
-    <tr>
-    <td>
+<div style="width:100%; max-width:600px; margin:0 auto; font-family: 'Arial', sans-serif; background-color: #f5f5f5; color: #333; padding: 10px; border-collapse: collapse;">
+  <div style="background-color:#B98100;color:white;padding:20px;text-align:center;border-radius:10px;">
+        <img src="https://res.cloudinary.com/dkgblnkxm/image/upload/v1694926535/w2wnxtjjbydmtjru2gjg.png" alt="Logo" style="width:100px;height:100px;">
+    </div>
+  <div style="padding: 10px">
+      <h1 style="color: #B98100; margin-bottom: 20px; font-size: 24px;">Welcome back to ${product_name}, ${name}!</h1>
       <p>Your account has been accessed recently. Here are the details:</p>
       <ul style="list-style: none; padding: 0;">
         <li style="margin-bottom: 10px;">
           <strong>Device Information:</strong><br/>
-          <span style="margin-right: 10px;"><strong>Browser:</strong> ${deviceInfo.Browser},</span>
-          <span style="margin-right: 10px;"><strong>Device Type:</strong> ${deviceInfo.deviceType},</span>
-          <span><strong>Name of Device:</strong> ${deviceInfo.deviceName}</span>
+          <p style="margin-right: 10px;"><strong>Browser:</strong> ${deviceInfo.Browser},</p>
+          <p style="margin-right: 10px;"><strong>Device Type:</strong> ${deviceInfo.deviceType},</p>
+          <p><strong>Name of Device:</strong> ${deviceInfo.deviceName}</p>
         </li>
         <li style="margin-bottom: 10px;">
           <strong>Location:</strong> ${userLocation.country}, ${userLocation.city}
         </li>
       </ul>
       <p>If this was you, no further action is required. If you didn't recognize this login, please secure your account.</p>
-    </td>
-  </tr> 
-</table>
+  </div>
+</div>
 
   `;
 
