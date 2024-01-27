@@ -131,9 +131,9 @@ exports.loginNotificationMailer = async (
 ) => {
   const message = `
 <table style="width:100%; max-width:600px; margin:0 auto; font-family: 'Arial', sans-serif; background-color: #f5f5f5; color: #333; padding: 20px; border-collapse: collapse;">
-  <tr>
+    <th><h1 style="color: #007BFF; margin-bottom: 20px;">Welcome back to ${product_name}, ${name}!</h1></th>
+    <tr>
     <td>
-      <h1 style="color: #007BFF; margin-bottom: 20px;">Welcome back to ${product_name}, ${name}!</h1>
       <p>Your account has been accessed recently. Here are the details:</p>
       <ul style="list-style: none; padding: 0;">
         <li style="margin-bottom: 10px;">
@@ -148,7 +148,7 @@ exports.loginNotificationMailer = async (
       </ul>
       <p>If this was you, no further action is required. If you didn't recognize this login, please secure your account.</p>
     </td>
-  </tr>
+  </tr> 
 </table>
 
   `;
