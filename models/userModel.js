@@ -104,6 +104,10 @@ const userSchema = new mongoose.Schema({
     deleted: {
         type: Boolean,
         default: false
+    },
+    lastLogin : {
+        type: Date,
+        default: new Date()
     }
 });
 

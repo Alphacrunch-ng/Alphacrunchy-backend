@@ -117,7 +117,7 @@ exports.loggingIn = async (request, response) => {
                     const today = new Date();
                     let ip = request.ip;
                     let device = request.useragent;
-                    authEvents.emit(events.USER_LOGGED_IN, {user, ip, device})
+                    authEvents.emit(events.USER_LOGGED_IN, {user , request})
                     const checkWallets = await Wallet.find({user_id: user._id}).select("-wallet_pin");
                     return response.status(200).json({
                         data: user,
