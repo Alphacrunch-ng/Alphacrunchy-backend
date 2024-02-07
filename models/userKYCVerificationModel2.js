@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const userKYCVerificationSchema = new Schema({
+const userKYCVerification2Schema = new Schema({
   DOB: String,
   Photo: String,
   Gender: String,
@@ -61,6 +61,6 @@ const userKYCVerificationSchema = new Schema({
   timestamp: Date
 });
 
-const UserKYCVerification = mongoose.model('UserKYCVerification', userKYCVerificationSchema);
+const UserKYCVerification2 = mongoose.model('UserKYCVerification2', userKYCVerification2Schema);
 
-module.exports = UserKYCVerification;
+module.exports = UserKYCVerification2;

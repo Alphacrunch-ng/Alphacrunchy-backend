@@ -1,7 +1,8 @@
 
 const User = require('../models/userModel.js');
 const cloudinary = require('../middlewares/cloudinary.js');
-const UserKYCVerification = require('../models/userKYCVerificationModel')
+const UserKYCVerification2 = require('../models/userKYCVerificationModel2');
+const UserBasicKYCVerification = require('../models/userBasicKYCVerification');
 const { serverError } = require('../utils/services.js');
 const { roles, operations } = require('../utils/constants.js');
 const { noticeMailer } = require('../utils/nodeMailer.js');
@@ -232,10 +233,20 @@ exports.setUserRole = async (request, response) => {
 exports.kycCallBack = async (req, res) => {
     const { kycResult } = req.body;
     console.log(kycResult);
-    const userKyc = await UserKYCVerification.create(kycResult);
-
+    const user = await User.findById(kycResult.PartnerParams.user_id);
+    const names = user.fullName.split(' ').map((name)=> name.toLowerCase());
+    
+    
     if(kycResult.ResultCode === "1012"){
+        const userKyc = await UserKYCVerification2.create(kycResult);
         // update the user's KYC status to approved in the database and send an email notification
+
+        if (names.includes(userKyc.FullData.surname.toLowerCase()) && names.includes(userKyc.FullData.firstNames.toLowerCase())  ) {
+            return res.status(400).json({
+                success: false
+            });
+        }
+
         const user = await User.findByIdAndUpdate(userKyc.PartnerParams.user_id, { kycLevel : 2}, { new : true});
 
         await createNotification(user._id, operations.biometricKycSuccess)
@@ -245,6 +256,7 @@ exports.kycCallBack = async (req, res) => {
         });
     }
     if(kycResult.ResultCode === "1020" || kycResult.ResultCode === "1021"){
+        const userKyc = await UserBasicKYCVerification.create(kycResult);
         // update the user's KYC status to approved in the database and send an email notification
         const user = await User.findByIdAndUpdate(userKyc.PartnerParams.user_id, { kycLevel : 1}, { new : true});
         await createNotification(user._id, operations.basicKycSuccess)

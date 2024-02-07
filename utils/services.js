@@ -1,6 +1,5 @@
 const crypto = require("crypto");
 const phones = require("./phone.json");
-const useragent = require("express-useragent");
 const axios = require("axios");
 
 function generateRandomString(length) {
@@ -57,9 +56,9 @@ exports.formatEmail = (email) => {
   return `${firstPartEmail.slice(0, 3)}***${email.slice(email.indexOf("@"))}`;
 };
 
-resolveDeviceType = (request) => {
+resolveDeviceType = (useragent) => {
   const { isTablet, isiPad, isiphone, isAndroid, isBlackberry, isDesktop } =
-    request.useragent;
+    useragent;
   switch (
     isTablet ||
     isiPad ||
@@ -85,18 +84,17 @@ resolveDeviceType = (request) => {
   }
 };
 
-exports.getUserDeviceInfo = (request) => {
+exports.getUserDeviceInfo = (useragent) => {
   const deviceInfo = {
-    Browser: request.useragent.browser,
-    deviceType: resolveDeviceType(request),
-    deviceName: request.useragent.platform, // name &  platform.
+    Browser: useragent.browser,
+    deviceType: resolveDeviceType(useragent),
+    deviceName: useragent.platform, // name &  platform.
   };
 
   return deviceInfo;
 };
 
-exports.getUserLocation = async (request) => {
-  let ip = request.ip;
+exports.getUserLocation = async (ip) => {
   const url = `http://ip-api.com/json/${ip}`;
   const { data } = await axios.get(url);
   return { country: data.country, city: data.city };

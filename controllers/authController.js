@@ -573,7 +573,8 @@ exports.getKycKey = async (req, res) => {
             res.status(200).json({
                 data: process.env.API_SIGNATURE_LIVE,
                 message: "Your Signature API Key",
-                signature
+                signature,
+                timestamp
             });
             break;
         default:
