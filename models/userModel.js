@@ -115,7 +115,6 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: new Date(),
   },
-  subAccount_id: { type: mongoose.Schema.Types.ObjectId, ref: "subAccount" },
 });
 
 //encrypts the password and sets the role
