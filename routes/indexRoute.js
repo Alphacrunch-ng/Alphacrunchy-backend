@@ -8,6 +8,7 @@ const transactionRoute = require("./transactionRoute");
 const messageRoute = require("./messageRoute");
 const giftCardRoute = require("./giftCardRoute");
 const walletRoute = require("./walletRoute");
+const cryptoRoute = require("./cryptoRoute");
 const faqRoute = require("./faqRoute");
 const { auth, authRoles } = require("../middlewares/auth");
 const { roles } = require("../utils/constants");
@@ -57,5 +58,7 @@ router.use("/message", messageRoute);
 router.use("/notification", auth, notificationRoute);
 
 router.use("/faq", faqRoute);
+
+router.use("/crypto", cryptoRoute);
 
 module.exports = router;

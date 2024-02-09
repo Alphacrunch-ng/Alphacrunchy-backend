@@ -100,6 +100,32 @@ exports.getUserLocation = async (ip) => {
   return { country: data.country, city: data.city };
 };
 
+exports.makeBitpowrRequest = async (url, method = "get", data = null) => {
+  const encodedToken = Buffer.from(
+    `${process.env.BITPOWR_PUBLICKEY}:${process.env.BITPOWR_SECRETKEY}`
+  ).toString("base64");
+
+  const options = {
+    headers: {
+      Authorization: `Bearer ${encodedToken}`,
+    },
+  };
+
+  try {
+    let response;
+    if (method.toLowerCase() === "get") {
+      response = await axios.get(url, options);
+    } else if (method.toLowerCase() === "post") {
+      response = await axios.post(url, data, options);
+    } else if (method.toLowerCase() === "put") {
+      response = await axios.put(url, data, options);
+    }
+
+    return response.data;
+  } catch (error) {
+    throw error.message;
+  }
+};
 // For Populating the rates =>
 //    giftcards.forEach((giftcard)=>{
 //     currencies.forEach(async (currency)=>{
