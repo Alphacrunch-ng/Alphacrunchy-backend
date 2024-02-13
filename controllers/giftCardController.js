@@ -654,7 +654,7 @@ exports.getGiftCardRates = async (req, res) => {
 
 // controller for updating a giftcard rate
 exports.updateGiftCardRate = async (req, res) => {
-  const { rate, currency, cardType } = req.body;
+  const { rate, cardType } = req.body;
   try {
     const check = await GiftCardRate.findOne({ id: req.params.id });
     if (!check) {
@@ -666,8 +666,8 @@ exports.updateGiftCardRate = async (req, res) => {
 
     const giftcard = await GiftCardRate.findOneAndUpdate(
       { id: check._id },
-      { rate, currency, cardType },
-      { new: true }
+      { rate, cardType },
+      { new: true, omitUndefined: true }
     );
 
     return res.status(200).json({
@@ -701,6 +701,46 @@ exports.setGiftCardRateState = async (req, res) => {
         });
       }
     );
+  } catch (error) {
+    return serverError(res, error);
+  }
+};
+
+exports.getGiftCardSupportedAllCurrencies = async (req, res) => {
+  try {
+    const currencies = await GiftCardRate.distinct('currency.code');
+    
+    return res.status(200).json({
+      success: true,
+      data: currencies,
+    });
+  } catch (error) {
+    return serverError(res, error);
+  }
+};
+
+exports.editGiftCardCurrency = async (req, res) => {
+  const { id } = req.params;
+  const { code, name, symbol } = req.body;
+
+  try {
+    const updatedCurrency = await GiftCardRate.findOneAndUpdate(
+      { 'currency._id': id },
+      { 'currency.code': code, 'currency.name': name, 'currency.symbol': symbol },
+      { new: true, omitUndefined: true }
+    );
+
+    if (!updatedCurrency) {
+      return res.status(404).json({
+        success: false,
+        message: 'Currency not found',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: updatedCurrency,
+    });
   } catch (error) {
     return serverError(res, error);
   }

@@ -9,7 +9,8 @@ const transactionSchema = new mongoose.Schema({
     required: true
   },
   transaction_number: {
-    type: String
+    type: String,
+    index: true
   },
   transaction_type : {
     type: String,

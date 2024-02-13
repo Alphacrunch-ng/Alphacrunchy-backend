@@ -3,6 +3,7 @@
 // importing mongoose
 const mongoose = require('mongoose');
 const { modifiedAt } = require('./hooks');
+const { Status } = require('../utils/constants');
 
 
 const walletTransactionSchema = new mongoose.Schema({
@@ -27,6 +28,7 @@ const walletTransactionSchema = new mongoose.Schema({
     },
     transaction_number: {
         type: String,
+        index: true
     },
     createdAt: {
         type: Date,
@@ -39,7 +41,7 @@ const walletTransactionSchema = new mongoose.Schema({
     state : {
         type: String,
         enum: {
-            values: ['pending', 'successful', 'failed'],
+            values: [Status.pending, Status.successful, Status.failed],
             message: "status can either be 'pending' or 'successful' or 'failed'",
         },
         default: 'pending'

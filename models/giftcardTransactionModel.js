@@ -74,6 +74,7 @@ const giftcardTransactionSchema = new mongoose.Schema({
     },
     transaction_number: {
         type: String,
+        index: true
     },
     modifiedAt: {
         type: Date,

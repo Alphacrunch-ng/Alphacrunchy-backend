@@ -101,17 +101,17 @@ exports.getUserLocation = async (ip) => {
 };
 
 exports.makeBitpowrRequest = async (url, method = "get", data = null) => {
-  const encodedToken = Buffer.from(
-    `${process.env.BITPOWR_PUBLICKEY}:${process.env.BITPOWR_SECRETKEY}`
-  ).toString("base64");
-
-  const options = {
-    headers: {
-      Authorization: `Bearer ${encodedToken}`,
-    },
-  };
-
   try {
+    const encodedToken = Buffer.from(
+      `${process.env.BITPOWR_PUBLICKEY}:${process.env.BITPOWR_SECRETKEY}`
+    ).toString("base64");
+
+    const options = {
+      headers: {
+        Authorization: `Bearer ${encodedToken}`,
+      },
+    };
+
     let response;
     if (method.toLowerCase() === "get") {
       response = await axios.get(url, options);
@@ -120,10 +120,11 @@ exports.makeBitpowrRequest = async (url, method = "get", data = null) => {
     } else if (method.toLowerCase() === "put") {
       response = await axios.put(url, data, options);
     }
-
+    console.log(response);
     return response.data;
+    
   } catch (error) {
-    throw error.message;
+    throw error;
   }
 };
 // For Populating the rates =>

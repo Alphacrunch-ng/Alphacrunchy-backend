@@ -1,5 +1,5 @@
 
-const { getGiftCardById, setGiftCardInactive, getAllGiftCards, createGiftCard, updateGiftCard, uploadGiftCard, deleteGiftCard, deleteUploadedGiftCard, createGiftCardTransaction, setTransactionGiftCardState, getGiftCardTransaction, getUserGiftCardTransactions, setGiftCardTransaction, getAllGiftCardTransactions, getAllGiftCardRates, createGiftCardRate, getGiftCardRates, updateGiftCardRate, setGiftCardRateState } = require('../controllers/giftCardController');
+const { getGiftCardById, setGiftCardInactive, getAllGiftCards, createGiftCard, updateGiftCard, uploadGiftCard, deleteGiftCard, deleteUploadedGiftCard, createGiftCardTransaction, setTransactionGiftCardState, getGiftCardTransaction, getUserGiftCardTransactions, setGiftCardTransaction, getAllGiftCardTransactions, getAllGiftCardRates, createGiftCardRate, getGiftCardRates, updateGiftCardRate, setGiftCardRateState, getAllCurrencies, getGiftCardSupportedAllCurrencies, editGiftCardCurrency } = require('../controllers/giftCardController');
 const { auth, authRoles } = require('../middlewares/auth');
 const upload = require('../middlewares/multer');
 const { roles } = require('../utils/constants');
@@ -27,6 +27,10 @@ router.get('/rates', getAllGiftCardRates);
 
 // Get single giftcard rates
 router.get('/rates/:giftcardId', getGiftCardRates);
+
+router.get('/currencies', auth, authRoles(roles.admin), getGiftCardSupportedAllCurrencies);
+
+router.patch('/currency/edit/:id', auth, authRoles(roles.admin), editGiftCardCurrency);
 
 
 // create giftcard rate

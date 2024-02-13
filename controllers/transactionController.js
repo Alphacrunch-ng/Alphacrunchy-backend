@@ -52,7 +52,39 @@ exports.generatePaymentLink = async (req, res) => {
     return serverError(res, error);
   }
 };
+exports.getTransactionByTransactionNumber = async (req, res) => {
+  const { transaction_number } = req.params;
+  let transaction = {}
+  try {
+      const check = await Transaction.findOne({transaction_number});
 
+      if (!check) {
+        return res.status(404).json({
+          success: false,
+          message: 'transaction not found',
+        });
+      }
+      transaction = {...check.toObject()};
+
+      if (check.transaction_type === transactionTypes.wallet) {
+        const transaction_details = await WalletTransaction.findOne({transaction_number : check.transaction_number});
+        transaction.transaction_details = transaction_details;
+
+      } else if (check.transaction_type === transactionTypes.giftcard) {
+        const transaction_details = await GiftCardTransaction.findOne({transaction_number : check.transaction_number});
+        transaction.transaction_details = transaction_details;
+      }
+
+      return res.status(200).json({
+        data: transaction,
+        success: true,
+        message: 'Successfully retrieved transaction.',
+      });
+    }
+    catch (error) {
+      return serverError(res, error);
+    }
+  }
 
 // GET a transaction by id
 exports.getTransactionById = async (req, res) => {
@@ -158,8 +190,11 @@ exports.getTransactionsByDay = async (req, res) => {
 exports.setTransactionStatus = async (req, res) => {
   try {
     const transactionId = req.params.id;
-    const { status } = req.body;
-    
+    let { status } = req.body;
+    status = String(status).toLowerCase();
+
+    let transaction = await Transaction.findById(transactionId);
+
     if (!Object.values(Status).includes(status.toLocaleLowerCase())) {
       return res.status(400).json({
         success: false,
@@ -172,7 +207,20 @@ exports.setTransactionStatus = async (req, res) => {
         message: "no id provided"
       })
     }
-    const transaction = await Transaction.findByIdAndUpdate(transactionId, {status : status.toLocaleLowerCase()}, {new: true});
+    if( status === Status.successful ) {
+      const isSuccess = await checkTransactionDetailsSuccess(transaction.transaction_number, transaction.transaction_type);
+
+      if (!isSuccess) {
+        return res.status(400).json({
+          success: false,
+          message: "Transaction details verification failed"
+        });
+      }
+      transaction = await Transaction.findByIdAndUpdate(transactionId, {status : status.toLocaleLowerCase()}, {new: true});
+    } else {
+      transaction = await Transaction.findByIdAndUpdate(transactionId, {status : status.toLocaleLowerCase()}, {new: true});
+    }
+    
     return res.status(200).json({
         data: transaction,
         success: true,
@@ -258,4 +306,22 @@ exports.createTransaction = async (user_id, description, amount , operation, tra
     } catch (error) {
         throw error;
     }
+}
+
+const checkTransactionDetailsSuccess = async ( transaction_number, transaction_type ) => {
+  let check;
+  switch (transaction_type) {
+    case transactionTypes.wallet:
+      check = await WalletTransaction.findOne({ transaction_number });
+      break;
+    case transactionTypes.giftcard:
+      check = await GiftCardTransaction.findOne({ transaction_number });
+      break;
+    // case transactionTypes.crypto:
+    //   check = CryptoTransaction.findOne({ transaction_number });
+    //   break;
+    default:
+      return false
+  }
+  return check.status === Status.successful;
 }

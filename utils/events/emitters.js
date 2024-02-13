@@ -15,8 +15,7 @@ authEvents.on(events.USER_LOGGED_IN, async ({user, request})=>{
     const deviceInfo = getUserDeviceInfo(request.useragent);
     let ip = request.ip;
     const userLocation = await getUserLocation(ip);
-    const result = await loginNotificationMailer( user.fullName, user.email, deviceInfo, userLocation);
-    console.log(result);
+    await loginNotificationMailer( user.fullName, user.email, deviceInfo, userLocation);
     await User.findByIdAndUpdate(user._id, { lastLogin : new Date()})
 })
 
