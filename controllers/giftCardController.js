@@ -11,6 +11,7 @@ const { createTransaction } = require("./transactionController");
 const { Status, operations, transactionTypes } = require("../utils/constants");
 const { getCacheData, setCacheData } = require("../utils/cache");
 const ObjectId = mongoose.Types.ObjectId;
+const SupportedCurrencies = require("../utils/currencies.json");
 
 
 // ------------GIFTCARD-MANAGEMENT----------- //
@@ -708,7 +709,7 @@ exports.setGiftCardRateState = async (req, res) => {
 
 exports.getGiftCardSupportedAllCurrencies = async (req, res) => {
   try {
-    const currencies = await GiftCardRate.distinct('currency.code');
+    const currencies = SupportedCurrencies.currencies;
     
     return res.status(200).json({
       success: true,
