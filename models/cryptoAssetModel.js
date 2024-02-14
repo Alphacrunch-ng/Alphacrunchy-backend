@@ -11,7 +11,7 @@ const cryptoAssetSchema = new Schema({
     isDeleted: { type: Boolean, default: false },
     isArchived: { type: Boolean, default: false },
     isContract: { type: Boolean, default: false },
-    chain: { type: String, required: true },
+    chain: { type: String, required: true, unique: true },
     network: { type: String, required: true },
     mode: { type: String, required: true },
     assetType: { type: String, required: true },

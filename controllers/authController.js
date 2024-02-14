@@ -124,7 +124,8 @@ exports.loggingIn = async (request, response) => {
                         is2FactorEnabled: false,
                         message: `Login Successfull`,
                         token: token,
-                        expiresIn: new Date(today.getTime() + (6 * 24 * 60 * 60 * 1000))
+                        expiresIn: new Date(today.getTime() + (6 * 24 * 60 * 60 * 1000)),
+                        ip : request.ip
                     });
                 }
             } else {

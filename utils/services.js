@@ -120,7 +120,6 @@ exports.makeBitpowrRequest = async (url, method = "get", data = null) => {
     } else if (method.toLowerCase() === "put") {
       response = await axios.put(url, data, options);
     }
-    console.log(response);
     return response.data;
     
   } catch (error) {
