@@ -3,7 +3,8 @@ const CryptoAssetModel = require("../models/cryptoAssetModel");
 const CryptoWalletModel = require("../models/cryptoWalletModel");
 const { serverError } = require("../utils/services");
 const { getCacheData, setCacheData } = require("../utils/cache");
-const cloudinary = require('../middlewares/cloudinary.js');
+const cloudinary = require("../middlewares/cloudinary.js");
+const User = require("../models/userModel.js");
 
 exports.getAssets = async (req, res) => {
   const cacheKey = `cryptoassets`;
@@ -16,9 +17,12 @@ exports.getAssets = async (req, res) => {
         message: "Cached result",
       });
     }
-    
-    const responseData = await CryptoAssetModel.find({ account_uid: process.env.BITPOWR_ACCOUNT_WALLET_ID ,isDeleted: false });  
-      
+
+    const responseData = await CryptoAssetModel.find({
+      account_uid: process.env.BITPOWR_ACCOUNT_WALLET_ID,
+      isDeleted: false,
+    });
+
     if (responseData) {
       setCacheData(cacheKey, responseData, 60 * 5 * 1000);
       return res.status(200).json({
@@ -41,11 +45,11 @@ exports.getAssets = async (req, res) => {
   //       message: "Cached result",
   //     });
   //   }
-    
+
   //   const responseData = await makeBitpowrRequest(
   //       `${process.env.BITPOWR_BASEURL}/accounts/${process.env.BITPOWR_ACCOUNT_WALLET_ID}/assets`
   //       );
-      
+
   //   if (responseData) {
   //     setCacheData(cacheKey, responseData, 60 * 5 * 1000);
   //     return res.status(200).json({
@@ -59,41 +63,45 @@ exports.getAssets = async (req, res) => {
   // }
 };
 
-exports.addAdminAsset = async (req, res) => { // the asset should have been added on the bitpowr dashboard
+exports.addAdminAsset = async (req, res) => {
+  // the asset should have been added on the bitpowr dashboard
   const { chain_name } = req.body;
   try {
-
     console.log(chain_name);
     const responseData = await makeBitpowrRequest(
       `${process.env.BITPOWR_BASEURL}/accounts/${process.env.BITPOWR_ACCOUNT_WALLET_ID}/assets`
-      );
-    if(!responseData.data){
-      return res.status(404).json({ 
+    );
+    if (!responseData.data) {
+      return res.status(404).json({
         success: false,
-        message: "unable to check provider"
+        message: "unable to check provider",
       });
     }
-    const assets = Array(...responseData.data)
-    const check = assets.filter(asset => {
-      return asset.chain.toUpperCase() === String(chain_name).toUpperCase()
+    const assets = Array(...responseData.data);
+    const check = assets.filter((asset) => {
+      return asset.chain.toUpperCase() === String(chain_name).toUpperCase();
     });
-    if(check.length < 1){
+    if (check.length < 1) {
       return res.status(400).json({
         success: false,
-        message: "Asset not found on the provider"
-      })
+        message: "Asset not found on the provider",
+      });
     }
 
-    const ifExists = await CryptoAssetModel.findOne({ chain: String(chain_name).toUpperCase() })
-    if(ifExists){
+    const ifExists = await CryptoAssetModel.findOne({
+      chain: String(chain_name).toUpperCase(),
+    });
+    if (ifExists) {
       return res.status(400).json({
         success: false,
-        message: "Asset already exists"
-      })
+        message: "Asset already exists",
+      });
     }
-    console.log("check: ",check[0]);
+    console.log("check: ", check[0]);
 
-    const cloudFile = await cloudinary.uploader.upload(req.file.path,{folder: "Alphacrunch/crypto"});
+    const cloudFile = await cloudinary.uploader.upload(req.file.path, {
+      folder: "Alphacrunch/crypto",
+    });
     const icon = cloudFile.secure_url;
     const assetData = {
       account_uid: process.env.BITPOWR_ACCOUNT_WALLET_ID,
@@ -110,18 +118,18 @@ exports.addAdminAsset = async (req, res) => { // the asset should have been adde
       assetType: check[0].assetType,
       autoForwardAddress: check[0].autoForwardAddress,
       createdAt: check[0].createdAt,
-      balance: check[0].balance
+      balance: check[0].balance,
     };
-    const asset = await CryptoAssetModel.create( assetData );
+    const asset = await CryptoAssetModel.create(assetData);
 
     return res.status(200).json({
       success: true,
-      asset
-    })
+      asset,
+    });
   } catch (error) {
     serverError(res, error);
   }
-}
+};
 
 exports.getUserAssets = async (req, res) => {
   try {
@@ -184,12 +192,60 @@ exports.createCryptoTransaction = async (req, res) => {
 };
 
 exports.createUserCryptoAccount = async (req, res) => {
-  // This would create a subAccount on smileId
   try {
-    return res.status(200).json({
-      success: true,
+    const user = await User.findById(req.params.id);
+    if (!user)
+      return res
+        .status(404)
+        .json({ success: false, message: "user not found" });
+    const ifExists = await CryptoWalletModel.findOne({
+      externalId: req.params.id,
     });
+    if (ifExists) {
+      return res.status(400).json({
+        success: false,
+        message: "User wallet already exists",
+      });
+    }
+    const data = {
+      externalId: user._id,
+      name: user.fullName,
+    };
+    const responseData = await makeBitpowrRequest(
+      `${process.env.BITPOWR_BASEURL}/accounts/${process.env.BITPOWR_ACCOUNT_WALLET_ID2}/sub-accounts`,
+      "post",
+      data
+    );
+    if (responseData) {
+      console.log(responseData);
+      const data = {
+        uid: responseData.data.uid,
+        name: responseData.data.name,
+        externalId: responseData.data.externalId,
+        isDeleted: responseData.data.isDeleted,
+        isArchived: responseData.data.isArchived,
+        organizationId: responseData.data.organizationId,
+        network: responseData.data.network,
+        createdAt: responseData.data.createdAt,
+        updatedAt: responseData.data.updatedAt,
+        mode: responseData.data.mode,
+        accountId: responseData.data.accountId,
+        addresses: responseData.data.addresses,
+      };
+      const wallet = await CryptoWalletModel.create(data);
+      if (wallet) {
+        return res.status(201).json({
+          success: true,
+          message: wallet,
+        });
+      }
+      return res.status(400).json({
+        success: false,
+        message: "Error creating wallet",
+      });
+    }
   } catch (error) {
+    console.log(error.message);
     serverError(res, error);
   }
 };
