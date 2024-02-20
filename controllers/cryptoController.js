@@ -192,15 +192,19 @@ exports.createCryptoTransaction = async (req, res) => {
 };
 
 exports.createUserCryptoAccount = async (req, res) => {
+  const userId = req.params.id;
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(userId);
     if (!user)
-      return res
-        .status(404)
-        .json({ success: false, message: "user not found" });
+      return res.status(404).json({ 
+        success: false, 
+        message: "user not found" 
+      });
+
     const ifExists = await CryptoWalletModel.findOne({
-      externalId: req.params.id,
+      externalId: user._id,
     });
+    console.log(ifExists, userId);
     if (ifExists) {
       return res.status(400).json({
         success: false,
@@ -208,16 +212,17 @@ exports.createUserCryptoAccount = async (req, res) => {
       });
     }
     const data = {
-      externalId: user._id,
+      externalId: userId,
       name: user.fullName,
     };
+    console.log(data);
     const responseData = await makeBitpowrRequest(
-      `${process.env.BITPOWR_BASEURL}/accounts/${process.env.BITPOWR_ACCOUNT_WALLET_ID2}/sub-accounts`,
+      `${process.env.BITPOWR_BASEURL}/accounts/${process.env.BITPOWR_ACCOUNT_WALLET_ID}/sub-accounts`,
       "post",
       data
     );
+    console.log(responseData);
     if (responseData) {
-      console.log(responseData);
       const data = {
         uid: responseData.data.uid,
         name: responseData.data.name,
@@ -245,7 +250,7 @@ exports.createUserCryptoAccount = async (req, res) => {
       });
     }
   } catch (error) {
-    console.log(error.message);
+    console.log(error.response, error.statuscode);
     serverError(res, error);
   }
 };

@@ -15,27 +15,51 @@ exports.modifiedAt = async function(next){
 }
 
 exports.sum = async function(next){
-    const cards = this.cards;
-    this.total_cards = cards.length
-    let totalAmountExpected = 0;
-    let totalAmount = 0;
     try {
+        // Populate the cards with their rates
+        await this.populate('cards.item_card_rate').execPopulate();
+        
+        // Now cards will be populated
+        const cards = this.cards;
+        
+        // Calculate total cards
+        this.total_cards = cards.length;
+        
+        let totalAmountExpected = 0;
+        let totalAmount = 0;
+        
         cards.forEach(card => {
-            totalAmountExpected += card.amount;
+            // Assuming card.item_card_rate is populated
+            totalAmountExpected += card.amount * card.item_card_rate.rate;
             if (card.state === Status.approved) {
                 totalAmount += card.amount;
             }
-
         });
-
-        this.total_amount_expected = totalAmountExpected * this.rate;
-        this.total_amount_paid = totalAmount * this.rate;
-
         next();
     } catch (error) {
         next();
     }
 }
+
+
+// exports.sum = async function(next){
+//     const cards = this.cards.populate('rate');
+//     this.total_cards = cards.length
+//     let totalAmountExpected = 0;
+//     let totalAmount = 0;
+//     try {
+//         cards.forEach(card => {
+//             totalAmountExpected += card.amount * card.rate.rate;
+//             if (card.state === Status.approved) {
+//                 totalAmount += card.amount;
+//             }
+
+//         });
+//         next();
+//     } catch (error) {
+//         next();
+//     }
+// }
 
 exports.setWalletNumber = async function(next){
     try {

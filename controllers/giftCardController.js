@@ -18,7 +18,7 @@ const SupportedCurrencies = require("../utils/currencies.json");
 
 // controller for creating a supported giftcard
 exports.createGiftCard = async (req, res) => {
-  const { name, rate, description } = req.body;
+  const { name, description } = req.body;
   try {
     const check = await GiftCard.findOne({ name: name });
     if (!check) {
@@ -30,7 +30,6 @@ exports.createGiftCard = async (req, res) => {
       const picture_cloudId = cloudFile.public_id;
       const giftcard = await GiftCard.create({
         name,
-        rate,
         description,
         picture_url,
         picture_cloudId,
@@ -57,14 +56,15 @@ exports.createGiftCardTransaction = async (req, res) => {
   console.log(req.user.id);
   const {
     receiverWalletId,
-    currencyName,
-    currencySymbol,
-    currencyCode,
-    rate,
-    amount,
+    giftcard_id,
+    total_amount,
     cards,
     description,
   } = req.body;
+
+  
+  const amount = total_amount;
+
 
   try {
     const check = await Wallet.findById(receiverWalletId);
@@ -78,14 +78,11 @@ exports.createGiftCardTransaction = async (req, res) => {
         transactionTypes.giftcard
       );
       // create a new GiftCardTransaction document
-      const giftcardTransaction = await GiftCardTransaction.create(
+     const result = await GiftCardTransaction.create(
         {
           reciever_wallet_number: check.wallet_number,
           user_id: req.user.id,
-          currency_name: currencyName,
-          currency_symbol: currencySymbol,
-          currency_code: currencyCode,
-          rate: rate,
+          giftcard_id,
           cards: cards,
           transaction_number: transaction.transaction_number,
           description: description,
@@ -104,6 +101,11 @@ exports.createGiftCardTransaction = async (req, res) => {
           }
         }
       );
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "wallet not found",
+      })
     }
   } catch (error) {
     return serverError(res, error);
@@ -198,7 +200,7 @@ exports.getGiftCardTransaction = async (req, res) => {
         message: "Cached result",
       });
     }
-    const check = await GiftCardTransaction.findOne({ _id: req.params.id });
+    const check = await GiftCardTransaction.findOne({ _id: req.params.id }).populate("cards.item_card_rate");
     if (!check) {
       return res.status(204).json({
         success: true,
@@ -299,7 +301,7 @@ exports.getUserGiftCardTransactions = async (req, res) => {
         message: "Cached result",
       });
     }
-    const check = await GiftCardTransaction.find({ user_id });
+    const check = await GiftCardTransaction.find({ user_id }).populate("cards.item_card_rate");
     if (!check) {
       return res.status(404).json({
         success: true,
@@ -329,7 +331,7 @@ exports.getAllGiftCardTransactions = async (req, res) => {
         message: "Cached result",
       });
     }
-    const check = await GiftCardTransaction.find();
+    const check = await GiftCardTransaction.find().populate("cards.item_card_rate");
     if (!check) {
       return res.status(404).json({
         success: true,

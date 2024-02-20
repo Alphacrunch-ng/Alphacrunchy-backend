@@ -1,4 +1,5 @@
 const JWT = require('jsonwebtoken');
+const { roles } = require('../utils/constants');
 
 exports.auth = async (req, res, next) => {
     try {
@@ -11,7 +12,6 @@ exports.auth = async (req, res, next) => {
         req.user = decoded;
         next();
     } catch (error) {
-        console.log(error);
         res.status(401).send({ error: error.message });
     }
 }

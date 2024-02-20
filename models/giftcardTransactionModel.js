@@ -1,20 +1,12 @@
-// general user model
 
 // importing mongoose
 const mongoose = require('mongoose');
-const { Status, CardTypes } = require('../utils/constants');
+const { Status } = require('../utils/constants');
 const { modifiedAt, sum, updateGiftcardTransactionStatus, checkAndUpdateGiftcardTransactionStatus } = require('./hooks');
 
 const cardItemSchema = new mongoose.Schema({
     card_item : {
         type: String // if card type is e-code then this would be an array of e-codes in string else it would be an array of the picture cloud_url
-    },
-    card_type : {
-        type: String,
-        enum: {
-            values: [CardTypes.physical, CardTypes.eCode],
-            message: "status can either be 'Physical Card' or 'E-Code'"
-        }
     },
     amount : {
         type: Number,
@@ -28,6 +20,9 @@ const cardItemSchema = new mongoose.Schema({
         },
         default: Status.pending
     },
+    item_card_rate: {
+        type: mongoose.Schema.Types.ObjectId, ref: 'GiftCardRate'
+    }
 });
 
 const giftcardTransactionSchema = new mongoose.Schema({
@@ -37,24 +32,14 @@ const giftcardTransactionSchema = new mongoose.Schema({
     user_id: {
         type: mongoose.Schema.Types.ObjectId, ref: 'User'
     },
-    currency_name: {
-        type: String,
-    },
-    currency_symbol: {
-        type: String,
-    },
-    currency_code: {
-        type: String,
+    giftcard_id: {
+        type: mongoose.Schema.Types.ObjectId, ref: 'GiftCard'
     },
     total_amount_expected: {
         type: Number,
         default: 0
     },
     total_amount_paid: {
-        type: Number,
-        default: 0
-    },
-    rate : {
         type: Number,
         default: 0
     },

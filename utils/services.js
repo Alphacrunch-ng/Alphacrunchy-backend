@@ -14,6 +14,7 @@ exports.serverError = async (res, error) => {
     success: false,
     message: "An error occured, we are working on it",
     error: error.message,
+    data: error.data
   });
 };
 
@@ -122,8 +123,8 @@ exports.makeBitpowrRequest = async (url, method = "get", data = null) => {
     }
     return response.data;
     
-  } catch (error) {
-    throw error;
+  } catch (err) {
+    throw err;
   }
 };
 // For Populating the rates =>
