@@ -232,7 +232,7 @@ exports.setUserRole = async (request, response) => {
 
 exports.kycCallBack = async (req, res) => {
     const { kycResult } = req.body;
-    console.log(kycResult);
+    console.log(kycResult, req.body);
     const user = await User.findById(kycResult.PartnerParams.user_id);
     const names = user.fullName.split(' ').map((name)=> name.toLowerCase());
     
