@@ -7,6 +7,9 @@ const { serverError } = require('../utils/services.js');
 const { roles, operations } = require('../utils/constants.js');
 const { noticeMailer } = require('../utils/nodeMailer.js');
 const { createNotification } = require('./notificationController.js');
+const { basicKycChecker } = require('../utils/kycService.js');
+const { kycEvents } = require('../utils/events/emitters.js');
+const { events } = require('../utils/events/eventConstants.js');
 
 // controller for getting a User by Id
 exports.getUserById = async (req, res) => {
@@ -127,7 +130,7 @@ exports.getUsers = async (request, response) => {
 // controller for updating a User
 exports.updateUser = async (req, res) => {
     try {
-        const {fullName, sex, phoneNumber, country, city, state, address} = req.body;
+        const {fullName, firstName, middleName, lastName, sex, country, city, state, address} = req.body;
         const checkUser = await User.findOne({ id: req.params.id});
         if (!checkUser) {
             return res.status(204).json({
@@ -145,9 +148,9 @@ exports.updateUser = async (req, res) => {
             const profilePicture_url = cloudFile.secure_url;
             const profilePic_cloudId = cloudFile.public_id;
 
-            const user = await User.findByIdAndUpdate(req.params.id,{fullName, sex, country, city, state, address, profilePicture_url, profilePic_cloudId}, {new: true}).select("-password");
+            const user = await User.findByIdAndUpdate(req.params.id,{fullName, firstName, middleName, lastName, sex, country, city, state, address, profilePicture_url, profilePic_cloudId}, {new: true}).select("-password");
         }
-        const user = await User.findByIdAndUpdate(req.params.id,{fullName, sex, country, city, state, address}, {new: true}).select("-password");
+        const user = await User.findByIdAndUpdate(req.params.id,{fullName, firstName, middleName, lastName, sex, country, city, state, address}, {new: true, omitUndefined: true}).select("-password");
         return res.status(200).json({
             status: 'success',
             data: user
@@ -242,8 +245,8 @@ exports.kycCallBack = async (req, res) => {
         // update the user's KYC status to approved in the database and send an email notification
 
         if (names.includes(userKyc.FullData.surname.toLowerCase()) && names.includes(userKyc.FullData.firstNames.toLowerCase())  ) {
-            return res.status(400).json({
-                success: false
+            return res.status(200).json({
+                success: true
             });
         }
 
@@ -265,7 +268,53 @@ exports.kycCallBack = async (req, res) => {
             success: true
         });
     }
-    return res.status(400).json({
-        success: false
+    return res.status(200).json({
+        success: true
     });
+}
+
+exports.basicKycCheck = async (req, res) => {
+    const { id } = req.params;
+    const user_id = id;
+    const { dob, bvn, id_type, firstName, middleName, lastName, phoneNumber, gender} = req.body;
+
+    try {
+        const user = await User.findById(user_id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'user not found'
+            });
+        }
+        if(!user.fullName.toLowerCase().includes(firstName.toLowerCase()) && !user.fullName.toLowerCase().includes(lastName.toLowerCase())) {
+            return res.status(400).json({
+                success: false,
+                message: 'first and last names not in fullname'
+            })
+        }
+        if(user_id !== req.user.id && user.role !== roles.admin) {
+            return res.status(400).json({
+                success: false,
+                message: 'invalid user'
+            })
+        }
+        const result = await basicKycChecker(dob, user_id, bvn, id_type, firstName, middleName, lastName, phoneNumber, gender);
+        const verified = "Exact Match"
+        if (result?.Actions?.Names === verified && result?.Actions.DOB === verified && result?.Actions.Verify_ID_Number === "Verified" && result?.Actions.Gender === verified) {
+            kycEvents.emit(events.USER_BASIC_KYC_SUCCESS, { user_id, email: req.user.email, dob, bvn, id_type, firstName, middleName, lastName, phoneNumber, gender, result})
+            await createNotification(user_id, operations.basicKycSuccess)
+        }
+        return res.status(200).json({
+            success: true,
+            data: result
+        })
+    } catch (error) {
+        return serverError(res, error);
+    }
+}
+
+exports.biometricKycCheck = async (req, res) => {
+    const { id } = req.params;
+    const user_id = id;
+    const { selfieBase64StringImage, firstName, lastName, id_type, id_number } = req.body;
 }

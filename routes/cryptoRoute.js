@@ -19,7 +19,7 @@ router.post(
   upload.single("icon"),
   addAdminAsset
 );
-router.get(
+router.post(
   "/add-sub-account/:id",
   auth,
   authRoles(roles.admin),

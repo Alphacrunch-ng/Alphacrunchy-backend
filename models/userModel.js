@@ -18,6 +18,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: ["true", "fullName is required."],
   },
+  firstName: {
+    type: String
+  },
+  lastName: {
+    type: String
+  },
+  middleName: {
+    type: String
+  },
   email: {
     type: String,
     required: ["true", "email is required."],
@@ -31,6 +40,9 @@ const userSchema = new mongoose.Schema({
       values: ["male", "female", "others"],
       message: "sex can either be 'male' or 'female' or 'others'",
     },
+  },
+  dob: {
+    type: Date
   },
   profilePicture_url: {
     type: String,

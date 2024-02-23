@@ -17,7 +17,7 @@ exports.modifiedAt = async function(next){
 exports.sum = async function(next){
     try {
         // Populate the cards with their rates
-        await this.populate('cards.item_card_rate').execPopulate();
+        await this.populate('cards.item_card_rate');
         
         // Now cards will be populated
         const cards = this.cards;

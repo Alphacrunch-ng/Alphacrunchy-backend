@@ -85,6 +85,7 @@ exports.createGiftCardTransaction = async (req, res) => {
           giftcard_id,
           cards: cards,
           transaction_number: transaction.transaction_number,
+          total_amount_expected: amount,
           description: description,
         },
         async (error, result) => {

@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const phones = require("./phone.json");
 const axios = require("axios");
+const { product_name } = require("./constants");
 
 function generateRandomString(length) {
   return crypto
@@ -25,6 +26,10 @@ exports.createOtp = () => {
 exports.createWalletNumber = (length) => {
   return generateRandomString(length).toUpperCase();
 };
+
+exports.createJobId = () => {
+  return product_name.trim().toUpperCase() + generateRandomString(10).toUpperCase();
+}
 
 // not implemented
 exports.connectChat = (socket) => {

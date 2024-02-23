@@ -221,7 +221,6 @@ exports.createUserCryptoAccount = async (req, res) => {
       "post",
       data
     );
-    console.log(responseData);
     if (responseData) {
       const data = {
         uid: responseData.data.uid,
@@ -250,7 +249,12 @@ exports.createUserCryptoAccount = async (req, res) => {
       });
     }
   } catch (error) {
-    console.log(error.response, error.statuscode);
+    if (error.response.status === 404) {
+      return res.status(404).json({
+        success: false,
+        message: error?.response?.data?.message,
+      });
+    }
     serverError(res, error);
   }
 };

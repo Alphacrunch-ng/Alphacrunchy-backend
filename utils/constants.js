@@ -4,6 +4,12 @@ exports.roles = {
   client: "CLIENT",
 };
 
+exports.countryCodes = {
+  Nigeria: "NG",
+  Ghana: "GH",
+  UK: "GB",
+}
+
 exports.transactionTypes = {
   wallet: "wallet",
   giftcard: "giftcard",
@@ -18,9 +24,9 @@ exports.operations = {
   credit: "Credit",
   transfer: "Transfer",
   sellGiftcard: "Sell Giftcard",
-  basicKycSuccess: "Basic KYC Success",
+  basicKycSuccess: "Basic KYC Successful",
   basicKycFailed: "Basic KYC Failed",
-  biometricKycSuccess: "Biometric KYC success",
+  biometricKycSuccess: "Biometric KYC Successful",
   biometricKycFailed: "Biometric KYC failed",
 };
 

@@ -190,7 +190,7 @@ exports.twoFactorLoggingIn = async (request, response) => {
                 });
                 user.password = "";
                 const today = new Date();
-
+                authEvents.emit(events.USER_LOGGED_IN, {user , request})
                 //resetting the 2 factor properties to default value
                 const updatedUser =  await User.findOneAndUpdate(
                     { _id: user._id }, // Specify the query condition to find the user
@@ -552,16 +552,8 @@ exports.changePassword = async (request, response) => {
 }
 
 exports.getKycKey = async (req, res) => {
-    let timestamp = new Date().toISOString();
-    let api_key = process.env.API_SIGNATURE_LIVE;
-    let partner_id = process.env.PARTNER_ID;
-    let hmac = crypto.createHmac('sha256', api_key);
 
-    hmac.update(timestamp, 'utf8');
-    hmac.update(partner_id, 'utf8');
-    hmac.update("sid_request", 'utf8');
-
-    let signature = hmac.digest().toString('base64');
+    let { timestamp, signature } = getSignatureAndTimeStamp();
     const { environment } = req.body;
     switch (environment) {
         case 'sandbox':
