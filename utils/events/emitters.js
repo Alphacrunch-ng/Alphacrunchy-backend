@@ -36,9 +36,18 @@ kycEvents.on(events.USER_BASIC_KYC_SUCCESS, async ({ user_id , email, dob, first
     
 })
 
-kycEvents.on(events.USER_BIOMETRIC_KYC_SUCCESS, async ({ dob, bvn, id_type, firstName, middleName, lastName, phoneNumber, gender})=>{
+kycEvents.on(events.USER_BIOMETRIC_KYC_SUCCESS, async ({ dob, bvn, id_type, firstName, middleName, lastName})=>{
     const user = await User.findByIdAndUpdate(user_id, { kycLevel : 2, firstName: firstName, middleName: middleName, lastName: lastName}, { new : true, omitUndefined: true});
     noticeMailer(user.email, operations.biometricKycSuccess);
+
+    try {
+        const user = await User.findByIdAndUpdate(user_id, { kycLevel : 2, firstName: firstName, middleName: middleName, lastName: lastName}, { new : true, omitUndefined: true});
+        // await UserBasicKYCVerification.create(result);
+    } catch (error) {
+        console.log(error);
+    } finally {
+        noticeMailer(email, operations.basicKycSuccess);
+    }
 })
 
 

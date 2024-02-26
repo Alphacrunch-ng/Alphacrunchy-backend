@@ -7,7 +7,7 @@ const { serverError } = require('../utils/services.js');
 const { roles, operations } = require('../utils/constants.js');
 const { noticeMailer } = require('../utils/nodeMailer.js');
 const { createNotification } = require('./notificationController.js');
-const { basicKycChecker } = require('../utils/kycService.js');
+const { basicKycChecker, biometericKycChecker } = require('../utils/kycService.js');
 const { kycEvents } = require('../utils/events/emitters.js');
 const { events } = require('../utils/events/eventConstants.js');
 
@@ -316,5 +316,25 @@ exports.basicKycCheck = async (req, res) => {
 exports.biometricKycCheck = async (req, res) => {
     const { id } = req.params;
     const user_id = id;
-    const { selfieBase64StringImage, firstName, lastName, id_type, id_number } = req.body;
+    const { documentBase64StringImage, selfieBase64StringImage, id_type} = req.body;
+    // const { documentBase64StringImage, selfieBase64StringImage, firstName, lastName, id_type, id_number} = req.body;
+
+    try {
+
+        const user = await User.findById(user_id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'user not found'
+            })
+        }
+        const result = await biometericKycChecker( documentBase64StringImage, selfieBase64StringImage, user_id, id_type);
+        // const result = await biometericKycChecker( documentBase64StringImage, selfieBase64StringImage, user_id, firstName, lastName, id_type, id_number, user.dob);
+        return res.status(200).json({
+            success: true,
+            data: result
+        })
+    } catch (err) {
+        return serverError(res, err);
+    }
 }

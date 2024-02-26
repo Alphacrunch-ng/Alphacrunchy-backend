@@ -12,8 +12,9 @@ let api_key = process.env.API_SIGNATURE_LIVE; // copy your API key from the Smil
 let sid_server = '1'; // Use '0' for the sandbox server, use '1' for production server
 let baseUrl = process.env.SMILEID_BASE_URL_LIVE;
 
+const biometericKycChecker = async (documentBase64StringImage, selfieBase64StringImage, user_id, id_type) => {
 
-const biometericKycChecker = async (selfieBase64StringImage, user_id, firstName, lastName, id_type, id_number, livelinessBase64StringImage) => {
+// const biometericKycChecker = async (documentBase64StringImage, selfieBase64StringImage, user_id, firstName, lastName, id_type, id_number, dob) => {
     
 
     const connection = new WebApi(partner_id, default_callback, api_key, sid_server);
@@ -35,7 +36,11 @@ const biometericKycChecker = async (selfieBase64StringImage, user_id, firstName,
         {
         image_type_id: 2,
         image: selfieBase64StringImage //'<full path to selfie image or base64image string>'
-        }
+        },
+        {
+            image_type_id: 3, //<1 | 3>
+            image: documentBase64StringImage //'<full path to front of id document image or base64image string>'
+        },
         // ,
         // { // Not required if you don't require proof of life (note photo of photo check will still be performed on the uploaded selfie)
         // image_type_id: 6,
@@ -43,16 +48,21 @@ const biometericKycChecker = async (selfieBase64StringImage, user_id, firstName,
         // }
     ];
 
-    // Create ID number info
     let id_info = {
-        first_name: firstName,
-        last_name: lastName, //'<surname>',
-        country: countryCodes.Nigeria, // '<2-letter country code>'
-        id_type: id_type,
-        id_number: id_number, // '<valid id number>',
-        dob: dob, // yyyy-mm-dd
-        entered: 'true' // must be a string
-    };
+        country: countryCodes.Nigeria, // The country where ID document was issued
+        id_type: id_type // The ID document type
+      };
+
+    // // Create ID number info
+    // let id_info = {
+    //     first_name: firstName,
+    //     last_name: lastName, //'<surname>',
+    //     country: countryCodes.Nigeria, // '<2-letter country code>'
+    //     id_type: id_type,
+    //     id_number: id_number, // '<valid id number>',
+    //     dob: dob, // yyyy-mm-dd
+    //     entered: 'true' // must be a string
+    // };
 
     // Set the options for the job
     let options = {
@@ -64,13 +74,12 @@ const biometericKycChecker = async (selfieBase64StringImage, user_id, firstName,
 
     // Submit the job.
     // This method returns a promise
-    connection.submit_job(partner_params, image_details, id_info, options).then((result) => {
-        console.log(result);
+    try {
+        const result = await connection.submit_job(partner_params, image_details, id_info, options);
         return result;
-    }).catch((err) => {
-        console.log(err);
-        throw err;
-    });
+    } catch (error) {
+        throw error;
+    }
 
 }
 

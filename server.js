@@ -29,7 +29,7 @@ const io = socket.init(http, {
       "http://localhost:3000",
       "https://cambio.ng/",
     ],
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["alphacrun"],
     credentials: true,
   },
