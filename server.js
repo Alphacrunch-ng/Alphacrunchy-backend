@@ -20,6 +20,7 @@ const { roles } = require("./utils/constants.js");
 const { getUserDeviceInfo, getUserLocation } = require("./utils/services.js");
 
 const app = express();
+app.use(cors());
 const http = require("http").createServer(app);
 const io = socket.init(http, {
   cors: {
@@ -28,7 +29,7 @@ const io = socket.init(http, {
       "http://localhost:3000",
       "https://cambio.ng/",
     ],
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    methods: ["GET", "POST"],
     allowedHeaders: ["alphacrun"],
     credentials: true,
   },
@@ -37,10 +38,9 @@ const spec = swaggerJsDoc(options);
 const port = process.env.PORT || 5001;
 
 //middlewares
-app.use(cors());
 app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(spec));
 app.use(express.json());
-app.use(bodyParser.json({ limit: '1.5mb' }));
+// app.use(bodyParser.json({ limit: '1.5mb' }));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use("/", express.static("public"));
 const logDirectory = path.join(__dirname, "log");
