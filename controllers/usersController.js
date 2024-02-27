@@ -335,6 +335,12 @@ exports.biometricKycCheck = async (req, res) => {
             data: result
         })
     } catch (err) {
+        if(err?.response?.data?.code === "2209") {
+            return res.status(400).json({
+                success: false,
+                message: err?.response?.data?.error
+            })
+        }
         return serverError(res, err);
     }
 }

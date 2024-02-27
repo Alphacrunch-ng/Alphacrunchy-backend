@@ -1,6 +1,0 @@
-::1 - - [26/Feb/2024:08:35:38 +0000] "POST /user/kyc/biometric/63e14439166b531cffdca6a6 HTTP/1.1" 500 114 "-" "PostmanRuntime/7.36.3"
-::1 - - [26/Feb/2024:08:37:09 +0000] "POST /user/kyc/biometric/63e14439166b531cffdca6a6 HTTP/1.1" 500 97 "-" "PostmanRuntime/7.36.3"
-::1 - - [26/Feb/2024:08:38:37 +0000] "POST /user/kyc/biometric/63e14439166b531cffdca6a6 HTTP/1.1" 200 16 "-" "PostmanRuntime/7.36.3"
-::1 - - [26/Feb/2024:08:48:03 +0000] "POST /user/kyc/biometric/63e14439166b531cffdca6a6 HTTP/1.1" 200 16 "-" "PostmanRuntime/7.36.3"
-::1 - - [26/Feb/2024:08:50:52 +0000] "POST /user/kyc/biometric/63e14439166b531cffdca6a6 HTTP/1.1" 200 1422 "-" "PostmanRuntime/7.36.3"
-::1 - - [26/Feb/2024:09:15:55 +0000] "POST /user/kyc/biometric/63e14439166b531cffdca6a6 HTTP/1.1" 200 1351 "-" "PostmanRuntime/7.36.3"

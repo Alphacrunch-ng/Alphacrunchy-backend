@@ -1,7 +1,7 @@
 const { registration, loggingIn, confirmUserEmail, requstResetPassword, resetPassword, resetPin, changePassword, requestOtp, setup2Factor, twoFactorLoggingIn, getKycKey } = require('../controllers/authController');
 const { getUserByEmail } = require('../controllers/usersController');
 const { createWallet } = require('../controllers/walletController');
-const {auth } = require('../middlewares/auth');
+const { auth } = require('../middlewares/auth');
 
 const router = require('express').Router();
 /**
