@@ -52,6 +52,7 @@ exports.registration = async (req, res) => {
 // signin in controller where token is created.
 exports.loggingIn = async (request, response) => {
     const {email, password} = request.body;
+    console.log(request.body)
     try {
         const user = await User.findOne({ email: email });
         
