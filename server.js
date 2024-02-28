@@ -93,15 +93,6 @@ app.get("/logs", auth, authRoles(roles.admin), (req, res) => {
 mongodb()
   .then(() => {
     app.use(cors({ origin: "*" }));
-    app.use((req, res, next) => {
-      if (req.method === 'OPTIONS') {
-        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH');
-        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-        res.status(200).send();
-      } else {
-        next();
-      }
-    });
     // Middleware to parse user-agent information
     app.use(useragent.express());
     app.use("/", indexRoute);
