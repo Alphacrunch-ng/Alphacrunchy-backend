@@ -23,12 +23,10 @@ const app = express();
 // app.use(cors({ origin: "*" }));
 app.use(cors({
   origin: [
-    "*",
     "https://cambio.ng",
     "https://admin-alpha-crunch.netlify.app",
     "http://localhost:3001",
-    "http://localhost:3000",
-    "https://cambio.ng/"],
+    "http://localhost:3000"],
 }));
 // app.use((req, res, next) => {
 //   if (req.method === 'OPTIONS') {
