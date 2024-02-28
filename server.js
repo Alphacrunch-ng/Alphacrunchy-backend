@@ -21,6 +21,15 @@ const { getUserDeviceInfo, getUserLocation } = require("./utils/services.js");
 
 const app = express();
 app.use(cors());
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.status(200).send();
+  } else {
+    next();
+  }
+});
 const http = require("http").createServer(app);
 const io = socket.init(http, {
   cors: {
