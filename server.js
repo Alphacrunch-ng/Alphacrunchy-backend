@@ -20,7 +20,7 @@ const { roles } = require("./utils/constants.js");
 const { getUserDeviceInfo, getUserLocation } = require("./utils/services.js");
 
 const app = express();
-// app.use(cors({ origin: "*" }));
+app.use(cors({ origin: "*" }));
 // app.use((req, res, next) => {
 //   if (req.method === 'OPTIONS') {
 //     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH');
@@ -92,7 +92,7 @@ app.get("/logs", auth, authRoles(roles.admin), (req, res) => {
 
 mongodb()
   .then(() => {
-    app.use(cors({ origin: "*" }));
+    // app.use(cors({ origin: "*" }));
     // Middleware to parse user-agent information
     app.use(useragent.express());
     app.use("/", indexRoute);

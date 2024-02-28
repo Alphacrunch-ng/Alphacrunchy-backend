@@ -27,3 +27,4 @@
 ::1 - - [28/Feb/2024:07:23:06 +0000] "GET /logs/ HTTP/1.1" 401 57 "-" "PostmanRuntime/7.36.3"
 ::1 - - [28/Feb/2024:07:23:23 +0000] "POST /auth/login HTTP/1.1" 200 2028 "-" "PostmanRuntime/7.36.3"
 ::1 - - [28/Feb/2024:07:23:57 +0000] "GET /logs/ HTTP/1.1" 200 59 "-" "PostmanRuntime/7.36.3"
+::1 - - [28/Feb/2024:07:54:51 +0000] "POST /auth/login HTTP/1.1" 200 2028 "-" "PostmanRuntime/7.36.3"
