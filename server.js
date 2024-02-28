@@ -20,7 +20,7 @@ const { roles } = require("./utils/constants.js");
 const { getUserDeviceInfo, getUserLocation } = require("./utils/services.js");
 
 const app = express();
-app.use(cors({ origin: "*" }));
+// app.use(cors({ origin: "*" }));
 app.use(cors({
   origin: [
     '*',
