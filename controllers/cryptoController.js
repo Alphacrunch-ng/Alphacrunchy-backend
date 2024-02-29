@@ -214,6 +214,7 @@ exports.createUserCryptoAccount = async (req, res) => {
     const data = {
       externalId: userId,
       name: user.fullName,
+      autoGenerateAddress: true,
     };
     console.log(data);
     const responseData = await makeBitpowrRequest(
@@ -258,3 +259,36 @@ exports.createUserCryptoAccount = async (req, res) => {
     serverError(res, error);
   }
 };
+
+exports.getSubAccountsFromSource = async (req, res) => {
+  const cacheKey = `subaccounts`;
+  try {
+    const cachedData = getCacheData(cacheKey);
+    if (cachedData) {
+      return res.status(200).json({
+        data: cachedData,
+        success: true,
+        message: "Cached result",
+      });
+    }
+    const responseData = await makeBitpowrRequest(
+      `${process.env.BITPOWR_BASEURL}/accounts/${process.env.BITPOWR_ACCOUNT_WALLET_ID}/sub-accounts`,
+      "get"
+    );
+    if (responseData) {
+      setCacheData(cacheKey, responseData.data, 60 * 5 * 1000);
+      return res.status(200).json({
+        success: true,
+        message: responseData,
+      })
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: "Error getting sub accounts",
+      })
+    }
+  }
+  catch (error) {
+    serverError(res, error);
+  }
+}

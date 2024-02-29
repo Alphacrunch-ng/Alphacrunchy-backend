@@ -12,7 +12,7 @@ let api_key = process.env.API_SIGNATURE_LIVE; // copy your API key from the Smil
 let sid_server = '1'; // Use '0' for the sandbox server, use '1' for production server
 let baseUrl = process.env.SMILEID_BASE_URL_LIVE;
 
-const biometericKycChecker = async (documentBase64StringImage, selfieBase64StringImage, user_id, id_type) => {
+const biometericKycChecker = async (documentBase64StringImage, selfieBase64StringImage, user_id, id_type, id_number) => {
 
 // const biometericKycChecker = async (documentBase64StringImage, selfieBase64StringImage, user_id, firstName, lastName, id_type, id_number, dob) => {
     
@@ -50,7 +50,8 @@ const biometericKycChecker = async (documentBase64StringImage, selfieBase64Strin
 
     let id_info = {
         country: countryCodes.Nigeria, // The country where ID document was issued
-        id_type: id_type // The ID document type
+        id_type: id_type, // The ID document type
+        id_number: id_number
       };
 
     // // Create ID number info
