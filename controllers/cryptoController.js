@@ -131,11 +131,137 @@ exports.addAdminAsset = async (req, res) => {
   }
 };
 
-exports.getUserAssets = async (req, res) => {
+exports.addUserAsset = async (req, res) => {
+  // the asset should have been added on the bitpowr dashboard
+  const { chain_name } = req.body;
+  const user_id = req.user.id;
   try {
+    const userCryptoWallet = await CryptoWalletModel.findOne({ externalId : user_id });
+    if (!userCryptoWallet){
+      return  res.status(401).send("Please create a crypto wallet first");
+    }
+    //checking if the user has that asset already on our database
+    const ifExists = await CryptoAssetModel.findOne({
+      chain: String(chain_name).toUpperCase(),
+    });
+    if (ifExists) {
+      return res.status(400).json({
+        success: false,
+        message: "Asset already exists",
+      });
+    }
+
+
+    const responseData = await makeBitpowrRequest(
+      `${process.env.BITPOWR_BASEURL}/accounts/${process.env.BITPOWR_ACCOUNT_WALLET_ID}/assets`
+    );
+    if (!responseData.data) {
+      return res.status(404).json({
+        success: false,
+        message: "unable to check provider",
+      });
+    }
+    const assets = Array(...responseData.data);
+    const check = assets.filter((asset) => {
+      return asset.chain.toUpperCase() === String(chain_name).toUpperCase();
+    });
+    if (check.length < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Asset not found on the provider",
+      });
+    }
+
+    const ifExistsOnDatabase = await CryptoAssetModel.find({
+      chain: String(chain_name).toUpperCase(), account_uid: process.env.BITPOWR_ACCOUNT_WALLET_ID
+    });
+
+    if(ifExistsOnDatabase.length < 1){
+      return res.status(400).json({
+        success: false,
+        message: "Asset not foundr",
+      })
+    }
+
+    const adminAsset = ifExistsOnDatabase.find((item)=> item.chain === String(chain_name).toUpperCase())
+    console.log("check: ", check[0]);
+
+    if(!adminAsset){
+      return res.status(400).json({
+        success: false,
+        message: "Asset not foundr",
+      })
+    }
+
+    const icon = adminAsset.icon;
+    const assetData = {
+      account_uid: process.env.BITPOWR_ACCOUNT_WALLET_ID,
+      icon: icon,
+      uid: check[0].uid,
+      guid: check[0].guid,
+      label: check[0].label,
+      isDeleted: check[0].isDeleted,
+      isArchived: check[0].isArchived,
+      isContract: check[0].isContract,
+      chain: check[0].chain,
+      network: check[0].network,
+      mode: check[0].mode,
+      assetType: check[0].assetType,
+      autoForwardAddress: check[0].autoForwardAddress,
+      createdAt: check[0].createdAt,
+      balance: check[0].balance,
+    };
+    const asset = await CryptoAssetModel.create(assetData);
+
     return res.status(200).json({
       success: true,
+      asset,
     });
+  } catch (error) {
+    serverError(res, error);
+  }
+};
+
+exports.getUserAssets = async (req, res) => {
+  const { user_id } = req.params;
+  let { uid, source } = req.body;
+  // convert source to boolean irrespective of the data type
+  source = Boolean(source);
+
+  const cacheKey = `cryptoassets`+ uid + source;
+  try {
+    const cachedData = getCacheData(cacheKey);
+    if (cachedData) {
+      return res.status(200).json({
+        data: cachedData,
+        success: true,
+        message: "Cached result",
+      });
+    }
+
+    let responseData;
+    if (source) {
+      responseData = await makeBitpowrRequest(
+        `${process.env.BITPOWR_BASEURL}/accounts/${uid}/assets`
+        );
+    } else {
+      responseData = await CryptoAssetModel.find({
+        uid,
+        isDeleted: false,
+      });
+    }
+  
+
+    
+
+    if (responseData) {
+      setCacheData(cacheKey, responseData, 60 * 5 * 1000);
+      return res.status(200).json({
+        success: true,
+        data: responseData,
+      });
+    }
+    return res.status(404).json({ success: false });
   } catch (error) {
     serverError(res, error);
   }
@@ -191,7 +317,7 @@ exports.createCryptoTransaction = async (req, res) => {
   }
 };
 
-exports.createUserCryptoAccount = async (req, res) => {
+exports.createUserCryptoAccount = async (req, res) => { // create subaccount
   const userId = req.params.id;
   try {
     const user = await User.findById(userId);
@@ -214,9 +340,10 @@ exports.createUserCryptoAccount = async (req, res) => {
     const data = {
       externalId: userId,
       name: user.fullName,
-      autoGenerateAddress: true,
+      autoGenerateAddress: true, // generate addresses for all available asset on the parent account.
     };
-    console.log(data);
+
+    // create the subaccount on bitpowr
     const responseData = await makeBitpowrRequest(
       `${process.env.BITPOWR_BASEURL}/accounts/${process.env.BITPOWR_ACCOUNT_WALLET_ID}/sub-accounts`,
       "post",
