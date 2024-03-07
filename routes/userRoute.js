@@ -42,9 +42,9 @@ router.delete('/picture/:id', deleteUserProfilePicture)
 router.put('/:id', setInActiveUser )
 
 // Middleware for specific routes that need higher payload size limit    largePayloadMiddleware,
-const largePayloadMiddleware = bodyParser.json({ limit: '1.5mb' });
+// const largePayloadMiddleware = bodyParser.json({ limit: '1.5mb' });
 
-router.post('/kyc/biometric/:id', largePayloadMiddleware,  biometricKycCheck);
+router.post('/kyc/biometric/:id', biometricKycCheck);
 
 router.post('/kyc/basic/:id', basicKycCheck);
 
