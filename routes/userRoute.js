@@ -1,6 +1,6 @@
 const { setInActiveUser, getUserById, updateUser, getUsers, getUserByEmail, deleteUserProfilePicture, kycCallBack, biometricKycCheck, basicKycCheck } = require('../controllers/usersController');
 const upload = require('../middlewares/multer');
-// const bodyParser = require('body-parser');
+const bodyParser = require('body-parser');
 
 
 
@@ -42,9 +42,9 @@ router.delete('/picture/:id', deleteUserProfilePicture)
 router.put('/:id', setInActiveUser )
 
 // Middleware for specific routes that need higher payload size limit    largePayloadMiddleware,
-// const largePayloadMiddleware = bodyParser.json({ limit: '1.5mb' });
+const largePayloadMiddleware = bodyParser.json({ limit: '1.5mb' });
 
-router.post('/kyc/biometric/:id',  biometricKycCheck);
+router.post('/kyc/biometric/:id', largePayloadMiddleware,  biometricKycCheck);
 
 router.post('/kyc/basic/:id', basicKycCheck);
 
