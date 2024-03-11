@@ -12,6 +12,7 @@ const cryptoRoute = require("./cryptoRoute");
 const faqRoute = require("./faqRoute");
 const { auth, authRoles } = require("../middlewares/auth");
 const { roles } = require("../utils/constants");
+const { changeAllUserId } = require("../controllers/messagesController");
 
 /**
  * @swagger
@@ -22,6 +23,8 @@ const { roles } = require("../utils/constants");
 router.get("/", (req, res) => {
   res.send("<h1>Alphacrunch Finance</h1>");
 });
+
+// router.post("/work/:id", changeAllUserId);
 
 //admin routes
 router.use("/auth", authRoute);

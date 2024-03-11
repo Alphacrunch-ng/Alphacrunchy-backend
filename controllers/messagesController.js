@@ -165,3 +165,18 @@ exports.deleteChat = async (req, res) => {
     return serverError(res, error);
   }
 };
+
+// exports.changeAllUserId = async (req, res) => {
+//   const old_id = req.params.id;
+//   const {new_user_id} = req.body;
+//   try {
+//       // const wallets = await Chat.updateMany({ user_id: old_id }, {user_id: new_user_id}, {new: true});
+//       const messages2 = await Message.updateMany({ recipient: mongoose.Types.ObjectId(old_id) }, {recipient: new_user_id}, {new: true});
+//       return res.status(200).json({
+//           data: messages2,
+//           success: true
+//       });
+//   } catch (error) {
+//       return serverError(res, error);
+//   }
+// }

@@ -268,7 +268,25 @@ exports.getUserAssets = async (req, res) => {
 };
 
 exports.getAssetById = async (req, res) => {
+  const asset_id = req.params.id;
   try {
+    const asset = await CryptoAssetModel.findById(asset_id);
+    if (!asset) {
+      return res.status(404).json({
+        success: false,
+        message: "Asset not found",
+      });
+    }
+    const wallet = await CryptoWalletModel.findById(asset.account_uid);
+    if (!wallet) {
+      return res.status(404).json({
+        success: false,
+        message: "Wallet not found",
+      });
+    }
+
+    if (wallet.externalId !== req.user.id)
+
     return res.status(200).json({
       success: true,
     });

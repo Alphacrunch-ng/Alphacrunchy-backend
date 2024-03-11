@@ -316,7 +316,7 @@ exports.basicKycCheck = async (req, res) => {
 exports.biometricKycCheck = async (req, res) => {
     const { id } = req.params;
     const user_id = id;
-    const { documentBase64StringImage, selfieBase64StringImage, id_type, id_number} = req.body;
+    const { documentBase64StringImage, selfieBase64StringImage, id_type} = req.body;
     // const { documentBase64StringImage, selfieBase64StringImage, firstName, lastName, id_type, id_number} = req.body;
 
     try {
@@ -330,7 +330,7 @@ exports.biometricKycCheck = async (req, res) => {
         }
 
         const verified = "Passed";
-        const result = await biometericKycChecker( documentBase64StringImage, selfieBase64StringImage, user_id, id_type, id_number);
+        const result = await biometericKycChecker( documentBase64StringImage, selfieBase64StringImage, user_id, id_type);
         if (result?.Actions?.Names === verified && result?.Actions.DOB === verified && result?.Actions.Verify_ID_Number === "Verified" && result?.Actions.Gender === verified) {
             kycEvents.emit(events.USER_BIOMETRIC_KYC_SUCCESS, { user_id})
             await createNotification(user_id, operations.basicKycSuccess)

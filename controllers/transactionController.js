@@ -325,3 +325,4 @@ const checkTransactionDetailsSuccess = async ( transaction_number, transaction_t
   }
   return check.status === Status.successful;
 }
+

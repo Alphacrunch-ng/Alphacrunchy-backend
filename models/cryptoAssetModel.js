@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const cryptoAssetSchema = new Schema({
-    uid: { type: String, required: true },
+    uid: { type: String, required: true, index: true },
     guid: { type: String, required: true },
     icon: { type: String},
     account_uid: { type: String, required: true},
