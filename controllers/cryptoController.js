@@ -5,6 +5,7 @@ const { serverError } = require("../utils/services");
 const { getCacheData, setCacheData } = require("../utils/cache");
 const cloudinary = require("../middlewares/cloudinary.js");
 const User = require("../models/userModel.js");
+const { roles } = require("../utils/constants.js");
 
 exports.getAssets = async (req, res) => {
   const cacheKey = `cryptoassets`;
@@ -97,7 +98,6 @@ exports.addAdminAsset = async (req, res) => {
         message: "Asset already exists",
       });
     }
-    console.log("check: ", check[0]);
 
     const cloudFile = await cloudinary.uploader.upload(req.file.path, {
       folder: "Alphacrunch/crypto",
@@ -223,8 +223,7 @@ exports.addUserAsset = async (req, res) => {
 };
 
 exports.getUserAssets = async (req, res) => {
-  const { user_id } = req.params;
-  let { uid, source } = req.body;
+  let { source } = req.body;
   // convert source to boolean irrespective of the data type
   source = Boolean(source);
 
@@ -238,6 +237,18 @@ exports.getUserAssets = async (req, res) => {
         message: "Cached result",
       });
     }
+
+    const wallet = await CryptoWalletModel.findOne({
+      externalId: req.user.id
+    });
+    if (!wallet){
+      return res.status(400).json({
+        success: false,
+        message: "Wallet not found"
+      });
+    }
+
+    const uid = wallet.uid;
 
     let responseData;
     if (source) {
@@ -263,7 +274,7 @@ exports.getUserAssets = async (req, res) => {
     }
     return res.status(404).json({ success: false });
   } catch (error) {
-    serverError(res, error);
+    return serverError(res, error);
   }
 };
 
@@ -285,10 +296,16 @@ exports.getAssetById = async (req, res) => {
       });
     }
 
-    if (wallet.externalId !== req.user.id)
+    if ((wallet.externalId !== req.user.id) && (req.user.role !== roles.admin)) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      })
+    }
 
     return res.status(200).json({
       success: true,
+      asset
     });
   } catch (error) {
     serverError(res, error);
@@ -296,9 +313,15 @@ exports.getAssetById = async (req, res) => {
 };
 
 exports.getAssetBalance = async (req, res) => {
+  const asset_id = req.params.id;
   try {
+    const responseData = await makeBitpowrRequest(
+      `${process.env.BITPOWR_BASEURL}/assets/${asset_id}/balance`,
+      'GET'
+    );
     return res.status(200).json({
       success: true,
+      data: responseData?.data
     });
   } catch (error) {
     serverError(res, error);

@@ -14,9 +14,9 @@ const cryptoWalletSchema = new mongoose.Schema({
   network: { type: String, required: true },
   createdAt: { type: Date, required: true },
   updatedAt: { type: Date, required: true },
-  mode: { type: String, required: true },
+  mode: { type: String},
   accountId: { type: String, required: true },
-  addresses: { type: Array, required: true, defaultValue: [] },
+  addresses: { type: Array, defaultValue: [] },
 });
 
 const cryptoWallet = mongoose.model("cryptoWallet", cryptoWalletSchema);

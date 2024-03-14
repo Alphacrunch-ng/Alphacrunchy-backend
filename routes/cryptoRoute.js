@@ -5,6 +5,7 @@ const {
   getSubAccountsFromSource,
   getUserAssets,
   addUserAsset,
+  getAssetBalance,
 } = require("../controllers/cryptoController");
 const { authRoles, auth } = require("../middlewares/auth");
 const upload = require("../middlewares/multer");
@@ -15,6 +16,7 @@ const router = require("express").Router();
 router.get("/get-assets", getAssets);
 router.get("/get-accounts/source", getSubAccountsFromSource);
 router.get("/user/get-assets/:user_id", auth, getUserAssets)
+router.get("/get-asset-balance/:id", auth, getAssetBalance)
 
 
 router.post(
@@ -34,7 +36,6 @@ router.post(
 router.post(
   "/add-sub-account/:id",
   auth,
-  authRoles(roles.admin),
   createUserCryptoAccount
 );
 

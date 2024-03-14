@@ -330,14 +330,31 @@ exports.biometricKycCheck = async (req, res) => {
         }
 
         const verified = "Passed";
-        const result = await biometericKycChecker( documentBase64StringImage, selfieBase64StringImage, user_id, id_type);
-        if (result?.Actions?.Names === verified && result?.Actions.DOB === verified && result?.Actions.Verify_ID_Number === "Verified" && result?.Actions.Gender === verified) {
+        const ResultData = await biometericKycChecker( documentBase64StringImage, selfieBase64StringImage, user_id, id_type);
+        const { result } = ResultData;
+
+        const documentExpiration = new Date(ResultData?.ExpirationDate)
+        if(documentExpiration < new Date()) {
+            return res.status(400).json({
+                success: false,
+                message: 'document expired'
+            })
+        }
+        
+        if (result?.Actions?.Document_Check === verified && result?.Actions?.Verify_Document === verified && result?.Actions?.Liveness_Check === verified && result?.ResultText === "Document Verified") {
             kycEvents.emit(events.USER_BIOMETRIC_KYC_SUCCESS, { user_id})
             await createNotification(user_id, operations.basicKycSuccess)
         }
+
+        if (Boolean(ResultData?.job_success) === false) {
+            return res.status(400).json({
+                success: true,
+                message: result?.ResultText
+            })
+        }
         return res.status(200).json({
             success: true,
-            data: result
+            data: result?.ResultText
         })
     } catch (err) {
         if(err?.response?.data?.code === "2209") {
