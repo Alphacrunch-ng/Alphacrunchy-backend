@@ -6,6 +6,7 @@ const { getCacheData, setCacheData } = require("../utils/cache");
 const cloudinary = require("../middlewares/cloudinary.js");
 const User = require("../models/userModel.js");
 const { roles } = require("../utils/constants.js");
+const { isValidAmount } = require("../utils/validators/generalValidators.js");
 
 exports.getAssets = async (req, res) => {
   const cacheKey = `cryptoassets`;
@@ -63,6 +64,56 @@ exports.getAssets = async (req, res) => {
   //   serverError(res, error);
   // }
 };
+
+exports.getCryptoWallet = async (req, res) => {
+  const { id } = req.user;
+  let { source } = req.query;
+  source = Boolean(source);
+  const cacheKey = `cryptowallet${id}`;
+  try {
+    const cachedData = getCacheData(cacheKey);
+    if (cachedData) {
+      return res.status(200).json({
+        data: cachedData,
+        success: true,
+        message: "Cached result",
+      });
+    }
+
+    const cryptoWallet = await CryptoWalletModel.findOne({ externalId: id }).exec();
+    if (!cryptoWallet){
+      return res.status(404).json({
+        success: true,
+        data: "Wallet not found",
+      });
+    }
+    if(source){
+      const responseData = await makeBitpowrRequest(
+        `${process.env.BITPOWR_BASEURL}/accounts/${process.env.BITPOWR_ACCOUNT_WALLET_ID}/sub-accounts/${cryptoWallet.uid}?orderBy=asc`,
+        "get"
+      );
+      if (responseData) {
+        setCacheData(cacheKey, responseData.data, 60 * 5 * 1000);
+        return res.status(200).json({
+          success: true,
+          data: responseData.data,
+        })
+      } else {
+        return res.status(404).json({
+          success: false,
+          message: "Error getting sub accounts",
+        })
+      }
+    }
+    setCacheData(cacheKey, cryptoWallet, 60 * 5 * 1000);
+    return res.status(200).json({
+      success: true,
+      data: cryptoWallet
+    });
+  } catch (error) {
+    return serverError(res, error);
+  }
+}
 
 exports.addAdminAsset = async (req, res) => {
   // the asset should have been added on the bitpowr dashboard
@@ -223,7 +274,7 @@ exports.addUserAsset = async (req, res) => {
 };
 
 exports.getUserAssets = async (req, res) => {
-  let { source } = req.body;
+  let { source, uid } = req.body;
   // convert source to boolean irrespective of the data type
   source = Boolean(source);
 
@@ -253,7 +304,7 @@ exports.getUserAssets = async (req, res) => {
     let responseData;
     if (source) {
       responseData = await makeBitpowrRequest(
-        `${process.env.BITPOWR_BASEURL}/accounts/${uid}/assets`
+        `${process.env.BITPOWR_BASEURL}assets/${uid}`
         );
     } else {
       responseData = await CryptoAssetModel.find({
@@ -266,6 +317,12 @@ exports.getUserAssets = async (req, res) => {
     
 
     if (responseData) {
+      if(responseData.status === 404){
+        return res.status(404).json({ 
+          success: false,
+          message: responseData.data.message
+         });
+      }
       setCacheData(cacheKey, responseData, 60 * 5 * 1000);
       return res.status(200).json({
         success: true,
@@ -459,4 +516,113 @@ exports.getSubAccountsFromSource = async (req, res) => {
   catch (error) {
     serverError(res, error);
   }
+}
+
+
+exports.buyCrypto = async (req, res) => {
+  // Validate input parameters
+  const { address, cryptoAmount, assetType, walletId } = req.body;
+
+  if(isValidAmount(cryptoAmount)){
+    if(parseFloat(cryptoAmount) < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "amount  must be a positive number.",
+      });
+    }
+  }
+
+  try {
+    const data = { address, cryptoAmount, assetType, walletId};
+
+    // create the transaction on bitpowr
+    const responseData = await makeBitpowrRequest(
+      `${process.env.BITPOWR_BASEURL}/transactions`,
+      "post",
+      data
+    );
+    if (responseData){
+      if(responseData.status >= 400){
+        return res.status(responseData.status).json({ 
+          success: false,
+          message: responseData.data.message
+         });
+      }
+      return res.status(200).json({
+        success: true,
+        data: responseData,
+      });
+    }
+    
+  } catch (error) {
+    return serverError(res, error);
+  }
+
+  
+
+  // response from bitpowr
+  // {
+  //   "status": "success",
+  //   "data": {
+  //     "hash": "1b6dff5b430a8b0b4bc604a23dda5aa4d7979dd11dbc25d9345bd88889ad8297",
+  //     "status": "PENDING",
+  //     "amount": "0.00012741",
+  //     "uid": "6680c116-c803-4e46-aa99-2f261cd216ac",
+  //     "assetType": "BTC",
+  //     "chain": "BITCOIN",
+  //     "fee": "0.00003034",
+  //     "ref": "BTP-Up5Ubzb0ot#H4LtW2VbdrxoxMt7Wy1"
+  //   }
+  // }
+}
+
+exports.getSwapRate = async (req, res) => {
+  const {sourceCurrency, sourceAmount, destinationCurrency } = req.body;
+  const cacheKey = `swaprate${sourceCurrency}_${destinationCurrency}`;
+  // Request to bitpowr
+  // { 
+  //   "sourceCurrency": "BTC",
+  //   "sourceAmount": 0.0002,
+  //   "destinationCurrency": "ETH"
+  // }
+  try {
+    const cachedData = getCacheData(cacheKey);
+    if (cachedData) {
+      return res.status(200).json({
+        data: cachedData,
+        success: true,
+        message: "Cached result",
+      });
+    }
+    const data = { sourceCurrency, sourceAmount, destinationCurrency };
+
+    // create the get swap rate on bitpowr
+    const responseData = await makeBitpowrRequest(
+      `${process.env.BITPOWR_BASEURL}/integration/swap/rates`,
+      "post",
+      data
+    );
+    if (responseData){
+      if(responseData.status >= 400){
+        return res.status(responseData.status).json({ 
+          success: false,
+          message: responseData.data.message
+         });
+      }
+      setCacheData(cacheKey, responseData, 60 * 1 * 1000);  // Cache for one minute
+      return res.status(200).json({
+        success: true,
+        data: responseData,
+      });
+    }
+    
+  } catch (error) {
+    return serverError(res, error);
+  }
+  // Response from bitpowr
+  // {
+  //   "status": "success",
+  //   "data": "0.00088921",
+  //   "message": "Successfully fetch rate"
+  // }
 }

@@ -129,6 +129,9 @@ exports.makeBitpowrRequest = async (url, method = "get", data = null) => {
     return response.data;
     
   } catch (err) {
+    if(err.response.status >= 400){
+      return err.response;
+    }
     throw err;
   }
 };
