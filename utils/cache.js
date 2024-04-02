@@ -9,3 +9,8 @@ exports.setCacheData = (cacheKey, data, duration) => {
     const result = cache.put(cacheKey, data, duration);
     return result;
 }
+
+exports.deleteCacheData = (cacheKey) => {
+    const result = cache.del(cacheKey);
+    return result;
+}

@@ -1,8 +1,9 @@
 const { makeBitpowrRequest } = require("../utils/services");
 const CryptoAssetModel = require("../models/cryptoAssetModel");
 const CryptoWalletModel = require("../models/cryptoWalletModel");
+const CryptoRate = require("../models/cryptoRateModel");
 const { serverError } = require("../utils/services");
-const { getCacheData, setCacheData } = require("../utils/cache");
+const { getCacheData, setCacheData, deleteCacheData } = require("../utils/cache");
 const cloudinary = require("../middlewares/cloudinary.js");
 const User = require("../models/userModel.js");
 const { roles } = require("../utils/constants.js");
@@ -406,6 +407,14 @@ exports.getCryptoTransactionById = async (req, res) => {
 };
 
 exports.createCryptoTransaction = async (req, res) => {
+  // expected input at bitpowr
+//   {
+//     "address": "2N35FKTBaEAJ8TJA98B4h7tfmLoVUfp2qNY",
+//     "cryptoAmount": 0.000002,
+//     "assetType": "BTC",
+//     "walletId": {{accountId}}
+// }
+  const { address, cryptoAmount, assetType, walletId } = req.body;
   try {
     return res.status(200).json({
       success: true,
@@ -626,3 +635,109 @@ exports.getSwapRate = async (req, res) => {
   //   "message": "Successfully fetch rate"
   // }
 }
+
+
+// in house crypto to naira rate controllers //
+exports.getCryptoRate = async (req, res) => {
+  const id = req.params.id;
+  const { currencyName } = req.body;
+  let cacheKey = `cryptorate_${currencyName}`;
+
+  try {
+    if(!id && !currencyName) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide id or currencyName",
+      });
+    }
+    // Check whether the request is cached or not
+    const cachedData = getCacheData(cacheKey);
+    if (cachedData) {
+      return res.status(200).json({
+        data: cachedData,
+        success: true,
+        message: "Cached result",
+      });
+    }
+    const cryptoCurrencyRate = id ? await CryptoRate.findById(id) : await CryptoRate.findOne({ currency: currencyName });
+    if (!cryptoCurrencyRate) {
+      return res.status(404).json({
+        success: false,
+        message: "Crypto currency rate not found",
+      });
+    }
+    setCacheData(cacheKey, cryptoCurrencyRate, 60 * 5 * 1000);
+    return res.status(200).json({
+      success: true,
+      data: cryptoCurrencyRate
+    });
+  } catch (error) {
+    serverError(res, error);
+  }
+};
+
+exports.createCryptoRate = async (req, res) => {
+  const { currencyName, rate } = req.body;
+  let cacheKey = `cryptorate_${currencyName}`;
+  try {
+    if(rate < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "rate must be a positive number.",
+      });
+    }
+    const newCryptoCurrencyRate = await CryptoRate.create({
+      currency: currencyName,
+      rate
+    });
+
+    setCacheData(cacheKey, newCryptoCurrencyRate, 60 * 5 * 1000);
+
+    return res.status(200).json({
+      success: true,
+      data: newCryptoCurrencyRate
+    });
+  } catch (error) {
+    serverError(res, error);
+  }
+};
+
+exports.updateCryptoRate = async (req, res) => {
+  const cryptoId = req.params.id;
+  const { rate } = req.body;
+  try {
+    if(rate < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "rate must be a positive number.",
+      });
+    }
+    const updatedCryptoCurrencyRate = await CryptoRate.findOneAndUpdate(
+      { id: cryptoId },
+      { rate },
+      { new: true, omitUndefined: true }
+      );
+      
+    let cacheKey = `cryptorate_${updatedCryptoCurrencyRate.currency}`;
+    setCacheData(cacheKey, updatedCryptoCurrencyRate, 60 * 5 * 1000);
+    return res.status(200).json({
+      success: true,
+    });
+  } catch (error) {
+    serverError(res, error);
+  }
+};
+
+exports.deleteCryptoRate = async (req, res) => {
+  const cryptoId = req.params.id;
+  try {
+    const deletedCryptoCurrencyRate = await CryptoRate.findByIdAndDelete(cryptoId);
+    let cacheKey = `cryptorate_${deletedCryptoCurrencyRate.currency}`;
+    deleteCacheData(cacheKey);
+    return res.status(200).json({
+      success: true,
+    });
+  } catch (error) {
+    serverError(res, error);
+  }
+};
