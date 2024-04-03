@@ -4,20 +4,15 @@ const fs = require("fs");
 const path = require("path");
 const cors = require("cors");
 const morgan = require("morgan");
-const swaggerUI = require("swagger-ui-express");
 require("dotenv").config();
-const swaggerJsDoc = require("swagger-jsdoc");
 const mongodb = require("./utils/db.js");
 const rfs = require("rotating-file-stream");
 const useragent = require("express-useragent");
 
 const indexRoute = require("./routes/indexRoute");
-const options = require("./utils/swaggerOptions");
-const { connectChat } = require("./utils/services.js");
 const socket = require("./utils/socket.js");
 const { authRoles, auth } = require("./middlewares/auth.js");
 const { roles } = require("./utils/constants.js");
-const { getUserDeviceInfo, getUserLocation } = require("./utils/services.js");
 
 const app = express();
 // app.use(cors({ origin: "*" }));
@@ -38,23 +33,9 @@ app.use(cors({
 //   }
 // });
 const http = require("http").createServer(app);
-const io = socket.init(http, {
-  cors: {
-    origin: [
-      "http://localhost:3001",
-      "http://localhost:3000",
-      "https://cambio.ng/",
-    ],
-    methods: ["GET", "POST"],
-    allowedHeaders: ["alphacrun"],
-    credentials: true,
-  },
-});
-const spec = swaggerJsDoc(options);
 const port = process.env.PORT || 5001;
 
 //middlewares
-app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(spec));
 app.use(express.json({ limit: "5mb" }));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use("/", express.static("public"));
