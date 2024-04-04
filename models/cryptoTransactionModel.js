@@ -10,7 +10,18 @@ const cryptoTransactionSchema = new mongoose.Schema({
         type: String,
         index: true
     },
-    state : {
+    hash: {
+        type: String,
+        required: true
+    },
+    address_from: {
+        type: String,
+        index: true
+    },
+    address: {
+        type: String,
+    },
+    status : {
         type: String,
         enum: {
             values: [Status.pending, Status.successful, Status.failed],

@@ -551,10 +551,17 @@ exports.buyCrypto = async (req, res) => {
       data
     );
     if (responseData){
-      if(responseData.status >= 400){
-        return res.status(responseData.status).json({ 
+      if(responseData?.data?.status === "error"){
+        return res.status(400).json({ 
           success: false,
-          message: responseData.data.message
+          message: responseData.data.errorCode,
+          status: responseData.data.status
+         });
+      }
+      if(responseData?.status >= 400){
+        return res.status(responseData?.status).json({ 
+          success: false,
+          message: responseData?.data?.message
          });
       }
       return res.status(200).json({

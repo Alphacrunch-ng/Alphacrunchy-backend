@@ -1,7 +1,8 @@
 const Transaction = require('../models/transactionModel');
 const User = require('../models/userModel.js');
-const WalletTransaction = require('../models/walletTransactionModel')
-const GiftCardTransaction = require('../models/giftcardTransactionModel')
+const WalletTransaction = require('../models/walletTransactionModel');
+const GiftCardTransaction = require('../models/giftcardTransactionModel');
+const CryptoTransaction = require('../models/cryptoTransactionModel');
 const { serverError } = require('../utils/services');
 const { Status, transactionTypes } = require('../utils/constants');
 const { transactionMailer } = require('../utils/nodeMailer');
@@ -317,9 +318,9 @@ const checkTransactionDetailsSuccess = async ( transaction_number, transaction_t
     case transactionTypes.giftcard:
       check = await GiftCardTransaction.findOne({ transaction_number });
       break;
-    // case transactionTypes.crypto:
-    //   check = CryptoTransaction.findOne({ transaction_number });
-    //   break;
+    case transactionTypes.crypto:
+      check = CryptoTransaction.findOne({ transaction_number });
+      break;
     default:
       return false
   }

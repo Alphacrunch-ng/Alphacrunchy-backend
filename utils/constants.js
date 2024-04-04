@@ -28,6 +28,11 @@ exports.operations = {
   basicKycFailed: "Basic KYC Failed",
   biometricKycSuccess: "Biometric KYC Successful",
   biometricKycFailed: "Biometric KYC failed",
+  buyCrypto: "Buy Crypto",
+  sellCrypto: "Sell Crypto",
+  transferCrypto: "Transfer Crypto",
+  recieveCrypto: "Recieve Crypto",
+  sendCrypto: "Send Crypto",
 };
 
 exports.product_name = "Cambio";
