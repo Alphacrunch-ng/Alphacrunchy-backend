@@ -38,7 +38,7 @@ kycEvents.on(events.USER_BASIC_KYC_SUCCESS, async ({ user_id , email, dob, first
 
 kycEvents.on(events.USER_BASIC_KYC_FAILED, async ({user, result})=>{
     try {
-        kycMailer(email, operations.basicKycFailed, result?.ResultText);
+        kycMailer(user.email, operations.basicKycFailed, result?.ResultText);
     } catch (error) {
         console.log(error);
     }
