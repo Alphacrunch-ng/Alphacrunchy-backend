@@ -2,15 +2,52 @@ const bcrypt = require('bcrypt');
 const User = require('../models/userModel.js');
 const Wallet = require('../models/walletModel.js');
 const { signUpMailer, resetPasswordMailer, noticeMailer, otpMailer } = require('../utils/nodeMailer.js');
-const { serverError, createOtp, formatEmail } = require('../utils/services.js');
+const { serverError, createOtp, formatEmail, userRequestError, unauthorizedError } = require('../utils/services.js');
 const { operations } = require('../utils/constants.js');
 const jwt = require('jsonwebtoken');
 const { sendSmsOtp } = require('../utils/smsService.js');
 let crypto = require('crypto');
 const { authEvents } = require('../utils/events/emitters.js');
 const { events } = require('../utils/events/eventConstants.js');
+const { checkWalletHelper } = require('./walletController.js');
 
+exports.transactionAuth = async (req, res) =>{
+  const { wallet_pin, wallet_number } = req.body;
+  try {
+    const checkWallet = await checkWalletHelper(wallet_number);
+    if(!checkWallet){
+    return userRequestError(res,'Invalid wallet number');
+    }
+    else{
+        let isMatched = await bcrypt.compare(wallet_pin, checkWallet.wallet_pin);
+        if (!isMatched) {
+            return unauthorizedError(res,"Incorrect pin");
+        }
+        const secret = process.env.JWT_SECRET;
 
+        const dataStoredInToken = {
+            user_id: checkWallet.user_id.toString(),
+            wallet_number: checkWallet.wallet_number,
+            wallet_balance: checkWallet.balance
+        };
+
+        //signing token
+        const token = jwt.sign(dataStoredInToken,secret,{
+        expiresIn: 300,
+        audience: process.env.JWT_AUDIENCE,
+        issuer: process.env.JWT_ISSUER
+        });
+
+        return res.status(200).json({
+            token,
+            expiresIn: 300
+        });
+    }
+  } catch (error) {
+    return serverError(res, error);
+  }
+    
+}
 // controller for signing up
 exports.registration = async (req, res) => {
     try {
@@ -115,7 +152,9 @@ exports.loggingIn = async (request, response) => {
                     });
                     user.password = "";
                     const today = new Date();
-                    authEvents.emit(events.USER_LOGGED_IN, {user , request})
+                    const ipaddress =  request.headers['x-forwarded-for'] || request.connection.remoteAddress || request.ip;
+                    const userLocationDetails = {useragent, ip: ipaddress}
+                    authEvents.emit(events.USER_LOGGED_IN, {user , userLocationDetails})
                     const checkWallets = await Wallet.find({user_id: user._id}).select("-wallet_pin");
                     return response.status(200).json({
                         data: user,

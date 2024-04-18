@@ -299,10 +299,18 @@ exports.basicKycCheck = async (req, res) => {
             })
         }
         const result = await basicKycChecker(dob, user_id, bvn, id_type, firstName, middleName, lastName, phoneNumber, gender);
+
         const verified = "Exact Match"
         if (result?.Actions?.Names === verified && result?.Actions.DOB === verified && result?.Actions.Verify_ID_Number === "Verified" && result?.Actions.Gender === verified) {
             kycEvents.emit(events.USER_BASIC_KYC_SUCCESS, { user_id, email: req.user.email, dob, bvn, id_type, firstName, middleName, lastName, phoneNumber, gender, result})
             await createNotification(user_id, operations.basicKycSuccess)
+        }
+        else {
+            kycEvents.emit(events.USER_BASIC_KYC_FAILED, {user, result})
+            return res.status(400).json({
+                success: false,
+                message: result?.ResultText
+            })
         }
         return res.status(200).json({
             success: true,
@@ -347,6 +355,7 @@ exports.biometricKycCheck = async (req, res) => {
         }
 
         if (Boolean(ResultData?.job_success) === false) {
+            kycEvents.emit(events.USER_BIOMETRIC_KYC_FAILED, {user, result})
             return res.status(400).json({
                 success: true,
                 message: result?.ResultText
@@ -366,3 +375,4 @@ exports.biometricKycCheck = async (req, res) => {
         return serverError(res, err);
     }
 }
+

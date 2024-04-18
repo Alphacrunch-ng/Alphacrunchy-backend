@@ -18,6 +18,19 @@ exports.serverError = async (res, error) => {
     data: error.data
   });
 };
+exports.userRequestError = async (res, message) => {
+  return res.status(400).json({
+    success: false,
+    message
+  });
+};
+
+exports.unauthorizedError  = async (res, message) => {
+  return res.status(401).json({
+    success: false,
+    message
+  })
+}
 
 exports.createOtp = () => {
   return Math.floor(Math.random() * 900000) + 100000;

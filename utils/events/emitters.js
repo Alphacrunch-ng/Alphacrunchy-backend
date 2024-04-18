@@ -1,7 +1,7 @@
 // events.js
 const EventEmitter = require('events');
 const { events } = require('./eventConstants');
-const { loginNotificationMailer, noticeMailer } = require("../nodeMailer");
+const { loginNotificationMailer, noticeMailer, kycMailer } = require("../nodeMailer");
 const useragent = require("express-useragent");
 const { getUserDeviceInfo, getUserLocation } = require("../services");
 const User = require('../../models/userModel');
@@ -14,11 +14,10 @@ const authEvents = new AuthEmitter();
 class KycEmitter extends EventEmitter {}
 const kycEvents = new KycEmitter();
 
-authEvents.on(events.USER_LOGGED_IN, async ({user, request})=>{
+authEvents.on(events.USER_LOGGED_IN, async ({user, data})=>{
 
-    const deviceInfo = getUserDeviceInfo(request.useragent);
-    let ip = request.ip;
-    console.log(ip);
+    const { useragent, ip } = data
+    const deviceInfo = getUserDeviceInfo(useragent);
     const userLocation = await getUserLocation(ip);
     await loginNotificationMailer( user.fullName, user.email, deviceInfo, userLocation);
     await User.findByIdAndUpdate(user._id, { lastLogin : new Date()})
@@ -37,10 +36,27 @@ kycEvents.on(events.USER_BASIC_KYC_SUCCESS, async ({ user_id , email, dob, first
     
 });
 
+kycEvents.on(events.USER_BASIC_KYC_FAILED, async ({user, result})=>{
+    try {
+        kycMailer(email, operations.basicKycFailed, result?.ResultText);
+    } catch (error) {
+        console.log(error);
+    }
+    
+});
+
 kycEvents.on(events.USER_BIOMETRIC_KYC_SUCCESS, async ({ user_id })=>{
     try {
         const user = await User.findByIdAndUpdate(user_id, { kycLevel : 2}, { new : true });
         noticeMailer(user.email, operations.biometricKycSuccess);
+    } catch (error) {
+        console.log(error);
+    }
+});
+
+kycEvents.on(events.USER_BIOMETRIC_KYC_FAILED, async ({ user, result })=>{
+    try {
+        kycMailer(user.email, operations.biometricKycFailed, result?.ResultText);
     } catch (error) {
         console.log(error);
     }

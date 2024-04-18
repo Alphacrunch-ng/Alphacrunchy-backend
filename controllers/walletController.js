@@ -9,8 +9,6 @@ const { createTransaction } = require('./transactionController');
 const { currencies } = require('../utils/currencies.json');
 const { getCacheData, setCacheData } = require('../utils/cache');
 const { getPaymentBanks, resolveBank, transferToBank } = require('../utils/paymentService');
-const FormData = require('form-data');
-const { default: axios } = require('axios');
 
 
 exports.creditWalletHelper = async (wallet_number, amount, transaction_number, reciever_acn) => {
@@ -23,6 +21,15 @@ exports.creditWalletHelper = async (wallet_number, amount, transaction_number, r
         await createNotification(creditWallet.user_id, `credited with ${amount}`);
 
         return { creditWallet, creditTransaction, walletTransaction };
+    } catch (error) {
+        throw error;
+    }
+}
+
+exports.checkWalletHelper = async (wallet_number) => {
+    try {
+        const wallet = await Wallet.findOne({wallet_number});
+        return wallet;
     } catch (error) {
         throw error;
     }
@@ -507,4 +514,3 @@ exports.paymentToBank = async (req, res) => {
     }
     
 }
-

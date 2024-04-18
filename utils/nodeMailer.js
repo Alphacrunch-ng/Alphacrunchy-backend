@@ -81,6 +81,29 @@ exports.noticeMailer = (email, operation) => {
   transportSender(mailOptions);
 };
 
+exports.kycMailer = (email, operation, msg) => {
+  const message = `<div>
+            <h1>Notification From ${product_name} App</h1>
+            <p>Notifying you of ${operation} action on you account</p>
+            <p>${msg}</p>
+            <p>Please ensure that your details on your profile matches your kyc document</p>
+            <p>If this was not initiated by you please contact customer care</p>
+            <p>Thank You</p>
+            </div>`;
+
+  // setup email data with unicode symbols
+  let mailOptions = {
+    from: `"${product_name}" <${process.env.SENDER_EMAIL}>`, // sender address
+    to: `${email}`, // list of recievedRequest
+    subject: `${product_name} ${operation} notification`, //
+    text: `New ${operation} notification`, // subject
+    html: message, // html body
+  };
+
+  // create reusable transporter object using the default smtp transport
+  transportSender(mailOptions);
+};
+
 exports.transactionMailer = (email, operation, amount, description) => {
   const message = `
 <div style="font-family: Arial, sans-serif; max-width: 400px; margin: auto; border: 1px solid #ccc; padding: 20px; border-radius: 10px;">

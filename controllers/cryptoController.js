@@ -1,4 +1,4 @@
-const { makeBitpowrRequest } = require("../utils/services");
+const { makeBitpowrRequest, userRequestError } = require("../utils/services");
 const CryptoAssetModel = require("../models/cryptoAssetModel");
 const CryptoWalletModel = require("../models/cryptoWalletModel");
 const CryptoRate = require("../models/cryptoRateModel");
@@ -8,6 +8,7 @@ const cloudinary = require("../middlewares/cloudinary.js");
 const User = require("../models/userModel.js");
 const { roles } = require("../utils/constants.js");
 const { isValidAmount } = require("../utils/validators/generalValidators.js");
+const { debitWalletHelper } = require("./walletController.js");
 
 exports.getAssets = async (req, res) => {
   const cacheKey = `cryptoassets`;
@@ -527,23 +528,19 @@ exports.getSubAccountsFromSource = async (req, res) => {
   }
 }
 
-
 exports.buyCrypto = async (req, res) => {
   // Validate input parameters
   const { address, cryptoAmount, assetType, walletId } = req.body;
 
   if(isValidAmount(cryptoAmount)){
     if(parseFloat(cryptoAmount) < 0) {
-      return res.status(400).json({
-        success: false,
-        message: "amount  must be a positive number.",
-      });
+      return userRequestError(res, "crypto amount must be a positive number.");
     }
   }
 
   try {
     const data = { address, cryptoAmount, assetType, walletId};
-
+    const debitWallet = await debitWalletHelper();
     // create the transaction on bitpowr
     const responseData = await makeBitpowrRequest(
       `${process.env.BITPOWR_BASEURL}/transactions`,
@@ -559,7 +556,7 @@ exports.buyCrypto = async (req, res) => {
          });
       }
       if(responseData?.status >= 400){
-        return res.status(responseData?.status).json({ 
+        return res.status(responseData?.status).json({
           success: false,
           message: responseData?.data?.message
          });
@@ -569,7 +566,6 @@ exports.buyCrypto = async (req, res) => {
         data: responseData,
       });
     }
-    
   } catch (error) {
     return serverError(res, error);
   }
