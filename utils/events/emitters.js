@@ -38,7 +38,7 @@ kycEvents.on(events.USER_BASIC_KYC_SUCCESS, async ({ user_id , email, dob, first
 
 kycEvents.on(events.USER_BASIC_KYC_FAILED, async ({user, result})=>{
     try {
-        kycMailer(user.email, operations.basicKycFailed, result?.ResultText);
+        kycMailer(user?.email, operations.basicKycFailed, result?.ResultText);
     } catch (error) {
         console.log(error);
     }
@@ -56,7 +56,7 @@ kycEvents.on(events.USER_BIOMETRIC_KYC_SUCCESS, async ({ user_id })=>{
 
 kycEvents.on(events.USER_BIOMETRIC_KYC_FAILED, async ({ user, result })=>{
     try {
-        kycMailer(user.email, operations.biometricKycFailed, result?.ResultText);
+        kycMailer(user?.email, operations.biometricKycFailed, result?.ResultText);
     } catch (error) {
         console.log(error);
     }
