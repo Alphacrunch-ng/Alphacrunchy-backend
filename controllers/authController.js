@@ -89,6 +89,8 @@ exports.registration = async (req, res) => {
 // signin in controller where token is created.
 exports.loggingIn = async (request, response) => {
     const {email, password} = request.body;
+    const ipaddress =  request?.headers['x-forwarded-for'] || request?.connection?.remoteAddress || request?.ip;
+    const useragent = request?.useragent;
     try {
         const user = await User.findOne({ email: email });
         
@@ -146,16 +148,18 @@ exports.loggingIn = async (request, response) => {
 
                     //signing token
                     const token = jwt.sign(dataStoredInToken,secret,{
-                    expiresIn:"7d",
-                    audience: process.env.JWT_AUDIENCE,
-                    issuer: process.env.JWT_ISSUER
+                        expiresIn:"7d",
+                        audience: process.env.JWT_AUDIENCE,
+                        issuer: process.env.JWT_ISSUER
                     });
                     user.password = "";
                     const today = new Date();
-                    const ipaddress =  request.headers['x-forwarded-for'] || request.connection.remoteAddress || request.ip;
+                    
                     const userLocationDetails = {useragent, ip: ipaddress}
-                    authEvents.emit(events.USER_LOGGED_IN, {user , userLocationDetails})
+                    authEvents.emit(events.USER_LOGGED_IN, { user , data: userLocationDetails })
+
                     const checkWallets = await Wallet.find({user_id: user._id}).select("-wallet_pin");
+
                     return response.status(200).json({
                         data: user,
                         wallets: checkWallets,
@@ -164,7 +168,7 @@ exports.loggingIn = async (request, response) => {
                         message: `Login Successfull`,
                         token: token,
                         expiresIn: new Date(today.getTime() + (6 * 24 * 60 * 60 * 1000)),
-                        ip : request.ip
+                        ipaddress
                     });
                 }
             } else {
@@ -187,6 +191,8 @@ exports.loggingIn = async (request, response) => {
 // 2 factor signin in controller where token is created.
 exports.twoFactorLoggingIn = async (request, response) => {
     const {email, otp} = request.body;
+    const ipaddress =  request?.headers['x-forwarded-for'] || request?.connection?.remoteAddress || request?.ip;
+    const useragent = request?.useragent;
     try {
         const user = await User.findOne({ email: email });
         const checkWallets = await Wallet.find({user_id: user._id}).select("-wallet_pin");
@@ -229,7 +235,8 @@ exports.twoFactorLoggingIn = async (request, response) => {
                 });
                 user.password = "";
                 const today = new Date();
-                authEvents.emit(events.USER_LOGGED_IN, {user , request})
+                const userLocationDetails = {useragent, ip: ipaddress}
+                authEvents.emit(events.USER_LOGGED_IN, {user , data: userLocationDetails})
                 //resetting the 2 factor properties to default value
                 const updatedUser =  await User.findOneAndUpdate(
                     { _id: user._id }, // Specify the query condition to find the user

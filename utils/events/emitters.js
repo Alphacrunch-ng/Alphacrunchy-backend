@@ -16,7 +16,7 @@ const kycEvents = new KycEmitter();
 
 authEvents.on(events.USER_LOGGED_IN, async ({user, data})=>{
 
-    const { useragent, ip } = data
+    const { useragent, ip } = data;
     const deviceInfo = getUserDeviceInfo(useragent);
     const userLocation = await getUserLocation(ip);
     await loginNotificationMailer( user.fullName, user.email, deviceInfo, userLocation);
