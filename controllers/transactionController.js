@@ -3,10 +3,12 @@ const User = require('../models/userModel.js');
 const WalletTransaction = require('../models/walletTransactionModel');
 const GiftCardTransaction = require('../models/giftcardTransactionModel');
 const CryptoTransaction = require('../models/cryptoTransactionModel');
+const TransactionApproval = require('../models/TransactionApprovalModel');
 const { serverError } = require('../utils/services');
 const { Status, transactionTypes } = require('../utils/constants');
 const { transactionMailer } = require('../utils/nodeMailer');
 const { getPaymentLink } = require('../utils/paymentService');
+const { creditWalletHelper } = require('./walletController.js');
 
 // GET all notifications for a specific user
 exports.getUserTransactions = async (req, res) => {
@@ -186,46 +188,52 @@ exports.getTransactionsByDay = async (req, res) => {
   }
 };
 
-
-
 exports.setTransactionStatus = async (req, res) => {
   try {
-    const transactionId = req.params.id;
-    let { status } = req.body;
-    status = String(status).toLowerCase();
-
-    let transaction = await Transaction.findById(transactionId);
+    const { id } = req.params;
+    const { status } = req.body;
 
     if (!Object.values(Status).includes(status.toLocaleLowerCase())) {
       return res.status(400).json({
         success: false,
-        message: "invalid status: " + status
-      })
+        message: "Invalid status",
+      });
     }
-    if (!transactionId) {
-      return res.status(400).json({
+
+    const transaction = await Transaction.findById(id);
+
+    if (!transaction) {
+      return res.status(404).json({
         success: false,
-        message: "no id provided"
-      })
+        message: "Transaction not found",
+      });
     }
-    if( status === Status.successful ) {
+
+    if (status === Status.successful) {
       const isSuccess = await checkTransactionDetailsSuccess(transaction.transaction_number, transaction.transaction_type);
 
       if (!isSuccess) {
         return res.status(400).json({
           success: false,
-          message: "Transaction details verification failed"
+          message: "Transaction details verification failed",
         });
       }
-      transaction = await Transaction.findByIdAndUpdate(transactionId, {status : status.toLocaleLowerCase()}, {new: true});
-    } else {
-      transaction = await Transaction.findByIdAndUpdate(transactionId, {status : status.toLocaleLowerCase()}, {new: true});
     }
-    
+
+    transaction.status = status;
+    await TransactionApproval.create({
+      transaction_id: transaction._id,
+      transaction_type: transaction.transaction_type,
+      transaction_number: transaction.transaction_number,
+      user_id: req.user.id,
+      status: status,
+    });
+    await transaction.save();
+    await creditWalletHelper(transaction.wallet_number, transaction.amount, transaction.transaction_number);
+
     return res.status(200).json({
-        data: transaction,
-        success: true,
-        message: `Successfull`
+      success: true,
+      message: "Transaction status updated successfully and user wallet credited",
     });
   } catch (error) {
     return serverError(res, error);
@@ -327,3 +335,7 @@ const checkTransactionDetailsSuccess = async ( transaction_number, transaction_t
   return check.status === Status.successful;
 }
 
+exports.checkTransactionHelper = async ( transaction_number ) => {
+  const check = await Transaction.findOne({ transaction_number });
+  return check;
+}

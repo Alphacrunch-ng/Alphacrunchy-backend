@@ -7,11 +7,12 @@ const Wallet = require("../models/walletModel.js");
 const { serverError } = require("../utils/services.js");
 const GiftCardTransaction = require("../models/giftcardTransactionModel");
 const mongoose = require("mongoose");
-const { createTransaction } = require("./transactionController");
+const { createTransaction, checkTransactionHelper } = require("./transactionController");
 const { Status, operations, transactionTypes } = require("../utils/constants");
 const { getCacheData, setCacheData } = require("../utils/cache");
 const ObjectId = mongoose.Types.ObjectId;
 const SupportedCurrencies = require("../utils/currencies.json");
+// const { creditWalletHelper } = require("./walletController.js");
 
 
 // ------------GIFTCARD-MANAGEMENT----------- //
@@ -112,6 +113,46 @@ exports.createGiftCardTransaction = async (req, res) => {
     return serverError(res, error);
   }
 };
+
+// exports.creditUserForGiftcardTransaction = async (req, res) => {
+//   const { transaction_number, amount } = req.body;
+//   try {
+//     const checkGiftcardTransaction = await GiftCardTransaction.findOne({
+//       transaction_number: transaction_number,
+//     });
+//     if (checkGiftcardTransaction === null){
+//       return res.status(404).json({
+//         success: false,
+//         message: "transaction not found",
+//       });
+//     }
+//     const checkTransaction = await checkTransactionHelper(checkGiftcardTransaction.transaction_number);
+//     if (checkTransaction.status !== Status.successful){ 
+//       return res.status(400).json({
+//         success: false,
+//         message: "transaction status is not successful",
+//       });
+//     }
+//     if(checkTransaction){
+//       return res.status(400).json({
+//         success: false,
+//         message: "transaction has a failed status",
+//       });
+//     }
+//     if(checkGiftcardTransaction.status === Status.failed){
+//       return res.status(400).json({
+//         success: false,
+//         message: "transaction has a failed status",
+//       });
+//     }
+
+
+//   const creditUser = await creditWalletHelper(checkGiftcardTransaction.reciever_wallet_number, amount, checkGiftcardTransaction.transaction_number);
+  
+//   } catch (error) {
+//     return serverError(res, error);
+//   }
+// }
 
 // controller for uploading transaction card
 exports.uploadGiftCard = async (req, res) => {
