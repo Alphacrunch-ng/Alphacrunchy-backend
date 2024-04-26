@@ -35,15 +35,14 @@ exports.checkWalletHelper = async (wallet_number) => {
     }
 }
 
-exports.debitWalletHelper = async (wallet_number, amount, transaction_number, reciever_acn) => {
+exports.debitWalletHelper = async ( wallet_number, amount, transaction_number, reciever_acn ) => {
     try {
         const description = `${amount} debited from wallet`;
-        const debitWallet = await Wallet.findOneAndUpdate({wallet_number},  { $inc: { balance: -amount } }, { new: true }).select("-wallet_pin");
+        const debitWallet = await Wallet.findOneAndUpdate({ wallet_number },  { $inc: { balance: -amount } }, { new: true }).select("-wallet_pin");
 
         const debitTransaction = await createTransaction(debitWallet.user_id, description, amount, operations.debit, transactionTypes.wallet, Status.successful, transaction_number);
         const walletTransaction = await createWalletTransaction(wallet_number, wallet_number, amount, description, debitTransaction.transaction_number, reciever_acn)
         await createNotification(debitWallet.user_id, `debited with ${amount}`);
-
         return { debitWallet, debitTransaction, walletTransaction };
     } catch (error) {
         throw error;

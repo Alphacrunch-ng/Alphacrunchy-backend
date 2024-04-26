@@ -211,7 +211,9 @@ exports.setTransactionStatus = async (req, res) => {
 
     if (status === Status.successful) {
       const isSuccess = await checkTransactionDetailsSuccess(transaction.transaction_number, transaction.transaction_type);
-
+      if(transaction.transaction_type === transactionTypes.giftcard){
+        await creditWalletHelper(transaction.wallet_number, transaction.amount, transaction.transaction_number);
+      }
       if (!isSuccess) {
         return res.status(400).json({
           success: false,
@@ -229,7 +231,7 @@ exports.setTransactionStatus = async (req, res) => {
       status: status,
     });
     await transaction.save();
-    await creditWalletHelper(transaction.wallet_number, transaction.amount, transaction.transaction_number);
+    
 
     return res.status(200).json({
       success: true,
