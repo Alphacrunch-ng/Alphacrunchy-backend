@@ -61,8 +61,8 @@ const createWalletTransaction = async (sender_wallet_number, reciever_wallet_num
 
 // controller for creating a User wallet
 exports.createWallet = async (req, res) => {
-    const {wallet_pin, id, } = req.body;
-    const currency_code = "NGN";
+    let {wallet_pin, id, currency_code} = req.body;
+    currency_code = currency_code? currency_code : "NGN";
     //checking if the sent currency code exist in the collection of supported currency
     const checkCurrency = currencies.filter((currency) => currency.code === String(currency_code).trim().toLocaleUpperCase());
     let selectedCurrency = {};
