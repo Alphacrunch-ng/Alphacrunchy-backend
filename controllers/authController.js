@@ -11,46 +11,48 @@ const { authEvents } = require('../utils/events/emitters.js');
 const { events } = require('../utils/events/eventConstants.js');
 const { checkWalletHelper } = require('./walletController.js');
 
-// exports.walletTransactionTokenGen = async (req, res) =>{
-//   const { wallet_pin, wallet_number } = req.body;
-//   try {
-//     const checkWallet = await checkWalletHelper(wallet_number);
-//     if(!checkWallet){
-//     return userRequestError(res,'Invalid wallet number');
-//     }
-//     else{
-//         let isMatched = await bcrypt.compare(wallet_pin, checkWallet.wallet_pin);
-//         if (!isMatched) {
-//             return unauthorizedError(res,"Incorrect pin");
-//         }
-//         const secret = process.env.JWT_SECRET;
+exports.walletTransactionTokenGen = async (req, res) =>{
+  const { wallet_pin, wallet_number, reciever_wallet_number, amount } = req.body;
+  try {
+    const checkWallet = await checkWalletHelper(wallet_number);
+    const recieverWallet = await checkWalletHelper(reciever_wallet_number)
+    if(!checkWallet){
+    return userRequestError(res,'Invalid wallet number');
+    }
+    else{
+        let isMatched = await bcrypt.compare(wallet_pin, checkWallet.wallet_pin);
+        if (!isMatched) {
+            return unauthorizedError(res,"Incorrect pin");
+        }
+        const secret = process.env.JWT_SECRET;
 
-//         const dataStoredInToken = {
-//             user_id: checkWallet.user_id.toString(),
-//             wallet_number: checkWallet.wallet_number,
-//             wallet_balance: checkWallet.balance
-//         };
+        const dataStoredInToken = {
+            user_id: checkWallet.user_id.toString(),
+            wallet_number: reciever_wallet_number,
+            reciever_wallet_balance: checkWallet.balance,
+            amount
+        };
 
-//         const tokenExpiry = 300
+        const tokenExpiry = 300
 
-//         //signing token
-//         const token = jwt.sign(dataStoredInToken,secret,{
-//             expiresIn: tokenExpiry,
-//             audience: process.env.JWT_AUDIENCE,
-//             issuer: process.env.JWT_ISSUER
-//         });
+        //signing token
+        const token = jwt.sign(dataStoredInToken,secret,{
+            expiresIn: tokenExpiry,
+            audience: process.env.JWT_AUDIENCE,
+            issuer: process.env.JWT_ISSUER
+        });
 
-//         return res.status(200).json({
-//             token,
-//             expiresIn: 300,
-//             message: `token expires in ${tokenExpiry} seconds`
-//         });
-//     }
-//   } catch (error) {
-//     return serverError(res, error);
-//   }
+        return res.status(200).json({
+            token,
+            expiresIn: 300,
+            message: `token expires in ${tokenExpiry} seconds`
+        });
+    }
+  } catch (error) {
+    return serverError(res, error);
+  }
     
-// }
+}
 // controller for signing up
 exports.registration = async (req, res) => {
     try {

@@ -298,8 +298,8 @@ exports.deleteTransaction = async (req, res) => {
 
 
 //Services 
-//create notification service
-exports.createTransaction = async (user_id, description, amount , operation, transaction_type, status, transaction_number)=> { // everything here is required
+//create transaction service
+exports.createTransaction = async (user_id, description, amount , operation, transaction_type, status, transaction_number)=> { // everything apart from transaction_number here is required
     try {
         const checkUser = await User.findOne({ _id: user_id}).select("-password");
         if (!checkUser) {
