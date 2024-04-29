@@ -112,8 +112,7 @@ exports.getChatMessages = async (req, res) => {
 exports.sendMessage = async (req, res) => {
     try {
         const { client, message, sender, attachments } = req.body;
-    
-        const io = getIo();
+
         let chat = await createChat(client);
         // let chat = { client, message, sender, recipient, attachments } 
     
@@ -127,7 +126,6 @@ exports.sendMessage = async (req, res) => {
         });
 
         await newMessage.save();
-        io.emit(CustomEvents.newMessage, 'created a message');
         return res.status(201).json({
           status: 'success',
           message: 'Message sent successfully!',
