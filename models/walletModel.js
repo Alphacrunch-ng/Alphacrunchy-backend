@@ -10,7 +10,9 @@ const Naira = currencies.find(e => e.symbol ==='₦')
 
 const walletSchema = new mongoose.Schema({
     user_id: {
-        type: mongoose.Schema.Types.ObjectId, ref: 'User'
+        type: mongoose.Schema.Types.ObjectId, ref: 'User',
+        required: true,
+        index: true
     },
     wallet_number: {
         type: String

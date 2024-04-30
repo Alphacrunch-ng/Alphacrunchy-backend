@@ -21,6 +21,7 @@ const { changeAllUserId } = require("../controllers/messagesController");
  */
 
 router.get("/", (req, res) => {
+  console.log(req.ip)
   res.send("<h1>Alphacrunch Finance</h1>");
 });
 

@@ -1,11 +1,22 @@
 const nodemailer = require("nodemailer");
 const { product_name } = require("./constants");
 
-exports.signUpMailer = (name, email, token) => {
+exports.signUpMailer = (name, email, token, deviceInfo, userLocation) => {
   const message = `
     <h1> Welcome to ${product_name}. ${name}</h1>
     <p>Your account has been sucessfully created</p>
     <p>Here is your token to set your password : ${token}</p>
+    <ul style="list-style: none; padding: 0;">
+        <li style="margin-bottom: 10px;">
+          <strong>Device Information:</strong><br/>
+          <p style="margin-right: 10px;"><strong>Browser:</strong> ${deviceInfo.Browser},</p>
+          <p style="margin-right: 10px;"><strong>Device Type:</strong> ${deviceInfo.deviceType},</p>
+          <p><strong>Name of Device:</strong> ${deviceInfo.deviceName}</p>
+        </li>
+        <li style="margin-bottom: 10px;">
+          <strong>Location:</strong> ${userLocation.country}, ${userLocation.city}
+        </li>
+      </ul>
     `;
   // setup email data with unicode symbols
   let mailOptions = {

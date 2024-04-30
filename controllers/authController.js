@@ -72,9 +72,13 @@ exports.registration = async (req, res) => {
                 email,
                 phoneNumber,
                 otp: hashedOtp,
-                password
-            });
-            signUpMailer(fullName, email, otp);
+                password,
+                sex, 
+                country, 
+                state, 
+                city 
+            },{ omitUndefined: true });
+            authEvents.emit(events.USER_SIGNED_UP, {user, data: {useragent: req.useragent, ip: req.ip, otp}});
             user.password = "";
             user.otp = "";
                 return res.status(201).json({

@@ -4,7 +4,7 @@ const Wallet = require('../models/walletModel.js');
 const WalletTransaction = require('../models/walletTransactionModel')
 const { serverError } = require('../utils/services.js');
 const { createNotification } = require('./notificationController');
-const { operations, transactionTypes, Status } = require('../utils/constants');
+const { operations, transactionTypes, Status, DEFAULT_WALLET_PIN } = require('../utils/constants');
 const { createTransaction } = require('./transactionController');
 const { currencies } = require('../utils/currencies.json');
 const { getCacheData, setCacheData } = require('../utils/cache');
@@ -29,6 +29,14 @@ exports.creditWalletHelper = async (wallet_number, amount, transaction_number, r
 exports.checkWalletHelper = async (wallet_number) => {
     try {
         const wallet = await Wallet.findOne({wallet_number});
+        return wallet;
+    } catch (error) {
+        throw error;
+    }
+}
+exports.checkWalletHelperUserId = async (user_id) => {
+    try {
+        const wallet = await Wallet.findOne({user_id});
         return wallet;
     } catch (error) {
         throw error;
@@ -513,4 +521,28 @@ exports.paymentToBank = async (req, res) => {
         return serverError(res, error);
     }
     
+}
+
+exports.createWalletHelper = async ( user_id ) => {
+    try {
+        const checkWallet = await checkWalletHelperUserId(user_id);
+       if (!checkWallet) {
+         throw new Error('Wallet already exists');
+       }
+        const hashedPin = await bcrypt.hash(DEFAULT_WALLET_PIN, 10);
+        const wallet = await Wallet.create({ 
+            wallet_pin: hashedPin, 
+            user_id, 
+            currency: {
+                    "code": "NGN",
+                    "name": "Nigerian Naira",
+                    "symbol": "₦"
+                }, 
+            default: true
+        });
+
+        return wallet;
+    } catch (error) {
+        throw error;
+    }
 }
