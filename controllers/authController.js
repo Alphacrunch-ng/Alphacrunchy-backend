@@ -55,19 +55,20 @@ exports.walletTransactionTokenGen = async (req, res) =>{
 }
 // controller for signing up
 exports.registration = async (req, res) => {
+    const { fullName, email, phoneNumber, password, sex, country, state, city } = req.body;
+    let user;
     try {
         let checkUser = await User.findOne({ email: req.body.email});
         if (checkUser !== null) {
-            return res.status(401).json({
+            return res.status(400).json({
                 status: 'failed',
                 message: 'email already exists'
             });
         }
         else {
-            const { fullName, email, phoneNumber, password, sex, country, state, city } = req.body;
             const otp = createOtp();
             const hashedOtp = await bcrypt.hash(otp.toString(), 10);
-            var user = await User.create({
+            user = await User.create({
                 fullName,
                 email,
                 phoneNumber,
@@ -77,7 +78,7 @@ exports.registration = async (req, res) => {
                 country, 
                 state, 
                 city 
-            },{ omitUndefined: true });
+            });
             authEvents.emit(events.USER_SIGNED_UP, {user, data: {useragent: req.useragent, ip: req.ip, otp}});
             user.password = "";
             user.otp = "";
@@ -90,7 +91,9 @@ exports.registration = async (req, res) => {
 
         
     } catch (error) {
-        await User.findByIdAndDelete({_id: user._id},{ useFindAndModify: false});
+        if(user){
+            await User.findByIdAndDelete({_id: user?._id},{ useFindAndModify: false});
+        }
         return serverError(res, error);
     }
 }

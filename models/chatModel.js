@@ -11,6 +11,10 @@ const chatSchema = new mongoose.Schema({
         ref: 'User',
         required: true,
     },
+    transaction_number: {
+        type: String,
+        index: true
+    },
     active : {
         type: Boolean,
         default: true

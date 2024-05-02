@@ -30,8 +30,13 @@ authEvents.on(events.USER_SIGNED_UP, async ({user, data})=>{
     const { fullName, email } = user;
     const deviceInfo = getUserDeviceInfo(useragent);
     const userLocation = await getUserLocation(ip);
-    signUpMailer(fullName, email, otp, deviceInfo, userLocation);
-    await createWalletHelper(user._id);
+    try {
+        signUpMailer(fullName, email, otp, deviceInfo, userLocation);
+        await createWalletHelper(user._id);
+    } catch (error) {
+        
+    }
+    
 })
 
 kycEvents.on(events.USER_BASIC_KYC_SUCCESS, async ({ user_id , email, dob, firstName, middleName, lastName, gender, result})=>{
