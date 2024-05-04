@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const User = require('../models/userModel.js');
 const Wallet = require('../models/walletModel.js');
-const { signUpMailer, resetPasswordMailer, noticeMailer, otpMailer } = require('../utils/nodeMailer.js');
+const { resetPasswordMailer, noticeMailer, otpMailer } = require('../utils/nodeMailer.js');
 const { serverError, createOtp, formatEmail, userRequestError, unauthorizedError } = require('../utils/services.js');
 const { operations } = require('../utils/constants.js');
 const jwt = require('jsonwebtoken');
@@ -9,7 +9,7 @@ const { sendSmsOtp } = require('../utils/smsService.js');
 let crypto = require('crypto');
 const { authEvents } = require('../utils/events/emitters.js');
 const { events } = require('../utils/events/eventConstants.js');
-const { checkWalletHelper } = require('./walletController.js');
+const { checkWalletHelper } = require('../models/repositories/walletRepo.js');
 
 exports.walletTransactionTokenGen = async (req, res) =>{
   const { wallet_pin, wallet_number, reciever_wallet_number, amount } = req.body;

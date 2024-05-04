@@ -1,13 +1,14 @@
 // const bcrypt = require('bcrypt');
 // const Wallet = require('../models/walletModel.js');
+const mongoose = require("mongoose");
 const GiftCard = require("../models/giftCardModel");
 const GiftCardRate = require("../models/giftCardRateModel");
 const cloudinary = require("../middlewares/cloudinary.js");
 const Wallet = require("../models/walletModel.js");
 const { serverError } = require("../utils/services.js");
 const GiftCardTransaction = require("../models/giftcardTransactionModel");
-const mongoose = require("mongoose");
-const { createTransaction/**, checkTransactionHelper**/ } = require("./transactionController");
+const { createTransaction,/**, checkTransactionHelper**/ 
+createApproveTransactionHelper} = require("../models/repositories/transactionRepo");
 const { Status, operations, transactionTypes } = require("../utils/constants");
 const { getCacheData, setCacheData } = require("../utils/cache");
 const ObjectId = mongoose.Types.ObjectId;
@@ -54,7 +55,6 @@ exports.createGiftCard = async (req, res) => {
 // controller for starting a giftcard trading transaction
 exports.createGiftCardTransaction = async (req, res) => {
   // extract data from the request body
-  console.log(req.user.id);
   const {
     receiverWalletId,
     giftcard_id,
@@ -262,6 +262,40 @@ exports.getGiftCardTransaction = async (req, res) => {
   }
 };
 
+// controller for adding a card to giftcard transaction
+exports.addCardToGiftCardTransaction = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { card_item, amount, item_card_rate } = req.body;
+
+    const giftCardTransaction = await GiftCardTransaction.findById(id);
+    if (!giftCardTransaction) {
+      return res.status(404).json({
+        success: false,
+        message: "Gift Card Transaction not found",
+      });
+    }
+
+    const newCard = {
+      card_item,
+      amount,
+      item_card_rate,
+    };
+
+    giftCardTransaction.cards.push(newCard);
+    await giftCardTransaction.save();
+    await updateTransactionAmountHelper(giftCardTransaction.transaction_number, giftCardTransaction.total_amount_expected);
+
+    return res.status(201).json({
+      data: giftCardTransaction,
+      success: true,
+      message: "Card added successfully",
+    });
+  } catch (error) {
+    return serverError(res, error);
+  }
+};
+
 // controller for getting a giftcard transaction
 exports.setGiftCardTransaction = async (req, res) => {
   const { status } = req.body;
@@ -320,6 +354,8 @@ exports.setGiftCardTransaction = async (req, res) => {
     );
 
     const giftcard = { ...updated.toObject() };
+
+    await createApproveTransactionHelper(transaction)
     return res.status(200).json({
       success: true,
       data: giftcard,

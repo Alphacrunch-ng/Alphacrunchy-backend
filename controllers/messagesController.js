@@ -1,17 +1,15 @@
-const Chat = require('../models/chatModel.js');
 const mongoose = require('mongoose');
+const Chat = require('../models/chatModel.js');
 const Message = require('../models/messageModel.js');
-const Notification = require('../models/notificationModel');
-const { getIo } = require('../utils/socket.js');
 const { serverError } = require('../utils/services');
-const { CustomEvents, roles } = require('../utils/constants.js');
 
 
-const createChat = async (id) => {
+const createChat = async (id, transaction_number) => {
   try {
     // Check if the chat already exists
         const chatExists = await Chat.findOne({
           client: id,
+          transaction_number,
           active: true,
         });
 
@@ -111,7 +109,7 @@ exports.getChatMessages = async (req, res) => {
 // CREATE a new chat controller
 exports.sendMessage = async (req, res) => {
     try {
-        const { client, message, sender, attachments } = req.body;
+        const { client, message, sender, attachments, transaction_number } = req.body;
 
         let chat = await createChat(client);
         // let chat = { client, message, sender, recipient, attachments } 

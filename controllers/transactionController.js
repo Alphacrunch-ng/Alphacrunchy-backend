@@ -1,14 +1,12 @@
 const Transaction = require('../models/transactionModel');
-const User = require('../models/userModel.js');
 const WalletTransaction = require('../models/walletTransactionModel');
 const GiftCardTransaction = require('../models/giftcardTransactionModel');
-const CryptoTransaction = require('../models/cryptoTransactionModel');
-const TransactionApproval = require('../models/TransactionApprovalModel');
+const { creditWalletHelper, checkWalletHelperUserId } = require('../models/repositories/walletRepo');
 const { serverError } = require('../utils/services');
 const { Status, transactionTypes } = require('../utils/constants');
-const { transactionMailer } = require('../utils/nodeMailer');
 const { getPaymentLink } = require('../utils/paymentService');
-const { creditWalletHelper } = require('./walletController.js');
+const { createApproveTransactionHelper, checkTransactionDetailsSuccess } = require('../models/repositories/transactionRepo');
+const { updateGiftCardTransactionPaidAmount } = require('../models/repositories/giftcardRepo');
 
 // GET all notifications for a specific user
 exports.getUserTransactions = async (req, res) => {
@@ -209,10 +207,25 @@ exports.setTransactionStatus = async (req, res) => {
       });
     }
 
+    if( status === transaction.status){
+      return res.status(400).json({
+        success: false,
+        message: "Transaction status already set",
+      });
+    }
+    const checkUserWallet = await checkWalletHelperUserId(transaction.user_id);
+    if ( !checkUserWallet) {
+      return res.status(400).json({
+        success: false,
+        message: "User wallet not found",
+      });
+    }
+
     if (status === Status.successful) {
       const isSuccess = await checkTransactionDetailsSuccess(transaction.transaction_number, transaction.transaction_type);
       if(transaction.transaction_type === transactionTypes.giftcard){
-        await creditWalletHelper(transaction.wallet_number, transaction.amount, transaction.transaction_number);
+        await creditWalletHelper(checkUserWallet.wallet_number, transaction.amount, transaction.transaction_number);
+        await updateGiftCardTransactionPaidAmount(transaction.transaction_number, transaction.amount);
       }
       if (!isSuccess) {
         return res.status(400).json({
@@ -223,13 +236,7 @@ exports.setTransactionStatus = async (req, res) => {
     }
 
     transaction.status = status;
-    await TransactionApproval.create({
-      transaction_id: transaction._id,
-      transaction_type: transaction.transaction_type,
-      transaction_number: transaction.transaction_number,
-      user_id: req.user.id,
-      status: status,
-    });
+    await createApproveTransactionHelper(status, transaction.transaction_number, transaction.transaction_type, req.user.id, req.user.fullName);
     await transaction.save();
     
 
@@ -295,49 +302,3 @@ exports.deleteTransaction = async (req, res) => {
     return serverError(res, error);
   }
 };
-
-
-//Services 
-//create transaction service
-exports.createTransaction = async (user_id, description, amount , operation, transaction_type, status, transaction_number)=> { // everything apart from transaction_number here is required
-    try {
-        const checkUser = await User.findOne({ _id: user_id}).select("-password");
-        if (!checkUser) {
-          throw new Error("user_id not found");
-      }
-        transactionMailer(checkUser.email, operation, amount, description)
-        
-        const newTransaction = transaction_number? 
-        new Transaction({ user_id, description, amount, transaction_type, status: status? status : "pending" , transaction_number}) 
-        : 
-        new Transaction({ user_id, description, amount, transaction_type, status: status? status : "pending" });
-
-        const saveTransaction = await newTransaction.save();
-        return saveTransaction;
-    } catch (error) {
-        throw error;
-    }
-}
-
-const checkTransactionDetailsSuccess = async ( transaction_number, transaction_type ) => {
-  let check;
-  switch (transaction_type) {
-    case transactionTypes.wallet:
-      check = await WalletTransaction.findOne({ transaction_number });
-      break;
-    case transactionTypes.giftcard:
-      check = await GiftCardTransaction.findOne({ transaction_number });
-      break;
-    case transactionTypes.crypto:
-      check = CryptoTransaction.findOne({ transaction_number });
-      break;
-    default:
-      return false
-  }
-  return check.status === Status.successful;
-}
-
-exports.checkTransactionHelper = async ( transaction_number ) => {
-  const check = await Transaction.findOne({ transaction_number });
-  return check;
-}

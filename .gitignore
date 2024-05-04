@@ -1,5 +1,8 @@
 /node_modules
 /log/*.log
-/log
+log
 .env
 *.log
+npm-debug*
+access.log
+log/access.log

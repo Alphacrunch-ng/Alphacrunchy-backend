@@ -3,11 +3,6 @@ const { Status, transactionTypes } = require("../utils/constants");
 
 const TransactionApprovalSchema = new mongoose.Schema(
     {
-        transaction_id: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Transaction",
-            required: true,
-        },
         transaction_type: {
             type: String,
             enum: {
@@ -39,9 +34,9 @@ const TransactionApprovalSchema = new mongoose.Schema(
         },
     },
     {
-        timestamps: true,
-        indexes: [{ fields: ["transactionId", "userId"], unique: true }],
+        timestamps: true
     }
 );
+const transactionApproval = mongoose.model("TransactionApproval", TransactionApprovalSchema);
+module.exports = transactionApproval;
 
-module.exports = mongoose.model("TransactionApproval", TransactionApprovalSchema);

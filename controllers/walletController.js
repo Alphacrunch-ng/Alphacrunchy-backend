@@ -1,71 +1,14 @@
 
 const bcrypt = require('bcrypt');
 const Wallet = require('../models/walletModel.js');
-const WalletTransaction = require('../models/walletTransactionModel')
 const { serverError } = require('../utils/services.js');
-const { createNotification } = require('./notificationController');
-const { operations, transactionTypes, Status, DEFAULT_WALLET_PIN } = require('../utils/constants');
-const { createTransaction } = require('./transactionController');
+const { createNotification } = require('../models/repositories/notificationRepo');
+const { operations, transactionTypes, Status } = require('../utils/constants');
+const { createTransaction } = require('../models/repositories/transactionRepo');
 const { currencies } = require('../utils/currencies.json');
 const { getCacheData, setCacheData } = require('../utils/cache');
 const { getPaymentBanks, resolveBank, transferToBank } = require('../utils/paymentService');
-
-
-exports.creditWalletHelper = async (wallet_number, amount, transaction_number, reciever_acn) => {
-    try {
-        const description = `${amount} credited to wallet`;
-        const creditWallet = await Wallet.findOneAndUpdate({wallet_number},  { $inc: { balance: amount } }, { new: true }).select("-wallet_pin");
-
-        const creditTransaction = await createTransaction(creditWallet.user_id, description, amount, operations.credit, transactionTypes.wallet, Status.successful, transaction_number);
-        const walletTransaction = await createWalletTransaction(wallet_number, wallet_number, amount, description, creditTransaction.transaction_number, reciever_acn)
-        await createNotification(creditWallet.user_id, `credited with ${amount}`);
-
-        return { creditWallet, creditTransaction, walletTransaction };
-    } catch (error) {
-        throw error;
-    }
-}
-
-exports.checkWalletHelper = async (wallet_number) => {
-    try {
-        const wallet = await Wallet.findOne({wallet_number});
-        return wallet;
-    } catch (error) {
-        throw error;
-    }
-}
-exports.checkWalletHelperUserId = async (user_id) => {
-    try {
-        const wallet = await Wallet.findOne({user_id});
-        return wallet;
-    } catch (error) {
-        throw error;
-    }
-}
-
-exports.debitWalletHelper = async ( wallet_number, amount, transaction_number, reciever_acn ) => {
-    try {
-        const description = `${amount} debited from wallet`;
-        const debitWallet = await Wallet.findOneAndUpdate({ wallet_number },  { $inc: { balance: -amount } }, { new: true }).select("-wallet_pin");
-
-        const debitTransaction = await createTransaction(debitWallet.user_id, description, amount, operations.debit, transactionTypes.wallet, Status.successful, transaction_number);
-        const walletTransaction = await createWalletTransaction(wallet_number, wallet_number, amount, description, debitTransaction.transaction_number, reciever_acn)
-        await createNotification(debitWallet.user_id, `debited with ${amount}`);
-        return { debitWallet, debitTransaction, walletTransaction };
-    } catch (error) {
-        throw error;
-    }
-}
-
-const createWalletTransaction = async (sender_wallet_number, reciever_wallet_number, amount, description, transaction_number, reciever_acn) =>{
-    try {
-        const walletTransaction = await WalletTransaction.create({sender_wallet_number, reciever_wallet_number, amount, description, transaction_number, reciever_acn})
-        return walletTransaction;
-    } catch (error) {
-        throw error;
-    }
-
-}
+const { createWalletTransaction, debitWalletHelper, creditWalletHelper } = require('../models/repositories/walletRepo.js');
 
 // controller for creating a User wallet
 exports.createWallet = async (req, res) => {
@@ -124,7 +67,7 @@ exports.creditWallet = async (req, res) => {
                 message: 'wallet not found'
             })
         }
-        const { creditWallet, creditTransaction, walletTransaction} = await this.creditWalletHelper(wallet_number, amount)
+        const { creditWallet, creditTransaction, walletTransaction} = await creditWalletHelper(wallet_number, amount)
         const wallets = await Wallet.find({user_id: creditWallet.user_id})
                                 .select("-wallet_pin").exec();
         return res.status(200).json({
@@ -159,7 +102,7 @@ exports.debitWallet = async (req, res) => {
             })
         }
         if (amount > checkWallet.balance) {
-            const description = `${amount} debited from wallet`;
+            const description = `insufficient funds in wallett`;
             const failedTransaction = await createTransaction(checkWallet.user_id, description, amount, operations.debit, transactionTypes.wallet, Status.failed);
 
             const walletTransaction = await createWalletTransaction(wallet_number, wallet_number, amount, description, failedTransaction.transaction_number, account_number)
@@ -191,7 +134,6 @@ exports.debitWallet = async (req, res) => {
 // debit a users wallet
 exports.wallet2WalletTransfer = async (req, res) => {
     const {wallet_number, amount, reciever_wallet_number } = req.body;
-    console.log(wallet_number, amount, reciever_wallet_number);
     
     try {
         const checkWallet = await Wallet.findOne({ wallet_number}).populate({
@@ -465,7 +407,7 @@ exports.completePayment = async (req, res) => {
           success: false,
         });
       }
-      const result = await this.creditWalletHelper(wallet_number, settled_amount, transaction_ref, reciever_acn);
+      const result = await creditWalletHelper(wallet_number, settled_amount, transaction_ref, reciever_acn);
       return res.status(200).json({
         status: 'success',
         data: result
@@ -496,7 +438,7 @@ exports.paymentToBank = async (req, res) => {
         const { response, error} = await transferToBank(bank_code, account_number, checkWallet.wallet_number, amount);
         
         if (response?.status === "success") {
-            const { debitWallet, debitTransaction, walletTransaction } = await this.debitWalletHelper(wallet_number, amount, response.data?.transactionRef, account_number);
+            const { debitWallet, debitTransaction, walletTransaction } = await debitWalletHelper(wallet_number, amount, response.data?.transactionRef, account_number);
             const wallets = await Wallet.find({user_id: debitWallet.user_id})
                                 .select("-wallet_pin").exec();
             return res.status(200).json({
@@ -507,7 +449,7 @@ exports.paymentToBank = async (req, res) => {
             });
         }
         if (error) {
-            const description = `${amount} debited from wallet`;
+            const description = `service unavailable`;
             const failedTransaction = await createTransaction(checkWallet.user_id, description, amount, operations.debit, transactionTypes.wallet, Status.failed);
 
             const walletTransaction = await createWalletTransaction(wallet_number, wallet_number, amount, description, failedTransaction.transaction_number, account_number)
@@ -521,28 +463,4 @@ exports.paymentToBank = async (req, res) => {
         return serverError(res, error);
     }
     
-}
-
-exports.createWalletHelper = async ( user_id ) => {
-    try {
-        const checkWallet = await checkWalletHelperUserId(user_id);
-       if (!checkWallet) {
-         throw new Error('Wallet already exists');
-       }
-        const hashedPin = await bcrypt.hash(DEFAULT_WALLET_PIN, 10);
-        const wallet = await Wallet.create({ 
-            wallet_pin: hashedPin, 
-            user_id, 
-            currency: {
-                    "code": "NGN",
-                    "name": "Nigerian Naira",
-                    "symbol": "₦"
-                }, 
-            default: true
-        });
-
-        return wallet;
-    } catch (error) {
-        throw error;
-    }
 }
