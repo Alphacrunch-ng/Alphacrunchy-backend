@@ -18,7 +18,7 @@ const app = express();
 // app.use(cors({ origin: "*" }));
 app.options('*', cors({
   headers: ['Content-Type', 'Authorization'], // sets the Access-Control-Allow-Headers header
-  methods: ['GET', 'POST', 'PUT', 'DELETE'] // sets the Access-Control-Allow-Methods header
+  methods: ['GET', 'POST', 'PUT','PATCH', 'DELETE'] // sets the Access-Control-Allow-Methods header
 }))
 app.use(cors({
   origin: [
