@@ -57,7 +57,7 @@ router.use(
 
 router.use("/image", imageRoute);
 
-router.use("/message", messageRoute);
+router.use("/message", auth, messageRoute);
 
 router.use("/notification", auth, notificationRoute);
 

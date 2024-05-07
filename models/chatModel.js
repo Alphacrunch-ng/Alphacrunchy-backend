@@ -13,7 +13,8 @@ const chatSchema = new mongoose.Schema({
     },
     transaction_number: {
         type: String,
-        index: true
+        index: true,
+        unique: true,
     },
     active : {
         type: Boolean,

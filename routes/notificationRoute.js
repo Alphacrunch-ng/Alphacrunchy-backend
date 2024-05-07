@@ -4,14 +4,6 @@ const { roles } = require('../utils/constants');
 
 const router = require('express').Router();
 
-/**
- * @swagger
- * /signup:
- *  post
- * components:
- *  schemas: 
- */
-
 
 // Get all adminRoutes
 router.get('/', (req, res)=>{
