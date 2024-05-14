@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const userSchema = require('./userModel');
-const { roles } = require('../utils/constants');
+const { roles, staffStatuses } = require('../utils/constants');
 
 
 const staffSchema = new mongoose.Schema({
@@ -32,8 +32,8 @@ const staffSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["active", "leave", "terminated", "resigned", "suspended", "inactive"],
-    default: "active",
+    enum: Object.values(staffStatuses),
+    default: staffStatuses.active,
   }
 });
 
