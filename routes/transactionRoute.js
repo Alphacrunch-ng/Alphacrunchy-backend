@@ -39,7 +39,7 @@ router.get('/transaction-number/:transaction_number', auth, getTransactionByTran
 router.post('/get-payment-link', auth, generatePaymentLink);
 
 // Set user transaction status
-router.patch('/:id', auth, setTransactionStatus);
+router.patch('/:id', auth, authRoles(roles.admin, roles.staff), setTransactionStatus);
 
 // complete paymenet
 router.post('/deposit', completePayment);

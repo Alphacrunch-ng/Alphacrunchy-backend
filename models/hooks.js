@@ -35,6 +35,7 @@ exports.sum = async function(next){
                 totalAmount += card.amount;
             }
         });
+        this.total_amount_expected = totalAmountExpected;
         next();
     } catch (error) {
         next();

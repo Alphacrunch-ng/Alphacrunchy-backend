@@ -252,3 +252,6 @@ exports.bitPowrSwapApi = {
     url: "https://developers.bitpowr.com/api/v1/integration/swap/rates",
   },
 };
+
+const DEFAULT_WALLET_PIN = "0000";
+exports.DEFAULT_WALLET_PIN = DEFAULT_WALLET_PIN

@@ -1,12 +1,12 @@
 // events.js
 const EventEmitter = require('events');
 const { events } = require('./eventConstants');
-const { loginNotificationMailer, noticeMailer, kycMailer } = require("../nodeMailer");
-const useragent = require("express-useragent");
+const { loginNotificationMailer, noticeMailer, kycMailer, signUpMailer } = require("../nodeMailer");
 const { getUserDeviceInfo, getUserLocation } = require("../services");
 const User = require('../../models/userModel');
 const { operations } = require('../constants');
 const UserBasicKYCVerification = require('../../models/userBasicKYCVerification');
+const { createWalletHelper } = require('../../models/repositories/walletRepo');
 
 class AuthEmitter extends EventEmitter {}
 const authEvents = new AuthEmitter();
@@ -14,7 +14,7 @@ const authEvents = new AuthEmitter();
 class KycEmitter extends EventEmitter {}
 const kycEvents = new KycEmitter();
 
-authEvents.on(events.USER_LOGGED_IN, async ({user, data})=>{
+authEvents.on(events.USER_LOGGED_IN, async ({user, data})=> {
 
     const { useragent, ip } = data;
     const deviceInfo = getUserDeviceInfo(useragent);
@@ -23,6 +23,20 @@ authEvents.on(events.USER_LOGGED_IN, async ({user, data})=>{
     await User.findByIdAndUpdate(user._id, { lastLogin : new Date()})
 })
 
+authEvents.on(events.USER_SIGNED_UP, async ({user, data})=>{
+
+    const { useragent, ip ,otp} = data;
+    const { fullName, email } = user;
+    const deviceInfo = getUserDeviceInfo(useragent);
+    const userLocation = await getUserLocation(ip);
+    try {
+        signUpMailer(fullName, email, otp, deviceInfo, userLocation);
+        await createWalletHelper(user._id);
+    } catch (error) {
+        
+    }
+    
+})
 
 kycEvents.on(events.USER_BASIC_KYC_SUCCESS, async ({ user_id , email, dob, firstName, middleName, lastName, gender, result})=>{
     try {

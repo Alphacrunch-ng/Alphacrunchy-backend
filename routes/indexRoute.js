@@ -21,6 +21,7 @@ const { changeAllUserId } = require("../controllers/messagesController");
  */
 
 router.get("/", (req, res) => {
+  console.log(req.ip)
   res.send("<h1>Alphacrunch Finance</h1>");
 });
 
@@ -56,7 +57,7 @@ router.use(
 
 router.use("/image", imageRoute);
 
-router.use("/message", messageRoute);
+router.use("/message", auth, messageRoute);
 
 router.use("/notification", auth, notificationRoute);
 

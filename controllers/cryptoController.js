@@ -530,16 +530,17 @@ exports.getSubAccountsFromSource = async (req, res) => {
 
 exports.buyCrypto = async (req, res) => {
   // Validate input parameters
-  const { address, cryptoAmount, assetType, walletId } = req.body;
+  const { crypto_address, crypto_amount, asset_type, crypto_wallet_id } = req.body;
 
-  if(isValidAmount(cryptoAmount)){
-    if(parseFloat(cryptoAmount) < 0) {
+  if(isValidAmount(crypto_amount)){
+    if(parseFloat(crypto_amount) < 0) {
       return userRequestError(res, "crypto amount must be a positive number.");
     }
   }
 
   try {
-    const data = { address, cryptoAmount, assetType, walletId};
+
+    const data = { address: crypto_address, cryptoAmount: crypto_amount, assetType: asset_type, walletId: crypto_wallet_id };
     const debitWallet = await debitWalletHelper();
     // create the transaction on bitpowr
     const responseData = await makeBitpowrRequest(
@@ -561,6 +562,7 @@ exports.buyCrypto = async (req, res) => {
           message: responseData?.data?.message
          });
       }
+      
       return res.status(200).json({
         success: true,
         data: responseData,

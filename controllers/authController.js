@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const User = require('../models/userModel.js');
 const Wallet = require('../models/walletModel.js');
-const { signUpMailer, resetPasswordMailer, noticeMailer, otpMailer } = require('../utils/nodeMailer.js');
+const { resetPasswordMailer, noticeMailer, otpMailer } = require('../utils/nodeMailer.js');
 const { serverError, createOtp, formatEmail, userRequestError, unauthorizedError } = require('../utils/services.js');
 const { operations } = require('../utils/constants.js');
 const jwt = require('jsonwebtoken');
@@ -9,12 +9,13 @@ const { sendSmsOtp } = require('../utils/smsService.js');
 let crypto = require('crypto');
 const { authEvents } = require('../utils/events/emitters.js');
 const { events } = require('../utils/events/eventConstants.js');
-const { checkWalletHelper } = require('./walletController.js');
+const { checkWalletHelper } = require('../models/repositories/walletRepo.js');
 
-exports.transactionAuth = async (req, res) =>{
-  const { wallet_pin, wallet_number } = req.body;
+exports.walletTransactionTokenGen = async (req, res) =>{
+  const { wallet_pin, wallet_number, reciever_wallet_number, amount } = req.body;
   try {
     const checkWallet = await checkWalletHelper(wallet_number);
+    const recieverWallet = await checkWalletHelper(reciever_wallet_number)
     if(!checkWallet){
     return userRequestError(res,'Invalid wallet number');
     }
@@ -27,20 +28,24 @@ exports.transactionAuth = async (req, res) =>{
 
         const dataStoredInToken = {
             user_id: checkWallet.user_id.toString(),
-            wallet_number: checkWallet.wallet_number,
-            wallet_balance: checkWallet.balance
+            wallet_number: reciever_wallet_number,
+            reciever_wallet_balance: checkWallet.balance,
+            amount
         };
+
+        const tokenExpiry = 300
 
         //signing token
         const token = jwt.sign(dataStoredInToken,secret,{
-        expiresIn: 300,
-        audience: process.env.JWT_AUDIENCE,
-        issuer: process.env.JWT_ISSUER
+            expiresIn: tokenExpiry,
+            audience: process.env.JWT_AUDIENCE,
+            issuer: process.env.JWT_ISSUER
         });
 
         return res.status(200).json({
             token,
-            expiresIn: 300
+            expiresIn: 300,
+            message: `token expires in ${tokenExpiry} seconds`
         });
     }
   } catch (error) {
@@ -50,26 +55,31 @@ exports.transactionAuth = async (req, res) =>{
 }
 // controller for signing up
 exports.registration = async (req, res) => {
+    const { fullName, email, phoneNumber, password, sex, country, state, city } = req.body;
+    let user;
     try {
         let checkUser = await User.findOne({ email: req.body.email});
         if (checkUser !== null) {
-            return res.status(401).json({
+            return res.status(400).json({
                 status: 'failed',
                 message: 'email already exists'
             });
         }
         else {
-            const { fullName, email, phoneNumber, password, sex, country, state, city } = req.body;
             const otp = createOtp();
             const hashedOtp = await bcrypt.hash(otp.toString(), 10);
-            var user = await User.create({
+            user = await User.create({
                 fullName,
                 email,
                 phoneNumber,
                 otp: hashedOtp,
-                password
+                password,
+                sex, 
+                country, 
+                state, 
+                city 
             });
-            signUpMailer(fullName, email, otp);
+            authEvents.emit(events.USER_SIGNED_UP, {user, data: {useragent: req.useragent, ip: req.ip, otp}});
             user.password = "";
             user.otp = "";
                 return res.status(201).json({
@@ -81,7 +91,9 @@ exports.registration = async (req, res) => {
 
         
     } catch (error) {
-        await User.findByIdAndDelete({_id: user._id},{ useFindAndModify: false});
+        if(user){
+            await User.findByIdAndDelete({_id: user?._id},{ useFindAndModify: false});
+        }
         return serverError(res, error);
     }
 }

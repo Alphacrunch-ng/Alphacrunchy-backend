@@ -1,12 +1,12 @@
 const Transaction = require('../models/transactionModel');
-const User = require('../models/userModel.js');
 const WalletTransaction = require('../models/walletTransactionModel');
 const GiftCardTransaction = require('../models/giftcardTransactionModel');
-const CryptoTransaction = require('../models/cryptoTransactionModel');
+const { creditWalletHelper, checkWalletHelperUserId } = require('../models/repositories/walletRepo');
 const { serverError } = require('../utils/services');
 const { Status, transactionTypes } = require('../utils/constants');
-const { transactionMailer } = require('../utils/nodeMailer');
 const { getPaymentLink } = require('../utils/paymentService');
+const { createApproveTransactionHelper, checkTransactionDetailsSuccess } = require('../models/repositories/transactionRepo');
+const { updateGiftCardTransactionPaidAmount } = require('../models/repositories/giftcardRepo');
 
 // GET all notifications for a specific user
 exports.getUserTransactions = async (req, res) => {
@@ -186,46 +186,63 @@ exports.getTransactionsByDay = async (req, res) => {
   }
 };
 
-
-
 exports.setTransactionStatus = async (req, res) => {
   try {
-    const transactionId = req.params.id;
-    let { status } = req.body;
-    status = String(status).toLowerCase();
-
-    let transaction = await Transaction.findById(transactionId);
+    const { id } = req.params;
+    const { status } = req.body;
 
     if (!Object.values(Status).includes(status.toLocaleLowerCase())) {
       return res.status(400).json({
         success: false,
-        message: "invalid status: " + status
-      })
+        message: "Invalid status",
+      });
     }
-    if (!transactionId) {
+
+    const transaction = await Transaction.findById(id);
+
+    if (!transaction) {
+      return res.status(404).json({
+        success: false,
+        message: "Transaction not found",
+      });
+    }
+
+    if( status === transaction.status){
       return res.status(400).json({
         success: false,
-        message: "no id provided"
-      })
+        message: "Transaction status already set",
+      });
     }
-    if( status === Status.successful ) {
-      const isSuccess = await checkTransactionDetailsSuccess(transaction.transaction_number, transaction.transaction_type);
+    const checkUserWallet = await checkWalletHelperUserId(transaction.user_id);
+    if ( !checkUserWallet) {
+      return res.status(400).json({
+        success: false,
+        message: "User wallet not found",
+      });
+    }
 
+    if (status === Status.successful) {
+      const isSuccess = await checkTransactionDetailsSuccess(transaction.transaction_number, transaction.transaction_type);
+      if(transaction.transaction_type === transactionTypes.giftcard){
+        await creditWalletHelper(checkUserWallet.wallet_number, transaction.amount, transaction.transaction_number);
+        await updateGiftCardTransactionPaidAmount(transaction.transaction_number, transaction.amount);
+      }
       if (!isSuccess) {
         return res.status(400).json({
           success: false,
-          message: "Transaction details verification failed"
+          message: "Transaction details verification failed",
         });
       }
-      transaction = await Transaction.findByIdAndUpdate(transactionId, {status : status.toLocaleLowerCase()}, {new: true});
-    } else {
-      transaction = await Transaction.findByIdAndUpdate(transactionId, {status : status.toLocaleLowerCase()}, {new: true});
     }
+
+    transaction.status = status;
+    await createApproveTransactionHelper(status, transaction.transaction_number, transaction.transaction_type, req.user.id, req.user.fullName);
+    await transaction.save();
     
+
     return res.status(200).json({
-        data: transaction,
-        success: true,
-        message: `Successfull`
+      success: true,
+      message: "Transaction status updated successfully and user wallet credited",
     });
   } catch (error) {
     return serverError(res, error);
@@ -285,45 +302,3 @@ exports.deleteTransaction = async (req, res) => {
     return serverError(res, error);
   }
 };
-
-
-//Services 
-//create notification service
-exports.createTransaction = async (user_id, description, amount , operation, transaction_type, status, transaction_number)=> { // everything here is required
-    try {
-        const checkUser = await User.findOne({ _id: user_id}).select("-password");
-        if (!checkUser) {
-          throw new Error("user_id not found");
-      }
-        transactionMailer(checkUser.email, operation, amount, description)
-        
-        const newTransaction = transaction_number? 
-        new Transaction({ user_id, description, amount, transaction_type, status: status? status : "pending" , transaction_number}) 
-        : 
-        new Transaction({ user_id, description, amount, transaction_type, status: status? status : "pending" });
-
-        const saveTransaction = await newTransaction.save();
-        return saveTransaction;
-    } catch (error) {
-        throw error;
-    }
-}
-
-const checkTransactionDetailsSuccess = async ( transaction_number, transaction_type ) => {
-  let check;
-  switch (transaction_type) {
-    case transactionTypes.wallet:
-      check = await WalletTransaction.findOne({ transaction_number });
-      break;
-    case transactionTypes.giftcard:
-      check = await GiftCardTransaction.findOne({ transaction_number });
-      break;
-    case transactionTypes.crypto:
-      check = CryptoTransaction.findOne({ transaction_number });
-      break;
-    default:
-      return false
-  }
-  return check.status === Status.successful;
-}
-
