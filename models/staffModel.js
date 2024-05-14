@@ -4,6 +4,8 @@ const { roles } = require('../utils/constants');
 
 
 const staffSchema = new mongoose.Schema({
+  ...userSchema.obj,
+
   department: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Department',
@@ -35,13 +37,12 @@ const staffSchema = new mongoose.Schema({
   }
 });
 
-const StaffSchema = userSchema.clone().add(staffSchema.obj);
 
-StaffSchema.pre('save', function(next){
+staffSchema.pre('save', function (next) {
   this.role = roles.staff;
   next();
 });
 
-const Staff = mongoose.model('Staff', StaffSchema);
+const Staff = mongoose.model('Staff', staffSchema);
 
 module.exports = Staff;
