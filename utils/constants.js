@@ -4,6 +4,15 @@ exports.roles = {
   client: "CLIENT",
 };
 
+exports.staffStatuses = {
+  active: "active",
+  leave: "leave",
+  terminated: "terminated",
+  resigned: "resigned",
+  suspended: "suspended",
+  inactive: "inactive",
+}
+
 exports.countryCodes = {
   Nigeria: "NG",
   Ghana: "GH",
