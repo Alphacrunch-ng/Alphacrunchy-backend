@@ -1,11 +1,13 @@
 const mongoose = require('mongoose');
-const userSchema = require('./userModel');
 const { roles, staffStatuses } = require('../utils/constants');
 
 
 const staffSchema = new mongoose.Schema({
-  ...userSchema.obj,
-
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
   department: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Department',
