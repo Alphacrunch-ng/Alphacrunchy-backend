@@ -207,6 +207,6 @@ const deviceInfoMarkup = (deviceInfo, userLocation) => `
     <strong>Location:</strong> ${userLocation.country}, ${userLocation.city}
   </li>
   <li style="margin-bottom: 10px;">
-    <p>Time: ${new Date().toLocaleString()}</p>
+    <p>Time: ${new Date().toUTCString()}</p>
   </li>
 </ul>`
