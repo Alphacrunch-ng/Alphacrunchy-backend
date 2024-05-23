@@ -6,17 +6,7 @@ exports.signUpMailer = (name, email, token, deviceInfo, userLocation) => {
     <h1> Welcome to ${product_name}. ${name}</h1>
     <p>Your account has been sucessfully created</p>
     <p>Here is your token to set your password : ${token}</p>
-    <ul style="list-style: none; padding: 0;">
-        <li style="margin-bottom: 10px;">
-          <strong>Device Information:</strong><br/>
-          <p style="margin-right: 10px;"><strong>Browser:</strong> ${deviceInfo.Browser},</p>
-          <p style="margin-right: 10px;"><strong>Device Type:</strong> ${deviceInfo.deviceType},</p>
-          <p><strong>Name of Device:</strong> ${deviceInfo.deviceName}</p>
-        </li>
-        <li style="margin-bottom: 10px;">
-          <strong>Location:</strong> ${userLocation.country}, ${userLocation.city}
-        </li>
-      </ul>
+    ${deviceInfoMarkup(deviceInfo, userLocation)}
     `;
   // setup email data with unicode symbols
   let mailOptions = {
@@ -141,6 +131,7 @@ exports.transactionMailer = (email, operation, amount, description) => {
             </tr>
         </tbody>
     </table>
+    
     <p>If this was not initiated by you please contact customer care</p>
     <p style="text-align:center;">Thank You</p>
 </div>  
@@ -170,18 +161,7 @@ exports.loginNotificationMailer = async (
     </div>
   <div style="padding: 10px">
       <h1 style="color: #B98100; margin-bottom: 20px; font-size: 24px;">Welcome back to ${product_name}, ${name}!</h1>
-      <p>Your account has been accessed recently. Here are the details:</p>
-      <ul style="list-style: none; padding: 0;">
-        <li style="margin-bottom: 10px;">
-          <strong>Device Information:</strong><br/>
-          <p style="margin-right: 10px;"><strong>Browser:</strong> ${deviceInfo.Browser},</p>
-          <p style="margin-right: 10px;"><strong>Device Type:</strong> ${deviceInfo.deviceType},</p>
-          <p><strong>Name of Device:</strong> ${deviceInfo.deviceName}</p>
-        </li>
-        <li style="margin-bottom: 10px;">
-          <strong>Location:</strong> ${userLocation.country}, ${userLocation.city}
-        </li>
-      </ul>
+      ${deviceInfoMarkup(deviceInfo, userLocation)}
       <p>If this was you, no further action is required. If you didn't recognize this login, please secure your account.</p>
   </div>
 </div>
@@ -213,3 +193,20 @@ const transportSender = (mailOptions) => {
   // send mail with defined transport object
   return transport.sendMail(mailOptions);
 };
+
+const deviceInfoMarkup = (deviceInfo, userLocation) => `
+<p>Your account has been accessed recently. Here are the details:</p>
+<ul style="list-style: none; padding: 0;">
+  <li style="margin-bottom: 10px;">
+    <strong>Device Information:</strong><br/>
+    <p style="margin-right: 10px;"><strong>Browser:</strong> ${deviceInfo.Browser},</p>
+    <p style="margin-right: 10px;"><strong>Device Type:</strong> ${deviceInfo.deviceType},</p>
+    <p><strong>Name of Device:</strong> ${deviceInfo.deviceName}</p>
+  </li>
+  <li style="margin-bottom: 10px;">
+    <strong>Location:</strong> ${userLocation.country}, ${userLocation.city}
+  </li>
+  <li style="margin-bottom: 10px;">
+    <p>Time: ${new Date().toLocaleDateString()}</p>
+  </li>
+</ul>`
