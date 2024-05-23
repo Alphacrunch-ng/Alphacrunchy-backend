@@ -31,9 +31,10 @@ authEvents.on(events.USER_SIGNED_UP, async ({user, data})=>{
     const userLocation = await getUserLocation(ip);
     try {
         signUpMailer(fullName, email, otp, deviceInfo, userLocation);
-        await createWalletHelper(user._id);
+        await createWalletHelper(user?._id);
     } catch (error) {
-        
+        console.log(error)
+        await User.findByIdAndDelete(user?._id)
     }
     
 })

@@ -55,8 +55,8 @@ exports.debitWalletHelper = async ( wallet_number, amount, transaction_number, r
 
 exports.createWalletHelper = async ( user_id ) => {
     try {
-        const checkWallet = await checkWalletHelperUserId(user_id);
-       if (!checkWallet) {
+        const checkWallet = await this.checkWalletHelperUserId(user_id);
+       if (checkWallet) {
          throw new Error('Wallet already exists');
        }
         const hashedPin = await bcrypt.hash(DEFAULT_WALLET_PIN, 10);

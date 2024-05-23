@@ -9,7 +9,7 @@ if (process.env.NODE_ENV === 'development') {
 const mongodb = async () => {
 
   try {
-    mongoose.connect(DB, {
+    await mongoose.connect(DB, {
       useNewUrlParser: true,
       useUnifiedTopology: true
     });
