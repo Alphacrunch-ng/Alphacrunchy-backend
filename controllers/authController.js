@@ -56,6 +56,7 @@ exports.walletTransactionTokenGen = async (req, res) =>{
 // controller for signing up
 exports.registration = async (req, res) => {
     const { fullName, email, phoneNumber, password, sex, country, state, city } = req.body;
+    const ipaddress =  req?.headers['x-forwarded-for'] || req?.connection?.remoteAddress || req?.ip;
     let user;
     try {
         let checkUser = await User.findOne({ email: req.body.email});
@@ -79,7 +80,7 @@ exports.registration = async (req, res) => {
                 state, 
                 city 
             });
-            authEvents.emit(events.USER_SIGNED_UP, {user, data: {useragent: req.useragent, ip: req.ip, otp}});
+            authEvents.emit(events.USER_SIGNED_UP, {user, data: {useragent: req.useragent, ip: String(ipaddress).split(',')[0], otp}});
             user.password = "";
             user.otp = "";
                 return res.status(201).json({
@@ -167,7 +168,7 @@ exports.loggingIn = async (request, response) => {
                     user.password = "";
                     const today = new Date();
                     
-                    const userLocationDetails = {useragent, ip: ipaddress}
+                    const userLocationDetails = {useragent, ip: String(ipaddress).split(',')[0]}
                     authEvents.emit(events.USER_LOGGED_IN, { user , data: userLocationDetails })
 
                     const checkWallets = await Wallet.find({user_id: user._id}).select("-wallet_pin");
@@ -247,7 +248,7 @@ exports.twoFactorLoggingIn = async (request, response) => {
                 });
                 user.password = "";
                 const today = new Date();
-                const userLocationDetails = {useragent, ip: ipaddress}
+                const userLocationDetails = {useragent, ip: String(ipaddress).split(',')[0]}
                 authEvents.emit(events.USER_LOGGED_IN, {user , data: userLocationDetails})
                 //resetting the 2 factor properties to default value
                 const updatedUser =  await User.findOneAndUpdate(
