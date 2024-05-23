@@ -131,7 +131,7 @@ exports.transactionMailer = (email, operation, amount, description) => {
             </tr>
         </tbody>
     </table>
-    
+
     <p>If this was not initiated by you please contact customer care</p>
     <p style="text-align:center;">Thank You</p>
 </div>  
@@ -207,6 +207,6 @@ const deviceInfoMarkup = (deviceInfo, userLocation) => `
     <strong>Location:</strong> ${userLocation.country}, ${userLocation.city}
   </li>
   <li style="margin-bottom: 10px;">
-    <p>Time: ${new Date().toLocaleDateString()}</p>
+    <p>Time: ${new Date().toLocaleString()}</p>
   </li>
 </ul>`
