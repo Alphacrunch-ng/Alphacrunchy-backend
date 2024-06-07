@@ -4,9 +4,10 @@ const { events } = require('./eventConstants');
 const { loginNotificationMailer, noticeMailer, kycMailer, signUpMailer } = require("../nodeMailer");
 const { getUserDeviceInfo, getUserLocation } = require("../services");
 const User = require('../../models/userModel');
-const { operations } = require('../constants');
+const { operations, DEFAULT_WALLET_PIN, broadcastTypes, broadcastAudiences, broadcastStatus } = require('../constants');
 const UserBasicKYCVerification = require('../../models/userBasicKYCVerification');
 const { createWalletHelper } = require('../../models/repositories/walletRepo');
+const { createBroadcast } = require('../../models/repositories/broadcastRepo');
 
 class AuthEmitter extends EventEmitter {}
 const authEvents = new AuthEmitter();
@@ -29,9 +30,18 @@ authEvents.on(events.USER_SIGNED_UP, async ({user, data})=>{
     const { fullName, email } = user;
     const deviceInfo = getUserDeviceInfo(useragent);
     const userLocation = await getUserLocation(ip);
+
     try {
         signUpMailer(fullName, email, otp, deviceInfo, userLocation);
         await createWalletHelper(user?._id);
+        await createBroadcast({
+            title: "change default pin",
+            message: `change default wallet pin from ${DEFAULT_WALLET_PIN}`,
+            type: broadcastTypes.alert,
+            audience: broadcastAudiences.specific,
+            targetUser: user?._id,
+            status: broadcastStatus.published
+        });
     } catch (error) {
         console.log(error)
         await User.findByIdAndDelete(user?._id)

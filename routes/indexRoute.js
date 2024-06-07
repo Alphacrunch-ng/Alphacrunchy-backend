@@ -10,6 +10,7 @@ const giftCardRoute = require("./giftCardRoute");
 const walletRoute = require("./walletRoute");
 const cryptoRoute = require("./cryptoRoute");
 const faqRoute = require("./faqRoute");
+const broadcastRoute = require("./broadcastRoute")
 const { auth, authRoles } = require("../middlewares/auth");
 const { roles } = require("../utils/constants");
 const { changeAllUserId } = require("../controllers/messagesController");
@@ -62,6 +63,8 @@ router.use("/message", auth, messageRoute);
 router.use("/notification", auth, notificationRoute);
 
 router.use("/faq", faqRoute);
+
+router.use("/broadcast", broadcastRoute);
 
 router.use("/crypto", cryptoRoute);
 

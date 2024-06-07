@@ -62,12 +62,13 @@ exports.otpMailer = (email, token) => {
 };
 
 exports.noticeMailer = (email, operation) => {
-  const message = `<div>
+  const message = `
+      <div>
             <h1>Notification From ${product_name} App</h1>
             <p>Notifying you of ${operation} action on you account</p>
             <p>If this was not initiated by you please contact customer care</p>
             <p>Thank You</p>
-            </div>`;
+      </div>`;
 
   // setup email data with unicode symbols
   let mailOptions = {
@@ -210,3 +211,11 @@ const deviceInfoMarkup = (deviceInfo, userLocation) => `
     <p>Time: ${new Date().toUTCString()}</p>
   </li>
 </ul>`
+
+const header = `
+<div style="width:100%; max-width:600px; margin:0 auto; font-family: 'Arial', sans-serif; background-color: #f5f5f5; color: #333; padding: 10px; border-collapse: collapse;">
+  <div style="background-color:#B98100;color:white;padding:20px;text-align:center;border-radius:10px;">
+        <img src="https://res.cloudinary.com/dkgblnkxm/image/upload/v1694926535/w2wnxtjjbydmtjru2gjg.png" alt="Logo" style="width:100px;height:100px;">
+    </div>
+</div>
+`

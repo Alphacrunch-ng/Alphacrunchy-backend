@@ -13,6 +13,29 @@ exports.staffStatuses = {
   inactive: "inactive",
 }
 
+exports.broadcastAudiences = {
+  all : 'all',
+  specific: 'specific'
+}
+
+exports.broadcastTypes = {
+  info: 'info',
+  warning: 'warning',
+  alert: 'alert'
+}
+
+exports.broadcastPriorities = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high'
+}
+
+exports.broadcastStatus = {
+  drafted: 'drafted',
+  published: 'published',
+  archived: 'archived'
+}
+
 exports.countryCodes = {
   Nigeria: "NG",
   Ghana: "GH",
