@@ -18,6 +18,11 @@ exports.broadcastAudiences = {
   specific: 'specific'
 }
 
+exports.transactionDirectionTypes = {
+  debit: 'debit',
+  credit: 'credit'
+}
+
 exports.broadcastTypes = {
   info: 'info',
   warning: 'warning',

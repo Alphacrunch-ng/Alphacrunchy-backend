@@ -9,7 +9,7 @@ const { serverError } = require("../utils/services.js");
 const GiftCardTransaction = require("../models/giftcardTransactionModel");
 const { createTransaction,/**, checkTransactionHelper**/ 
 createApproveTransactionHelper} = require("../models/repositories/transactionRepo");
-const { Status, operations, transactionTypes } = require("../utils/constants");
+const { Status, operations, transactionTypes, transactionDirectionTypes } = require("../utils/constants");
 const { getCacheData, setCacheData } = require("../utils/cache");
 const ObjectId = mongoose.Types.ObjectId;
 const SupportedCurrencies = require("../utils/currencies.json");
@@ -63,7 +63,7 @@ exports.createGiftCardTransaction = async (req, res) => {
     description,
   } = req.body;
 
-  
+  const transaction_direction = transactionDirectionTypes.credit;
   const amount = total_amount;
 
 
@@ -76,7 +76,8 @@ exports.createGiftCardTransaction = async (req, res) => {
         description,
         amount,
         operations.sellGiftcard,
-        transactionTypes.giftcard
+        transactionTypes.giftcard,
+        transaction_direction
       );
       // create a new GiftCardTransaction document
      const result = await GiftCardTransaction.create(

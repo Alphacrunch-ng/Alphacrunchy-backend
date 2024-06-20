@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { Status, transactionTypes } = require('../utils/constants');
+const { Status, transactionTypes, transactionDirectionTypes } = require('../utils/constants');
 const { modifiedAt, setTransactionNumber } = require('./hooks');
 
 const transactionSchema = new mongoose.Schema({
@@ -35,6 +35,10 @@ const transactionSchema = new mongoose.Schema({
         message: "status can either be 'approved', 'pending', 'successful' or 'failed'",
     },
     default: Status.pending
+  },
+  transaction_direction: {
+    type: String,
+    enum: Object.values(transactionDirectionTypes)
   },
   createdAt: {
     type: Date,
