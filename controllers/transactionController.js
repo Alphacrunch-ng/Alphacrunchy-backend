@@ -3,19 +3,86 @@ const WalletTransaction = require('../models/walletTransactionModel');
 const GiftCardTransaction = require('../models/giftcardTransactionModel');
 const { creditWalletHelper, checkWalletHelperUserId } = require('../models/repositories/walletRepo');
 const { serverError } = require('../utils/services');
-const { Status, transactionTypes } = require('../utils/constants');
+const { Status, transactionTypes, transactionDirectionTypes } = require('../utils/constants');
 const { getPaymentLink } = require('../utils/paymentService');
 const { createApproveTransactionHelper, checkTransactionDetailsSuccess } = require('../models/repositories/transactionRepo');
 const { updateGiftCardTransactionPaidAmount } = require('../models/repositories/giftcardRepo');
+const { default: mongoose } = require('mongoose');
+const ObjectId = mongoose.Types.ObjectId;
 
-// GET all notifications for a specific user
+/**
+ * GET all transactions for a specific user
+ * @param req.params.id - User id
+ * @param req.query.pageSize - number, Default to 16 if pageSize is not provided
+ * @param req.query.page - number, Default to 1 if page is not provided
+ */
 exports.getUserTransactions = async (req, res) => {
   try {
     const userId = req.params.id;
-    const transactions = await Transaction.find({ user_id: userId })
-                                            .sort({ createdAt: -1 });
+    const pageSize = +req.query.pageSize || 16; // Default to 16 if pageSize is not provided
+    const page = +req.query.page || 1; // Default to 1 if page is not provided
+
+    const transactions = await Transaction.aggregate([
+  
+      {
+        $facet: {
+          metadata: [
+            {
+              $match: { user_id: ObjectId(userId) }
+            },
+            { $count: "total" },
+            { 
+              $addFields: { 
+                page, 
+                pageSize, 
+                totalPages: { $ceil: { $divide: ["$total", pageSize] } },
+                pagesLeft: { $subtract: [{ $ceil: { $divide: ["$total", pageSize] } }, page] }
+              } 
+            }
+          ],
+          all: [
+            {
+              $match: { user_id: ObjectId(userId) }
+            },
+            { $sort: { createdAt: -1 } }, // Sort by createdAt descending
+            { $skip: (page - 1) * pageSize }, // Skip records for pagination
+            { $limit: pageSize }, // Limit records per page
+          ],
+          credit: [
+            {
+              $match: { user_id: ObjectId(userId) }
+            },
+            { $match: { transaction_direction: transactionDirectionTypes.credit } },
+            { $sort: { createdAt: -1 } }, // Sort by createdAt descending
+            { $skip: (page - 1) * pageSize }, // Skip records for pagination
+            { $limit: pageSize }, // Limit records per page
+          ],
+          debit: [
+            {
+              $match: { user_id: ObjectId(userId) }
+            },
+            { $match: { transaction_direction: transactionDirectionTypes.debit } },
+            { $sort: { createdAt: -1 } }, // Sort by createdAt descending
+            { $skip: (page - 1) * pageSize }, // Skip records for pagination
+            { $limit: pageSize }, // Limit records per page
+          ]
+        }
+      },
+    ]);
+
+    const metadata = transactions[0].metadata;
+    const allTransactions = transactions[0].all;
+    const creditTransactions = transactions[0].credit;
+    const debitTransactions = transactions[0].debit;
+
+    const result = {
+      metadata,
+      all: allTransactions,
+      credit: creditTransactions,
+      debit: debitTransactions
+    };
     return res.status(200).json({
-        data: transactions,
+        data: result,
         success: true,
         message: `Successfull`
     });
@@ -122,16 +189,92 @@ exports.getTransactionById = async (req, res) => {
     }
   }
 
-// GET all transactions
+
+/**
+ * GET all transactions for all users
+ * @param req.query.pageSize - number, Default to 16 if pageSize is not provided
+ * @param req.query.page - number, Default to 1 if page is not provided
+ */
 exports.getTransactions = async (req, res) => {
-  const {pageSize, page} = req.params;
   try {
-      const transactions = await Transaction.find().sort({ createdAt: -1 })
-                                                  .limit(pageSize? +pageSize : 16 )
-                                                  .skip(page? (+page - 1) * +pageSize : 0)
-                                                  .exec();
+    const pageSize = +req.query.pageSize || 16; // Default to 16 if pageSize is not provided
+    const page = +req.query.page || 1; // Default to 1 if page is not provided
+
+    // const wdebit = await Transaction.updateMany(
+    //   { 
+    //     transaction_type: 'wallet', 
+    //     description: { $regex: /debit/i } // Case insensitive regex to match "debit"
+    //   }, 
+    //   { 
+    //     $set: { transaction_direction: 'debit' } 
+    //   },
+    //   { 
+    //     new: true 
+    //   }
+    // );
+    // const wcredit = await Transaction.updateMany(
+    //   { 
+    //     transaction_type: 'wallet', 
+    //     description: { $regex: /credit/i } // Case insensitive regex to match "debit"
+    //   }, 
+    //   { 
+    //     $set: { transaction_direction: 'credit' } 
+    //   },
+    //   { 
+    //     new: true 
+    //   }
+    // );
+
+    const transactions = await Transaction.aggregate([
+      {
+        $facet: {
+          metadata: [
+            { $count: "total" },
+            { 
+              $addFields: { 
+                page, 
+                pageSize, 
+                totalPages: { $ceil: { $divide: ["$total", pageSize] } },
+                pagesLeft: { $subtract: [{ $ceil: { $divide: ["$total", pageSize] } }, page] }
+              } 
+            }
+          ],
+          all: [
+            { $sort: { createdAt: -1 } }, // Sort by createdAt descending
+            { $skip: (page - 1) * pageSize }, // Skip records for pagination
+            { $limit: pageSize }, // Limit records per page
+          ],
+          credit: [
+            { $match: { transaction_direction: transactionDirectionTypes.credit } },
+            { $sort: { createdAt: -1 } }, // Sort by createdAt descending
+            { $skip: (page - 1) * pageSize }, // Skip records for pagination
+            { $limit: pageSize }, // Limit records per page
+          ],
+          debit: [
+            { $match: { transaction_direction: transactionDirectionTypes.debit } },
+            { $sort: { createdAt: -1 } }, // Sort by createdAt descending
+            { $skip: (page - 1) * pageSize }, // Skip records for pagination
+            { $limit: pageSize }, // Limit records per page
+          ]
+        }
+      },
+    ]);
+
+    const metadata = transactions[0].metadata;
+    const allTransactions = transactions[0].all;
+    const creditTransactions = transactions[0].credit;
+    const debitTransactions = transactions[0].debit;
+
+    const result = {
+      metadata,
+      all: allTransactions,
+      credit: creditTransactions,
+      debit: debitTransactions
+    };
+    
+
       return res.status(200).json({
-        data: transactions,
+        data: result,
         success: true,
         message: 'Successfully retrieved transactions for the today.',
       });
@@ -141,45 +284,91 @@ exports.getTransactions = async (req, res) => {
     }
   }
 
-// GET all transactions by day date should be in ISO format eg. Format: YYYY-MM-DD Example: "2023-09-15" (assuming today is September 15, 2023)
+/**
+ * GET all transactions by day 
+ * @param req.body.date - Date should be in ISO format eg. Format: YYYY-MM-DD Example: "2023-09-15" (assuming today is September 15, 2023)
+ * @param req.query.pageSize - number, Default to 16 if pageSize is not provided
+ * @param req.query.page - number, Default to 1 if page is not provided
+ */
 exports.getTransactionsByDay = async (req, res) => {
   try {
-    const { date } = req.body; // Assuming date is passed as a query parameter
-    if (!date) {
-      // if no date, then it would return the result for today
-      const targetDate = new Date(Date.now());
-      
-      // Set the start and end date for the specified day
-      targetDate.setHours(0, 0, 0, 0); // Start of the day
-      const nextDay = new Date(targetDate);
-      nextDay.setDate(nextDay.getDate() + 1); // End of the day
-
-      const transactions = await Transaction.find({
-        createdAt: { $gte: targetDate, $lt: nextDay },
-      }).sort({ createdAt: -1 });
-      return res.status(200).json({
-        data: transactions,
-        success: true,
-        message: 'Successfully retrieved transactions for the today.',
-      });
-    }
+    
+    const { date } = req.body;
+    const pageSize = +req.query.pageSize || 16; // Default to 16 if pageSize is not provided
+    const page = +req.query.page || 1; // Default to 1 if page is not provided
 
     // Convert the date to a JavaScript Date object (assuming date is in ISO format)
-    const targetDate = new Date(date);
+    const targetDate = new Date(date? date: new Date()); // if no date, then it would return the result for today
+    
     // Set the start and end date for the specified day
     targetDate.setHours(0, 0, 0, 0); // Start of the day
     const nextDay = new Date(targetDate);
 
     nextDay.setDate(nextDay.getDate() + 1); // End of the day
 
-    const transactions = await Transaction.find({
-      createdAt: { $gte: targetDate, $lt: nextDay },
-    }).sort({ createdAt: -1 });
+    const transactions = await Transaction.aggregate([
+      {
+        $facet: {
+          metadata: [
+            {
+              $match: { createdAt: { $gte: targetDate, $lt: nextDay } }
+            },
+            { $count: "total" },
+            { 
+              $addFields: { 
+                page, 
+                pageSize, 
+                totalPages: { $ceil: { $divide: ["$total", pageSize] } },
+                pagesLeft: { $subtract: [{ $ceil: { $divide: ["$total", pageSize] } }, page] }
+              } 
+            }
+          ],
+          all: [
+            {
+              $match: { createdAt: { $gte: targetDate, $lt: nextDay } }
+            },
+            { $sort: { createdAt: -1 } }, // Sort by createdAt descending
+            { $skip: (page - 1) * pageSize }, // Skip records for pagination
+            { $limit: pageSize }, // Limit records per page
+          ],
+          credit: [
+            { $match: { transaction_direction: transactionDirectionTypes.credit } },
+            {
+              $match: { createdAt: { $gte: targetDate, $lt: nextDay } }
+            },
+            { $sort: { createdAt: -1 } }, // Sort by createdAt descending
+            { $skip: (page - 1) * pageSize }, // Skip records for pagination
+            { $limit: pageSize }, // Limit records per page
+          ],
+          debit: [
+            { $match: { transaction_direction: transactionDirectionTypes.debit } },
+            {
+              $match: { createdAt: { $gte: targetDate, $lt: nextDay } }
+            },
+            { $sort: { createdAt: -1 } }, // Sort by createdAt descending
+            { $skip: (page - 1) * pageSize }, // Skip records for pagination
+            { $limit: pageSize }, // Limit records per page
+          ]
+        }
+      },
+    ]);
+
+    const metadata = transactions[0].metadata;
+    const allTransactions = transactions[0].all;
+    const creditTransactions = transactions[0].credit;
+    const debitTransactions = transactions[0].debit;
+
+    const result = {
+      metadata,
+      all: allTransactions,
+      credit: creditTransactions,
+      debit: debitTransactions
+    };
 
     return res.status(200).json({
-      data: transactions,
+      data: result,
       success: true,
-      message: 'Successfully retrieved transactions for the specified day.',
+      message: date? 'Successfully retrieved transactions for the specified day.': 'Successfully retrieved transactions for the today.',
     });
   } catch (error) {
     return serverError(res, error);
