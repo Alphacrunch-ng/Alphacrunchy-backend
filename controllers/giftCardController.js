@@ -299,7 +299,7 @@ exports.addCardToGiftCardTransaction = async (req, res) => {
 
 // controller for getting a giftcard transaction
 exports.setGiftCardTransaction = async (req, res) => {
-  const { status } = req.body;
+  const { status, comment } = req.body;
   if (!Object.values(Status).includes(status)) {
     return res.status(400).json({
       success: false,
@@ -329,10 +329,12 @@ exports.setGiftCardTransaction = async (req, res) => {
         { new: true }
       );
       const giftcard = { ...updated.toObject() };
+      const approvedBy = await createApproveTransactionHelper(updated.status, updated.transaction_number, transactionTypes.giftcard, updated.user_id, comment)
       return res.status(200).json({
         message: "all cards are approved so transaction approved",
         success: true,
         data: giftcard,
+        approvedBy
       });
     } else if (checkCardsFailed) {
       const updated = await GiftCardTransaction.findByIdAndUpdate(
@@ -341,26 +343,20 @@ exports.setGiftCardTransaction = async (req, res) => {
         { new: true }
       );
       const giftcard = { ...updated.toObject() };
+      const approvedBy = await createApproveTransactionHelper(updated.status, updated.transaction_number, transactionTypes.giftcard, updated.user_id, comment)
       return res.status(200).json({
         message: "all cards are failed so transaction failed",
         success: true,
         data: giftcard,
+        approvedBy
+      });
+    } else{
+      return res.status(400).json({
+        success: false,
+        message: "card are pending approval"
       });
     }
-
-    const updated = await GiftCardTransaction.findByIdAndUpdate(
-      { _id: req.params.id },
-      { status },
-      { new: true }
-    );
-
-    const giftcard = { ...updated.toObject() };
-
-    await createApproveTransactionHelper(transaction)
-    return res.status(200).json({
-      success: true,
-      data: giftcard,
-    });
+    
   } catch (error) {
     return serverError(res, error);
   }

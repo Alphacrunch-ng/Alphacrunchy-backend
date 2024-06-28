@@ -30,7 +30,7 @@ const TransactionApprovalSchema = new mongoose.Schema(
         },
         comment: {
             type: String,
-            required: true,
+            default: "",
         },
     },
     {

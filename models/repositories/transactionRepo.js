@@ -66,6 +66,8 @@ exports.createApproveTransactionHelper = async ( status, transaction_number, tra
       comment
     });
     await ApprovedBy.save();
+
+    await ApprovedBy.populate('user_id')
     return ApprovedBy;
   } catch (error) {
     throw error;
