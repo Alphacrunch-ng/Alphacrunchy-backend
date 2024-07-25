@@ -39,7 +39,7 @@ app.use(cors({
 // }));
 
 app.use(passport.initialize());
-app.use(passport.session());
+// app.use(passport.session());
 // app.use((req, res, next) => {
 //   if (req.method === 'OPTIONS') {
 //     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH');

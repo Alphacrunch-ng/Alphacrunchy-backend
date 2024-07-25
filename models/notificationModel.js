@@ -15,18 +15,12 @@ const notificationSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  createdAt: {
-    type: Date,
-    default: Date.now()
-  },
-  modifiedAt: {
-    type: Date,
-    default: Date.now()
-  },
   active: {
     type: Boolean,
     default: true
   }
+},{
+  timestamps: true
 });
 
 //setting modifiedAt to current time after every update
