@@ -160,7 +160,6 @@ exports.loggingIn = async (request, response) => {
                     
                 } else {
                     const { token, expiresIn } = generateToken(user);
-                    user.lastLogin = today;
                     await user.save();
                     user.password = "";
                     
