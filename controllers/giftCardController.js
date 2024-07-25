@@ -71,16 +71,17 @@ exports.createGiftCardTransaction = async (req, res) => {
     const check = await Wallet.findById(receiverWalletId);
     if (check !== null) {
       //create transactiondocument
-      const transaction = await createTransaction(
-        check.user_id,
+      const transaction = await createTransaction({
+        user_id: check.user_id,
         description,
         amount,
-        operations.sellGiftcard,
-        transactionTypes.giftcard,
-        transaction_direction
-      );
+        operation: operations.sellGiftcard,
+        transaction_type: transactionTypes.giftcard,
+        transaction_direction,
+        status: Status.pending,
+      });
       // create a new GiftCardTransaction document
-     const result = await GiftCardTransaction.create(
+     await GiftCardTransaction.create(
         {
           reciever_wallet_number: check.wallet_number,
           user_id: req.user.id,
@@ -423,7 +424,7 @@ exports.getAllGiftCardTransactions = async (req, res) => {
   }
 };
 
-// approving a submitted giftcard by id
+// approving each submitted giftcard by id
 exports.setTransactionGiftCardState = async (req, res) => {
   const { id } = req.params;
   const { card_id, state } = req.body;

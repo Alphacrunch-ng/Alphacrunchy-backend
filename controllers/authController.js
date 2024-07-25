@@ -10,6 +10,10 @@ let crypto = require('crypto');
 const { authEvents } = require('../utils/events/emitters.js');
 const { events } = require('../utils/events/eventConstants.js');
 const { checkWalletHelper } = require('../models/repositories/walletRepo.js');
+const { comparePassword, hashPassword } = require('../utils/crypto/hash.js');
+const { generateToken } = require('../utils/crypto/token.js');
+const { validatePassword } = require('../utils/validators/passwordValidators/passwordValidator.js');
+const { lengthValidator, uppercaseValidator, symbolValidator, numberValidator } = require('../utils/validators/passwordValidators/passwordValidators.js');
 
 exports.walletTransactionTokenGen = async (req, res) =>{
   const { wallet_pin, wallet_number, reciever_wallet_number, amount } = req.body;
@@ -20,7 +24,7 @@ exports.walletTransactionTokenGen = async (req, res) =>{
     return userRequestError(res,'Invalid wallet number');
     }
     else{
-        let isMatched = await bcrypt.compare(wallet_pin, checkWallet.wallet_pin);
+        let isMatched = await comparePassword(wallet_pin, checkWallet.wallet_pin);
         if (!isMatched) {
             return unauthorizedError(res,"Incorrect pin");
         }
@@ -57,8 +61,10 @@ exports.walletTransactionTokenGen = async (req, res) =>{
 exports.registration = async (req, res) => {
     const { fullName, email, phoneNumber, password, sex, country, state, city } = req.body;
     const ipaddress =  req?.headers['x-forwarded-for'] || req?.connection?.remoteAddress || req?.ip;
+    const passwordValidators = [lengthValidator, uppercaseValidator, symbolValidator, numberValidator];
     let user;
     try {
+
         let checkUser = await User.findOne({ email: req.body.email});
         if (checkUser !== null) {
             return res.status(400).json({
@@ -67,8 +73,11 @@ exports.registration = async (req, res) => {
             });
         }
         else {
+            if (!validatePassword(password, passwordValidators)) {
+                return badRequestResponse(res, "Password does not meet the required criteria.")
+            }
             const otp = createOtp();
-            const hashedOtp = await bcrypt.hash(otp.toString(), 10);
+            const hashedOtp = await hashPassword(otp.toString());
             user = await User.create({
                 fullName,
                 email,
@@ -80,7 +89,7 @@ exports.registration = async (req, res) => {
                 state, 
                 city 
             });
-            authEvents.emit(events.USER_SIGNED_UP, {user, data: {useragent: req.useragent, ip: String(ipaddress).split(',')[0], otp}});
+            authEvents.emit(events.USER_SIGNED_UP, {user, data: {useragent: req.useragent, ip: String(ipaddress).split(',')[0], otp, googleAuth: false}});
             user.password = "";
             user.otp = "";
                 return res.status(201).json({
@@ -108,7 +117,7 @@ exports.loggingIn = async (request, response) => {
         const user = await User.findOne({ email: email });
         
         if (user) {
-            const isPasswordMatching = await bcrypt.compare(password, user.password);
+            const isPasswordMatching = await comparePassword(password, user.password);
             
             if (!user.confirmedEmail) {
                 return response.status(400).json({
@@ -150,23 +159,10 @@ exports.loggingIn = async (request, response) => {
 
                     
                 } else {
-                    const secret = process.env.JWT_SECRET;
-
-                    const dataStoredInToken = {
-                        id: user._id.toString(),
-                        email: user.email,
-                        fullName: user.fullName,
-                        role: user.role
-                    };
-
-                    //signing token
-                    const token = jwt.sign(dataStoredInToken,secret,{
-                        expiresIn:"7d",
-                        audience: process.env.JWT_AUDIENCE,
-                        issuer: process.env.JWT_ISSUER
-                    });
+                    const { token, expiresIn } = generateToken(user);
+                    user.lastLogin = today;
+                    await user.save();
                     user.password = "";
-                    const today = new Date();
                     
                     const userLocationDetails = {useragent, ip: String(ipaddress).split(',')[0]}
                     authEvents.emit(events.USER_LOGGED_IN, { user , data: userLocationDetails })
@@ -179,8 +175,8 @@ exports.loggingIn = async (request, response) => {
                         success: true,
                         is2FactorEnabled: false,
                         message: `Login Successfull`,
-                        token: token,
-                        expiresIn: new Date(today.getTime() + (6 * 24 * 60 * 60 * 1000)),
+                        token,
+                        expiresIn,
                         ipaddress
                     });
                 }
@@ -231,45 +227,26 @@ exports.twoFactorLoggingIn = async (request, response) => {
             }
             if (isOtpMatching) {
 
-                const secret = process.env.JWT_SECRET;
+                const { token, expiresIn } = generateToken(user);
 
-                const dataStoredInToken = {
-                    id: user._id.toString(),
-                    email: user.email,
-                    fullName: user.fullName,
-                    role: user.role
-                  };
-
-                //creating token
-                const token = jwt.sign(dataStoredInToken,secret,{
-                  expiresIn:"7d",
-                  audience: process.env.JWT_AUDIENCE,
-                  issuer: process.env.JWT_ISSUER
-                });
+                //resetting the 2 factor properties to default value
+                user.twoFactorAuth.expiresAt = 1;
+                user.twoFactorAuth.secret = "";
+                await user.save();
                 user.password = "";
-                const today = new Date();
+                
                 const userLocationDetails = {useragent, ip: String(ipaddress).split(',')[0]}
                 authEvents.emit(events.USER_LOGGED_IN, {user , data: userLocationDetails})
-                //resetting the 2 factor properties to default value
-                const updatedUser =  await User.findOneAndUpdate(
-                    { _id: user._id }, // Specify the query condition to find the user
-                    { 
-                      $unset: { 'twoFactorAuth.expiresAt': 1 }, // Unset the tempSecretExpiresAt field
-                      $set: { 'twoFactorAuth.secret': '' } // Set the secret field to an empty string
-                    },
-                    { 
-                      new: true, // Return the updated document
-                      setDefaultsOnInsert: true // Apply default values on insert
-                    }
-                ).select('-password')
 
                 return response.status(200).json({
-                    data: updatedUser,
+                    data: user,
                     wallets: checkWallets,
                     success: true,
+                    is2FactorEnabled: true,
                     message: `Login Successfull`,
-                    token: token,
-                    expiresIn: new Date(today.getTime() + (6 * 24 * 60 * 60 * 1000))
+                    token,
+                    expiresIn,
+                    ipaddress
                 });
             } else {
                 return response.status(401).json({

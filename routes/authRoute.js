@@ -1,6 +1,7 @@
 const { registration, loggingIn, confirmUserEmail, requstResetPassword, resetPassword, resetPin, changePassword, requestOtp, setup2Factor, twoFactorLoggingIn, getKycKey } = require('../controllers/authController');
 const { getUserByEmail } = require('../controllers/usersController');
 const { createWallet } = require('../controllers/walletController');
+const googleAuthRoute = require("./googleAuthRoute");
 const { auth } = require('../middlewares/auth');
 
 const router = require('express').Router();
@@ -47,5 +48,10 @@ router.post('/change-password', auth, changePassword)
 router.post('/wallet/create', auth, createWallet)
 
 router.post('/kyc-signature', auth, getKycKey);
+
+/**
+ * @url -> "/auth/google/*"
+ * */
+router.use("/google", googleAuthRoute)
 
 module.exports = router;

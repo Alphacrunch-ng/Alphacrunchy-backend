@@ -70,13 +70,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: ["true", "password is required."],
   },
-  createdAt: {
-    type: Date,
-    default: Date.now(),
-  },
-  modifiedAt: {
-    type: Date,
-    default: Date.now(),
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true, // Allows the field to be unique while still allowing null values
   },
   role: {
     type: String,
@@ -126,6 +123,8 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: new Date(),
   },
+},{
+  timestamps: true
 });
 
 //encrypts the password and sets the role
@@ -136,15 +135,37 @@ userSchema.pre("save", setRole);
 
 userSchema.pre("save", set2FA);
 
-//setting modifiedAt to current time after every update
-userSchema.pre("save", modifiedAt);
-userSchema.pre("findOneAndUpdate", function (next) {
-  this._update.modifiedAt = new Date();
-  next();
-});
+// //setting modifiedAt to current time after every update
+// userSchema.pre("save", modifiedAt);
+// userSchema.pre("findOneAndUpdate", function (next) {
+//   this._update.modifiedAt = new Date();
+//   next();
+// });
 
 //normalizing user email to lowercase every update
 userSchema.pre("save", normalizeEmail);
+
+userSchema.statics.findOrCreate = async function (profile) {
+  try {
+      let user = await this.findOne({ googleId: profile?.id, email: profile?.email });
+      if (user) {
+          return user;
+      } else {
+          user = await this.create({
+              googleId: profile?.id,
+              email: profile?.emails[0]?.value,
+              fullName: profile?.displayName,
+              role: roles.client,
+              confirmedEmail: true,
+              sex: profile?.gender 
+          });
+          return user;
+      }
+  } catch (err) {
+      throw err;
+  }
+};
+
 
 const User = mongoose.model("User", userSchema);
 

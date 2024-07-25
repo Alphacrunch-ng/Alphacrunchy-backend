@@ -8,7 +8,7 @@ const { Status, transactionTypes } = require('../../utils/constants');
 const { transactionMailer } = require('../../utils/nodeMailer');
 //Services 
 //create transaction service
-exports.createTransaction = async (user_id, description, amount , operation, transaction_type, status, transaction_number, transaction_direction)=> { // everything apart from transaction_number here is required
+exports.createTransaction = async ({user_id, description, amount , operation, transaction_type, status, transaction_number, transaction_direction})=> { // everything apart from transaction_number here is required
     try {
         const checkUser = await User.findOne({ _id: user_id}).select("-password");
         if (!checkUser) {

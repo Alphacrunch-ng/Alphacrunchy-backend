@@ -1,4 +1,6 @@
 const express = require("express");
+// const session = require('express-session');
+const passport = require('passport');
 const bodyParser = require("body-parser");
 const fs = require("fs");
 const path = require("path");
@@ -29,6 +31,15 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization", "Accept", "Accept-Language", "Accept-Encoding"],
   exposedHeaders: ["Content-Type", "Authorization", "Accept", "Accept-Language", "Accept-Encoding"],
 }));
+// app.use(session({ 
+//   secret: 'your-secret-key', 
+//   resave: false, 
+//   saveUninitialized: false,
+//   cookie: { secure: false } // secure should be true in production with HTTPS
+// }));
+
+app.use(passport.initialize());
+app.use(passport.session());
 // app.use((req, res, next) => {
 //   if (req.method === 'OPTIONS') {
 //     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH');

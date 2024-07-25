@@ -5,6 +5,9 @@ const bitpowrWebhookSecret = process.env.BITPOWR_WEBHOOK_SECRET;
 
 exports.auth = async (req, res, next) => {
     try {
+        if (req.isAuthenticated()) {
+            return next();
+        }
         const token = req.header('Authorization')?.replace('Bearer ', '');
         const decoded = JWT.verify(token, secret, {
             issuer: process.env.JWT_ISSUER,

@@ -12,7 +12,7 @@ exports.creditWalletHelper = async (wallet_number, amount, transaction_number, r
         const description = `${amount} credited to wallet`;
         const creditWallet = await Wallet.findOneAndUpdate({wallet_number},  { $inc: { balance: amount } }, { new: true }).select("-wallet_pin");
 
-        const creditTransaction = await createTransaction(creditWallet.user_id, description, amount, operations.credit, transactionTypes.wallet, Status.successful, transaction_number, transactionDirectionTypes.credit);
+        const creditTransaction = await createTransaction({user_id: creditWallet.user_id, description, amount, operation: operations.credit, transaction_type: transactionTypes.wallet, status: Status.successful, transaction_number, transaction_direction: transactionDirectionTypes.credit});
         const walletTransaction = await this.createWalletTransaction(wallet_number, wallet_number, amount, description, creditTransaction.transaction_number, reciever_acn)
         await createNotification(creditWallet.user_id, `credited with ${amount}`);
 
@@ -44,7 +44,7 @@ exports.debitWalletHelper = async ( wallet_number, amount, transaction_number, r
         const description = `${amount} debited from wallet`;
         const debitWallet = await Wallet.findOneAndUpdate({ wallet_number },  { $inc: { balance: -amount } }, { new: true }).select("-wallet_pin");
 
-        const debitTransaction = await createTransaction(debitWallet.user_id, description, amount, operations.debit, transactionTypes.wallet, Status.successful, transaction_number, transactionDirectionTypes.debit);
+        const debitTransaction = await createTransaction({ user_id: debitWallet.user_id, description, amount, operation: operations.debit, transaction_type: transactionTypes.wallet, status: Status.successful, transaction_number, transaction_direction: transactionDirectionTypes.debit});
         const walletTransaction = await createWalletTransaction(wallet_number, wallet_number, amount, description, debitTransaction.transaction_number, reciever_acn)
         await createNotification(debitWallet.user_id, `debited with ${amount}`);
         return { debitWallet, debitTransaction, walletTransaction };
@@ -85,4 +85,13 @@ exports.createWalletTransaction = async (sender_wallet_number, reciever_wallet_n
         throw error;
     }
 
+}
+
+exports.getUserWalletsHelper = async (user_id) => {
+    try{
+        const wallets = await Wallet.find({ user_id }).select("-wallet_pin");
+        return wallets;
+    } catch (error){
+        throw error;
+    }
 }

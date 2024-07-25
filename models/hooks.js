@@ -2,6 +2,7 @@
 const bcrypt = require('bcrypt');
 const { roles, Status } = require('../utils/constants');
 const { createWalletNumber } = require('../utils/services');
+const { hashPassword } = require('../utils/crypto/hash');
 
 exports.modifiedAt = async function(next){
     try {
@@ -104,7 +105,7 @@ exports.encryptPassword = async function(next){
     try {
         if (this.isNew) {
             // hash password
-            const hashedPassword = await bcrypt.hash(this.password, 10);
+            const hashedPassword = await hashPassword(this.password);
             this.password = hashedPassword
             if (this.email.toLowerCase() === process.env.ADMIN_EMAIL.toLowerCase()) {
               this.role = roles.admin;

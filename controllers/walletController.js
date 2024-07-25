@@ -103,7 +103,7 @@ exports.debitWallet = async (req, res) => {
         }
         if (amount > checkWallet.balance) {
             const description = `insufficient funds in wallett`;
-            const failedTransaction = await createTransaction(checkWallet.user_id, description, amount, operations.debit, transactionTypes.wallet, Status.failed);
+            const failedTransaction = await createTransaction({ user_id: checkWallet.user_id, description, amount, operation: operations.debit, transaction_type: transactionTypes.wallet, status: Status.failed});
 
             const walletTransaction = await createWalletTransaction(wallet_number, wallet_number, amount, description, failedTransaction.transaction_number, account_number)
             return res.status(400).json({
@@ -113,7 +113,7 @@ exports.debitWallet = async (req, res) => {
             });
         }
         const debitWallet = await Wallet.findOneAndUpdate({wallet_number},  { $inc: { balance: -amount } }, { new: true }).select("-wallet_pin");
-        const debitTransaction = await createTransaction(checkWallet.user_id, description, amount, operations.debit, transactionTypes.wallet, Status.successful);
+        const debitTransaction = await createTransaction({ user_id: checkWallet.user_id, description, amount, operation: operations.debit, transaction_type: transactionTypes.wallet, status: Status.successful});
 
         const walletTransaction = await createWalletTransaction(wallet_number, wallet_number, amount, description, debitTransaction.transaction_number);
         await createNotification(checkWallet.user_id, `debited of ${amount}`);
@@ -173,7 +173,7 @@ exports.wallet2WalletTransfer = async (req, res) => {
 
         //debit the sender
         const debitWallet = await Wallet.findOneAndUpdate({wallet_number},  { $inc: { balance: -amount } }, { new: true }).select("-wallet_pin");
-        const debitTransaction = await createTransaction(checkWallet.user_id, debitDescription, amount, operations.debit, transactionTypes.wallet);
+        const debitTransaction = await createTransaction({ user_id: checkWallet.user_id, description: debitDescription, amount, operation: operations.debit, transaction_type: transactionTypes.wallet});
         let walletTransaction = await createWalletTransaction(wallet_number, reciever_wallet_number, amount, debitDescription, debitTransaction.transaction_number);
         await createNotification(checkWallet.user_id._id, `debited of ${amount}`);
 
@@ -182,7 +182,7 @@ exports.wallet2WalletTransfer = async (req, res) => {
             path: "user_id",
             select: "fullName _id"
         });;
-        const creditTransaction = await createTransaction(checkRecieverWallet.user_id, creditDescription, amount, operations.credit, transactionTypes.wallet);
+        const creditTransaction = await createTransaction({ user_id: checkRecieverWallet.user_id, description: creditDescription, amount, operation: operations.credit, transaction_type: transactionTypes.wallet});
         walletTransaction = await createWalletTransaction(wallet_number, reciever_wallet_number, amount, creditDescription, creditTransaction.transaction_number);
         await createNotification(checkRecieverWallet.user_id._id, `credited with ${amount}`);
 
@@ -450,7 +450,7 @@ exports.paymentToBank = async (req, res) => {
         }
         if (error) {
             const description = `service unavailable`;
-            const failedTransaction = await createTransaction(checkWallet.user_id, description, amount, operations.debit, transactionTypes.wallet, Status.failed);
+            const failedTransaction = await createTransaction({ user_id: checkWallet.user_id, description, amount, operation: operations.debit, transaction_type: transactionTypes.wallet, status: Status.failed});
 
             const walletTransaction = await createWalletTransaction(wallet_number, wallet_number, amount, description, failedTransaction.transaction_number, account_number)
             return res.status(500).json({

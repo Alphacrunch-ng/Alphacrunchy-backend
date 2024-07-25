@@ -26,13 +26,15 @@ authEvents.on(events.USER_LOGGED_IN, async ({user, data})=> {
 
 authEvents.on(events.USER_SIGNED_UP, async ({user, data})=>{
 
-    const { useragent, ip ,otp} = data;
+    const { useragent, ip ,otp, googleAuth} = data;
     const { fullName, email } = user;
     const deviceInfo = getUserDeviceInfo(useragent);
     const userLocation = await getUserLocation(ip);
 
     try {
-        signUpMailer(fullName, email, otp, deviceInfo, userLocation);
+        if(!googleAuth){
+            signUpMailer(fullName, email, otp, deviceInfo, userLocation);
+        }
         await createWalletHelper(user?._id);
         await createBroadcast({
             title: "change default pin",

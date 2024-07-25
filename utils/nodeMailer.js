@@ -1,28 +1,28 @@
 const nodemailer = require("nodemailer");
 const { product_name } = require("./constants");
 
-exports.signUpMailer = (name, email, token, deviceInfo, userLocation) => {
+exports.signUpMailer = async (name, email, token, deviceInfo, userLocation) => {
   const message = `
     <h1> Welcome to ${product_name}. ${name}</h1>
     <p>Your account has been sucessfully created</p>
-    <p>Here is your token to set your password : ${token}</p>
+    ${`<p>Here is your token to set your password : ${token}</p>` && token}
     ${deviceInfoMarkup(deviceInfo, userLocation)}
     `;
   // setup email data with unicode symbols
   let mailOptions = {
     from: `"Cambio" <${process.env.SENDER_EMAIL}>`, // sender address
-    to: `${email}`, // list of recievedRequest
-    subject: "Cambio Sign-up notification", //
+    to: `${email}`,
+    subject: "Cambio Sign-up notification",
     text: `Welcome ${name}, Your account has been created`, // subject
     html: message, // html body
   };
 
   // create reusable transporter object using the default smtp transport
-  transportSender(mailOptions);
+  await transportSender(mailOptions);
 };
 
 //email sender for reset password
-exports.resetPasswordMailer = (email, token) => {
+exports.resetPasswordMailer = async (email, token) => {
   const message = `
     <h1>${product_name}.</h1>
     <p>Your OTP is <b>${token}</b> to reset your password. </p>
@@ -38,11 +38,11 @@ exports.resetPasswordMailer = (email, token) => {
   };
 
   // create reusable transporter object using the default smtp transport
-  transportSender(mailOptions);
+  await transportSender(mailOptions);
 };
 
 //general purpose mailer for otp
-exports.otpMailer = (email, token) => {
+exports.otpMailer = async (email, token) => {
   const message = `
     <h1>${product_name}.</h1>
     <p>Your OTP is <b>${token}</b></p>
@@ -58,10 +58,10 @@ exports.otpMailer = (email, token) => {
   };
 
   // create reusable transporter object using the default smtp transport
-  return transportSender(mailOptions);
+  return await transportSender(mailOptions);
 };
 
-exports.noticeMailer = (email, operation) => {
+exports.noticeMailer = async (email, operation) => {
   const message = `
       <div>
             <h1>Notification From ${product_name} App</h1>
@@ -80,7 +80,7 @@ exports.noticeMailer = (email, operation) => {
   };
 
   // create reusable transporter object using the default smtp transport
-  transportSender(mailOptions);
+  await transportSender(mailOptions);
 };
 
 exports.kycMailer = (email, operation, msg) => {
@@ -182,7 +182,7 @@ exports.loginNotificationMailer = async (
   transportSender(mailOptions);
 };
 
-const transportSender = (mailOptions) => {
+const transportSender = async (mailOptions) => {
   // create reusable transporter object using the default smtp transport
   let transport = nodemailer.createTransport({
     service: "gmail",
@@ -192,7 +192,7 @@ const transportSender = (mailOptions) => {
     },
   });
   // send mail with defined transport object
-  return transport.sendMail(mailOptions);
+  return await transport.sendMail(mailOptions);
 };
 
 const deviceInfoMarkup = (deviceInfo, userLocation) => `
