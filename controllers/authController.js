@@ -160,12 +160,11 @@ exports.loggingIn = async (request, response) => {
                     
                 } else {
                     const { token, expiresIn } = generateToken(user);
-                    await user.save();
                     user.password = "";
-                    
-                    const userLocationDetails = {useragent, ip: String(ipaddress).split(',')[0]}
-                    authEvents.emit(events.USER_LOGGED_IN, { user , data: userLocationDetails })
 
+                    const userLocationDetails = { useragent, ip: String(ipaddress).split(',')[0] }
+                    authEvents.emit( events.USER_LOGGED_IN, { user , data: userLocationDetails } )
+                    
                     const checkWallets = await Wallet.find({user_id: user._id}).select("-wallet_pin");
 
                     return response.status(200).json({
