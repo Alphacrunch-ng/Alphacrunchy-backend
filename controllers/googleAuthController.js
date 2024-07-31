@@ -25,7 +25,7 @@ exports.googleLoginCallback = async (req, res, next) => {
           authEvents.emit(events.USER_LOGGED_IN, { user: checkUser, data: { ...userLocationDetails, googleAuth: true} });
       
           const checkWallets = await getUserWalletsHelper(user?._id);
-          checkUser.passpord = "";
+          checkUser.password = "";
           return res.status(200).json({
               data: checkUser,
               wallets: checkWallets,
