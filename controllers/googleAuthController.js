@@ -16,7 +16,7 @@ exports.googleLoginCallback = async (req, res, next) => {
           if (err) return next(err);
           if (!user) return res.status(400).json({ message: 'User not found' });
 
-          const checkUser = await getUserByGoogleIdHelper(user.googleId)
+          let checkUser = await getUserByGoogleIdHelper(user.googleId)
           if (!checkUser) return res.status(400).json({ message: 'User not found' });
 
           const { token, expiresIn } = generateToken(checkUser);
@@ -25,8 +25,9 @@ exports.googleLoginCallback = async (req, res, next) => {
           authEvents.emit(events.USER_LOGGED_IN, { user: checkUser, data: { ...userLocationDetails, googleAuth: true} });
       
           const checkWallets = await getUserWalletsHelper(user?._id);
+          checkUser.passpord = "";
           return res.status(200).json({
-              data: user,
+              data: checkUser,
               wallets: checkWallets,
               success: true,
               is2FactorEnabled: false,
