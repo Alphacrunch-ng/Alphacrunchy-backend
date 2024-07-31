@@ -1,5 +1,6 @@
 const User = require('../userModel');
 const { roles } = require('../../utils/constants');
+const { hashPassword } = require('../../utils/crypto/hash');
 
 /**
  * Finds a user by their email address.
@@ -72,6 +73,7 @@ const createUserHelper = async ({
   confirmedEmail,
 } = {}) => {
   try {
+    
     const userData = {
       ...(fullName && { fullName }),
       ...(firstName && { firstName }),

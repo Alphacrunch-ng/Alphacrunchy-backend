@@ -42,7 +42,9 @@ authEvents.on(events.USER_SIGNED_UP, async ({user, data})=>{
             type: broadcastTypes.alert,
             audience: broadcastAudiences.specific,
             targetUser: user?._id,
-            status: broadcastStatus.published
+            status: broadcastStatus.published,
+            scheduledTime: new Date(Date.now() + 5000)
+            
         });
     } catch (error) {
         console.log(error)

@@ -6,8 +6,6 @@ const router = require('express').Router();
  * components:
  *  schemas: 
  */
-// Initiate Google authentication
-router.get('/', googleAuth);
 
 /**
 * @url = "/auth/google/callback" - Google callback URL

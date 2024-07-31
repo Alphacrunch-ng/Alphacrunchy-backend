@@ -5,11 +5,13 @@ const googleAuthRoute = require("./googleAuthRoute");
 const { auth } = require('../middlewares/auth');
 
 const router = require('express').Router();
+
+
 /**
  * @swagger
  * components:
  *  schemas: 
- */
+*/
 
 // register a user
 router.post('/signup', registration);
@@ -52,6 +54,6 @@ router.post('/kyc-signature', auth, getKycKey);
 /**
  * @url -> "/auth/google/*"
  * */
-router.use("/google", googleAuthRoute)
+router.use("/google", googleAuthRoute);
 
 module.exports = router;

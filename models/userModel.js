@@ -51,7 +51,7 @@ const userSchema = new mongoose.Schema({
   },
   phoneNumber: {
     type: String,
-    required: ["true", "phone number is required."],
+    // required: ["true", "phone number is required."],
   },
   country: {
     type: String,
