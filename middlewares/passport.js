@@ -1,6 +1,5 @@
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const User = require('../models/userModel');
 const { roles } = require('../utils/constants');
 
 passport.use("google-signup",new GoogleStrategy({

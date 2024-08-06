@@ -8,7 +8,8 @@ const Wallet = require("../models/walletModel.js");
 const { serverError } = require("../utils/services.js");
 const GiftCardTransaction = require("../models/giftcardTransactionModel");
 const { createTransaction,/**, checkTransactionHelper**/ 
-createApproveTransactionHelper} = require("../models/repositories/transactionRepo");
+createApproveTransactionHelper,
+updateTransactionAmountHelper} = require("../models/repositories/transactionRepo");
 const { Status, operations, transactionTypes, transactionDirectionTypes } = require("../utils/constants");
 const { getCacheData, setCacheData } = require("../utils/cache");
 const ObjectId = mongoose.Types.ObjectId;

@@ -82,9 +82,9 @@ const giftcardTransactionSchema = new mongoose.Schema({
 //setting totals to current cards after every update
 giftcardTransactionSchema.pre('save', sum);
 
-// check each card statuses and sets to approve if all are approved and fail if all are fail
-giftcardTransactionSchema.pre('save', updateGiftcardTransactionStatus);
-giftcardTransactionSchema.pre('findOneAndUpdate', checkAndUpdateGiftcardTransactionStatus);
+// // check each card statuses and sets to approve if all are approved and fail if all are fail
+// giftcardTransactionSchema.pre('save', updateGiftcardTransactionStatus);
+// giftcardTransactionSchema.pre('findOneAndUpdate', checkAndUpdateGiftcardTransactionStatus);
 
 //setting modifiedAt to current time after every update
 giftcardTransactionSchema.pre('save', modifiedAt);
