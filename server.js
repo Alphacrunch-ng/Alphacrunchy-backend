@@ -19,17 +19,17 @@ const { roles } = require("./utils/constants.js");
 const app = express();
 // app.use(cors({ origin: "*" }));
 app.options('*', cors({
-  headers: ['Content-Type', 'Authorization'], // sets the Access-Control-Allow-Headers header
-  methods: ['GET', 'POST', 'PUT','PATCH', 'DELETE'] // sets the Access-Control-Allow-Methods header
+  headers: ['Content-Type', 'Authorization', '*'], // sets the Access-Control-Allow-Headers header
+  methods: ['GET', 'POST', 'PUT','PATCH', 'DELETE', '*'] // sets the Access-Control-Allow-Methods header
 }))
 app.use(cors({
   origin: [
     "https://cambio.ng",
     "https://admin-alpha-crunch.netlify.app",
     "http://localhost:3001",
-    "http://localhost:3000", "*"],
-  allowedHeaders: ["Content-Type", "Authorization", "Accept", "Accept-Language", "Accept-Encoding"],
-  exposedHeaders: ["Content-Type", "Authorization", "Accept", "Accept-Language", "Accept-Encoding"],
+    "http://localhost:3000"],
+  allowedHeaders: ["Content-Type", "Authorization", "Accept", "Accept-Language", "Accept-Encoding", "*"],
+  exposedHeaders: ["Content-Type", "Authorization", "Accept", "Accept-Language", "Accept-Encoding", "*"],
 }));
 // app.use(session({ 
 //   secret: 'your-secret-key', 
