@@ -1,4 +1,4 @@
-const { googleAuth, googleLoginCallback, googleSignupCallback } = require('../controllers/googleAuthController');
+const { googleLoginCallback, googleSignupCallback } = require('../controllers/googleAuthController');
 const router = require('express').Router();
 
 /**
@@ -10,8 +10,8 @@ const router = require('express').Router();
 /**
 * @url = "/auth/google/callback" - Google callback URL
 */
-router.get('/signup/callback', googleSignupCallback);  // For signup
+router.post('/signup/callback', googleSignupCallback);  // For signup
 
-router.get('/login/callback', googleLoginCallback); // For login
+router.post('/login/callback', googleLoginCallback); // For login
 
 module.exports = router;
