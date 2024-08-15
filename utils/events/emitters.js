@@ -34,8 +34,8 @@ authEvents.on(events.USER_SIGNED_UP, async ({user, data})=>{
     try {
         if(!googleAuth){
             signUpMailer(fullName, email, otp, deviceInfo, userLocation);
+            await createWalletHelper(user?._id);
         }
-        await createWalletHelper(user?._id);
         await createBroadcast({
             title: "change default pin",
             message: `change default wallet pin from ${DEFAULT_WALLET_PIN}`,

@@ -2,7 +2,7 @@ const { verifyGoogleToken, fetchIdToken } = require('../middlewares/googleAuth')
 const { generateToken } = require('../utils/crypto/token');
 const { authEvents } = require('../utils/events/emitters');
 const { events } = require('../utils/events/eventConstants');
-const { getUserWalletsHelper } = require('../models/repositories/walletRepo');
+const { getUserWalletsHelper, createWalletHelper } = require('../models/repositories/walletRepo');
 const { getUserByEmailHelper, getUserByGoogleIdHelper, createUserHelper, deleteUserByIdHelper } = require('../models/repositories/userRepo');
 const { serverError } = require('../utils/services');
 
@@ -57,10 +57,11 @@ exports.googleSignupCallback = async (req, res) => {
         createdUser = newUser;
         authEvents.emit(events.USER_SIGNED_UP, {user: newUser, data: {useragent, ip: String(ipaddress).split(',')[0], otp: null, googleAuth: true}});
         const { token, expiresIn } = generateToken(createdUser);
-        const checkWallets = await getUserWalletsHelper(createdUser?._id);
+        const wallet = await createWalletHelper(createdUser?._id);
+        // const checkWallets = await getUserWalletsHelper(createdUser?._id);
         return res.status(201).json({
             data: createdUser,
-            wallets: checkWallets,
+            wallets: [wallet],
             success: true,
             is2FactorEnabled: false,
             token,
