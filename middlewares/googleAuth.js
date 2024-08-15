@@ -1,5 +1,5 @@
 const { OAuth2Client } = require('google-auth-library');
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, 'postmessage');
 
 async function verifyGoogleToken(idToken) {
   const ticket = await client.verifyIdToken({
@@ -15,6 +15,12 @@ async function verifyGoogleToken(idToken) {
   };
 }
 
+const fetchIdToken = async (code) => {
+  const tokenInfo = await client.getToken(code);
+  return tokenInfo.tokens.id_token;
+};
+
 module.exports = {
   verifyGoogleToken,
+  fetchIdToken
 };

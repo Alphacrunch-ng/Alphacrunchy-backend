@@ -27,7 +27,7 @@ app.use(cors({
     "https://cambio.ng",
     "https://admin-alpha-crunch.netlify.app",
     "http://localhost:3001",
-    "http://localhost:3000"],
+    "http://localhost:3000", "*"],
   allowedHeaders: ["Content-Type", "Authorization", "Accept", "Accept-Language", "Accept-Encoding", "*"],
   exposedHeaders: ["Content-Type", "Authorization", "Accept", "Accept-Language", "Accept-Encoding", "*"],
 }));

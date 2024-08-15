@@ -1,4 +1,4 @@
-const { verifyGoogleToken } = require('../middlewares/googleAuth');
+const { verifyGoogleToken, fetchIdToken } = require('../middlewares/googleAuth');
 const { generateToken } = require('../utils/crypto/token');
 const { authEvents } = require('../utils/events/emitters');
 const { events } = require('../utils/events/eventConstants');
@@ -9,8 +9,11 @@ const { serverError } = require('../utils/services');
 exports.googleLoginCallback = async (req, res) => {
     const ipaddress =  req?.headers['x-forwarded-for'] || req?.connection?.remoteAddress || req?.ip;
     const useragent = req?.useragent;
-    const idToken = req.body.idToken; // Assuming idToken is sent in the request body
+    let { idToken, code} = req.body; // Assuming idToken is sent in the request body
     try {
+        if(code){
+          idToken = await fetchIdToken(code);
+        }
         const user = await verifyGoogleToken(idToken);
         let checkUser = await getUserByGoogleIdHelper(user.googleId);
         if (!checkUser) return res.status(400).json({ message: 'User not found' });
@@ -20,7 +23,7 @@ exports.googleLoginCallback = async (req, res) => {
         const userLocationDetails = { useragent, ip: String(ipaddress).split(',')[0] };
         authEvents.emit(events.USER_LOGGED_IN, { user: checkUser, data: { ...userLocationDetails, googleAuth: true} });
     
-        const checkWallets = await getUserWalletsHelper(user?._id);
+        const checkWallets = await getUserWalletsHelper(checkUser?._id);
         checkUser.password = "";
         return res.status(200).json({
             data: checkUser,
@@ -40,20 +43,29 @@ exports.googleLoginCallback = async (req, res) => {
 exports.googleSignupCallback = async (req, res) => {
     const ipaddress =  req?.headers['x-forwarded-for'] || req?.connection?.remoteAddress || req?.ip;
     const useragent = req?.useragent;
-    const idToken = req.body.idToken; // Assuming idToken is sent in the request body
+    let { idToken, code} = req.body; // Assuming idToken is sent in the request body
     let createdUser;
     try {
-        const user = await verifyGoogleToken(idToken);
+      if(code){
+        idToken = await fetchIdToken(code);
+      }
+      const user = await verifyGoogleToken(idToken);
         const existingUser = await getUserByEmailHelper({email: user.email});
         if (existingUser) return res.status(400).json({ message: 'User already exists' });
     
         const newUser = await createUserHelper({ ...user, password: user.googleId, confirmedEmail: true });
         createdUser = newUser;
         authEvents.emit(events.USER_SIGNED_UP, {user: newUser, data: {useragent, ip: String(ipaddress).split(',')[0], otp: null, googleAuth: true}});
-    
+        const { token, expiresIn } = generateToken(createdUser);
+        const checkWallets = await getUserWalletsHelper(createdUser?._id);
         return res.status(201).json({
-            data: newUser,
+            data: createdUser,
+            wallets: checkWallets,
             success: true,
+            is2FactorEnabled: false,
+            token,
+            expiresIn,
+            ipaddress,
             message: `Successfully created user`,
         });
     } catch (error) {
