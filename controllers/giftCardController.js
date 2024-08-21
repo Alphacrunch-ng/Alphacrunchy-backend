@@ -5,7 +5,7 @@ const GiftCard = require("../models/giftCardModel");
 const GiftCardRate = require("../models/giftCardRateModel");
 const cloudinary = require("../middlewares/cloudinary.js");
 const Wallet = require("../models/walletModel.js");
-const { serverError } = require("../utils/services.js");
+const { serverErrorResponse: serverError, badRequestResponse } = require("../utils/services.js");
 const GiftCardTransaction = require("../models/giftcardTransactionModel");
 const { createTransaction,/**, checkTransactionHelper**/ 
 createApproveTransactionHelper,
@@ -14,6 +14,7 @@ const { Status, operations, transactionTypes, transactionDirectionTypes } = requ
 const { getCacheData, setCacheData } = require("../utils/cache");
 const ObjectId = mongoose.Types.ObjectId;
 const SupportedCurrencies = require("../utils/currencies.json");
+const { findGiftCardRateById } = require("../models/repositories/giftcardRepo.js");
 // const { creditWalletHelper } = require("./walletController.js");
 
 
@@ -62,6 +63,7 @@ exports.createGiftCardTransaction = async (req, res) => {
     total_amount,
     cards,
     description,
+    card_rate_id
   } = req.body;
 
   const transaction_direction = transactionDirectionTypes.credit;
@@ -69,7 +71,12 @@ exports.createGiftCardTransaction = async (req, res) => {
 
 
   try {
+    const checkCardRate = await findGiftCardRateById({id: card_rate_id});
+    if (!checkCardRate){
+      return badRequestResponse({ res, message: "giftcard rate not found"})
+    }
     const check = await Wallet.findById(receiverWalletId);
+    
     if (check !== null) {
       //create transactiondocument
       const transaction = await createTransaction({
@@ -82,7 +89,7 @@ exports.createGiftCardTransaction = async (req, res) => {
         status: Status.pending,
       });
       // create a new GiftCardTransaction document
-     await GiftCardTransaction.create(
+      GiftCardTransaction.create(
         {
           reciever_wallet_number: check.wallet_number,
           user_id: req.user.id,
@@ -325,11 +332,9 @@ exports.setGiftCardTransaction = async (req, res) => {
       (card) => card.state === Status.failed
     );
     if (checkCardsApproved) {
-      const updated = await GiftCardTransaction.findByIdAndUpdate(
-        { _id: req.params.id },
-        { status: Status.approved },
-        { new: true }
-      );
+      check.status = Status.approved;
+      check.save();
+      const updated = check;
       const giftcard = { ...updated.toObject() };
       const approvedBy = await createApproveTransactionHelper(updated.status, updated.transaction_number, transactionTypes.giftcard, updated.user_id, comment)
       return res.status(200).json({
@@ -339,11 +344,9 @@ exports.setGiftCardTransaction = async (req, res) => {
         approvedBy
       });
     } else if (checkCardsFailed) {
-      const updated = await GiftCardTransaction.findByIdAndUpdate(
-        { _id: req.params.id },
-        { status: Status.failed },
-        { new: true }
-      );
+      check.status = Status.failed;
+      check.save();
+      const updated = check;
       const giftcard = { ...updated.toObject() };
       const approvedBy = await createApproveTransactionHelper(updated.status, updated.transaction_number, transactionTypes.giftcard, updated.user_id, comment)
       return res.status(200).json({

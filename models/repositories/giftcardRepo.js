@@ -1,4 +1,5 @@
 const GiftCardTransaction = require("../giftcardTransactionModel");
+const GiftCardRate = require("../giftCardRateModel");
 
 exports.updateGiftCardTransactionPaidAmount = async (transaction_number, amount) => {
     try {
@@ -14,3 +15,16 @@ exports.updateGiftCardTransactionPaidAmount = async (transaction_number, amount)
         throw error;
     }
 }
+
+exports.findGiftCardRateById = async ({ id }) => {
+    try {
+
+        const giftcardRate = await GiftCardRate.findById(id);
+        if (!giftcardRate){
+            throw new Error("GiftCard Rate not found");
+        }
+        return giftcardRate;
+    } catch (error) {
+        throw error;
+    }
+} 

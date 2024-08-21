@@ -10,7 +10,7 @@ function generateRandomString(length) {
     .slice(0, length); // return required number of characters
 }
 
-exports.serverError = async (res, error) => {
+exports.serverErrorResponse = async (res, error) => {
   return res.status(500).json({
     success: false,
     message: "An error occured, we are working on it",
@@ -18,7 +18,21 @@ exports.serverError = async (res, error) => {
     data: error.data
   });
 };
-exports.userRequestError = async (res, message) => {
+exports.successResponse = async ({res, data, message }) => {
+  return res.status(200).json({
+    success: true,
+    message: message,
+    data: data
+  });
+};
+exports.createdSuccessFullyResponse = async ({res, data, message }) => {
+  return res.status(201).json({
+    success: true,
+    message: message,
+    data: data
+  });
+};
+exports.badRequestResponse = async ({res, message}) => {
   return res.status(400).json({
     success: false,
     message

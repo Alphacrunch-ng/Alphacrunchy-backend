@@ -73,6 +73,9 @@ const giftcardTransactionSchema = new mongoose.Schema({
         },
         default: Status.pending
     },
+    card_rate_id: {
+        type: mongoose.Schema.Types.ObjectId, ref: 'GiftCardRate'
+    },
     active : {
         type: Boolean,
         default: true
