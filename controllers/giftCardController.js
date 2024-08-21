@@ -60,14 +60,12 @@ exports.createGiftCardTransaction = async (req, res) => {
   const {
     receiverWalletId,
     giftcard_id,
-    total_amount,
     cards,
     description,
     card_rate_id
   } = req.body;
 
   const transaction_direction = transactionDirectionTypes.credit;
-  const amount = total_amount;
 
 
   try {
@@ -78,41 +76,36 @@ exports.createGiftCardTransaction = async (req, res) => {
     const check = await Wallet.findById(receiverWalletId);
     
     if (check !== null) {
-      //create transactiondocument
-      const transaction = await createTransaction({
-        user_id: check.user_id,
-        description,
-        amount,
-        operation: operations.sellGiftcard,
-        transaction_type: transactionTypes.giftcard,
-        transaction_direction,
-        status: Status.pending,
-      });
       // create a new GiftCardTransaction document
-      GiftCardTransaction.create(
+      const giftcardTransaction = await GiftCardTransaction.create(
         {
           reciever_wallet_number: check.wallet_number,
           user_id: req.user.id,
           giftcard_id,
           cards: cards,
-          transaction_number: transaction.transaction_number,
-          total_amount_expected: amount,
+          card_rate_id,
           description: description,
+      });
+      //create transactiondocument
+      const transaction = await createTransaction({
+        user_id: check.user_id,
+        description,
+        amount: giftcardTransaction.total_amount_expected,
+        operation: operations.sellGiftcard,
+        transaction_type: transactionTypes.giftcard,
+        transaction_direction,
+        status: Status.pending,
+      });
+      giftcardTransaction.transaction_number = transaction.transaction_number;
+      await giftcardTransaction.save();
+      return res.status(201).json({
+        data: {
+          giftcardTransaction, 
+          transaction
         },
-        async (error, result) => {
-          if (error) {
-            console.log(error);
-            return serverError(res, error);
-          } else {
-            return res.status(201).json({
-              data: result,
-              transaction,
-              success: true,
-              message: "giftcard transaction initiallized.",
-            });
-          }
-        }
-      );
+        success: true,
+        message: "giftcard transaction initiallized.",
+      });
     } else {
       return res.status(400).json({
         success: false,

@@ -2,11 +2,12 @@
 // importing mongoose
 const mongoose = require('mongoose');
 const { Status } = require('../utils/constants');
-const { modifiedAt, sum, updateGiftcardTransactionStatus, checkAndUpdateGiftcardTransactionStatus } = require('./hooks');
+const { modifiedAt, sum } = require('./hooks');
 
 const cardItemSchema = new mongoose.Schema({
     card_item : {
-        type: String // if card type is e-code then this would be an array of e-codes in string else it would be an array of the picture cloud_url
+        type: String, // if card type is e-code then this would be an array of e-codes in string else it would be an array of the picture cloud_url
+        unique: true
     },
     amount : {
         type: Number,

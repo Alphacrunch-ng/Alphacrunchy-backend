@@ -17,8 +17,7 @@ exports.modifiedAt = async function(next){
 
 exports.sum = async function(next){
     try {
-        // Populate the cards with their rates
-        await this.populate('cards.item_card_rate');
+        await this.populate('card_rate_id');
         
         // Now cards will be populated
         const cards = this.cards;
@@ -28,10 +27,12 @@ exports.sum = async function(next){
         
         let totalAmountExpected = 0;
         let totalAmount = 0;
+        // Assuming this.card_rate_id.rate is populated
+        const rate = this.card_rate_id.rate;
         
         cards.forEach(card => {
-            // Assuming card.item_card_rate is populated
-            totalAmountExpected += card.amount * card.item_card_rate.rate;
+            
+            totalAmountExpected += card.amount * rate;
             if (card.state === Status.approved) {
                 totalAmount += card.amount;
             }
