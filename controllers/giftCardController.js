@@ -269,7 +269,7 @@ exports.getGiftCardTransaction = async (req, res) => {
 exports.addCardToGiftCardTransaction = async (req, res) => {
   try {
     const { id } = req.params;
-    const { card_item, amount, item_card_rate } = req.body;
+    const { card_item, amount } = req.body;
 
     const giftCardTransaction = await GiftCardTransaction.findById(id);
     if (!giftCardTransaction) {
@@ -282,7 +282,6 @@ exports.addCardToGiftCardTransaction = async (req, res) => {
     const newCard = {
       card_item,
       amount,
-      item_card_rate,
     };
 
     giftCardTransaction.cards.push(newCard);
