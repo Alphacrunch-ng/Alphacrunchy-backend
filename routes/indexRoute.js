@@ -11,6 +11,7 @@ const walletRoute = require("./walletRoute");
 const cryptoRoute = require("./cryptoRoute");
 const faqRoute = require("./faqRoute");
 const broadcastRoute = require("./broadcastRoute")
+const logRoute = require("./logRoute")
 const { auth, authRoles } = require("../middlewares/auth");
 const { roles } = require("../utils/constants");
 const { changeAllUserId } = require("../controllers/messagesController");
@@ -41,20 +42,10 @@ router.use("/transaction", transactionRoute);
 router.use("/back-door", auth, authRoles(roles.admin), adminRoute);
 
 //user routes
-router.use(
-  "/user",
-  auth,
-  authRoles(roles.admin, roles.client, roles.staff),
-  userRoute
-);
+router.use("/user", auth, authRoles(roles.admin, roles.client, roles.staff), userRoute);
 
 //admin routes
-router.use(
-  "/wallet",
-  auth,
-  authRoles(roles.admin, roles.client, roles.staff),
-  walletRoute
-);
+router.use("/wallet", auth, authRoles(roles.admin, roles.client, roles.staff), walletRoute);
 
 router.use("/image", imageRoute);
 
@@ -67,5 +58,7 @@ router.use("/faq", faqRoute);
 router.use("/broadcast", broadcastRoute);
 
 router.use("/crypto", cryptoRoute);
+
+router.use("/logs", logRoute)
 
 module.exports = router;
