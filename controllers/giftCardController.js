@@ -245,7 +245,16 @@ exports.getGiftCardTransaction = async (req, res) => {
         message: "Cached result",
       });
     }
-    const check = await GiftCardTransaction.findOne({ _id: req.params.id }).populate("cards.item_card_rate");
+    const check = await GiftCardTransaction.findById(req.params.id)
+  .populate('card_rate_id')
+  .populate({
+    path: 'giftcard_id',
+    select: '-picture_cloudId -rate'
+  })
+  .populate({
+    path: 'user_id',
+    select: '-password -otp -googleId -twoFactorAuth -dob -kycLevel', // Exclude sensitive fields
+  });
     if (!check) {
       return res.status(204).json({
         success: true,
