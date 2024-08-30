@@ -23,7 +23,7 @@ router.get('/', (req, res)=>{
 // Get user By ID
 router.get('/users', getUsers)
 
-// Get user By ID
+// Get user By Email
 router.get('/email', getUserByEmail)
 
 // Get user By ID

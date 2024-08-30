@@ -27,7 +27,7 @@ router.put('/update/:id', updateUser)
 router.put('/setInactive/:id', setInActiveUser)
 
 // Update adminRoute By ID
-router.patch('/setUserRole/:id', setUserRole)
+router.patch('/set-user-role/:id', setUserRole)
 
 // Delete adminRoute By ID
 router.delete('/user/delete/:id', deleteUser )

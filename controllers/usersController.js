@@ -214,7 +214,7 @@ exports.setUserRole = async (request, response) => {
           });
     }
     try {
-        const user = await User.findByIdAndUpdate({ _id: id }, { role }, { new: true }).select("-password");
+        const user = await User.findByIdAndUpdate({ _id: id }, { role: String(role).toUpperCase() }, { new: true }).select("-password -otp -googleId -twoFactorAuth -dob -kycLevel");
         if (user) {
                 return response.status(200).json({
                     data: user,
