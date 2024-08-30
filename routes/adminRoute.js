@@ -1,3 +1,4 @@
+const { deleteAllTransaction } = require('../controllers/transactionController');
 const { deleteUser, updateUser, getUserById, setInActiveUser, setUserRole } = require('../controllers/usersController');
 
 const router = require('express').Router();
@@ -31,5 +32,8 @@ router.patch('/set-user-role/:id', setUserRole)
 
 // Delete adminRoute By ID
 router.delete('/user/delete/:id', deleteUser )
+
+// delete-transactions
+router.delete('/delete-transactions', deleteAllTransaction)
 
 module.exports = router;

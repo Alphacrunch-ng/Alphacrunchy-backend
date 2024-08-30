@@ -2,10 +2,10 @@ const Transaction = require('../models/transactionModel');
 const WalletTransaction = require('../models/walletTransactionModel');
 const GiftCardTransaction = require('../models/giftcardTransactionModel');
 const { creditWalletHelper, checkWalletHelperUserId } = require('../models/repositories/walletRepo');
-const { serverError } = require('../utils/services');
+const { serverError, successResponse, serverErrorResponse } = require('../utils/services');
 const { Status, transactionTypes, transactionDirectionTypes } = require('../utils/constants');
 const { getPaymentLink } = require('../utils/paymentService');
-const { createApproveTransactionHelper, checkTransactionDetailsSuccess } = require('../models/repositories/transactionRepo');
+const { createApproveTransactionHelper, checkTransactionDetailsSuccess, deleteTransactionHelper: deleteTransactionByTransactionNumber, deleteAllTransactionsHelper } = require('../models/repositories/transactionRepo');
 const { updateGiftCardTransactionPaidAmount } = require('../models/repositories/giftcardRepo');
 const { default: mongoose } = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
@@ -484,10 +484,21 @@ exports.setTransactionInactive = async (req, res) => {
 // DELETE a transaction
 exports.deleteTransaction = async (req, res) => {
   try {
-    const Id = req.params.id;
-    await Transaction.findByIdAndDelete(Id);
-    res.status(200).json({ message: 'Transaction deleted' });
+    const id = req.params.id;
+    const result = await deleteTransactionByTransactionNumber({id})
+    return successResponse({res, data: result, message: "deleted transaction and it's child"});
   } catch (error) {
     return serverError(res, error);
+  }
+};
+
+// DELETE transactions
+exports.deleteAllTransaction = async (req, res) => {
+  try {
+    const { user_id} = req.body;
+    const result = await deleteAllTransactionsHelper({ user_id });
+    return successResponse({res, data: result, message: "deleted all transactions and their children"});
+  } catch (error) {
+    return serverErrorResponse(res, error);
   }
 };

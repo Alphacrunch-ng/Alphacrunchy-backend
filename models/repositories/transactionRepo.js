@@ -73,3 +73,147 @@ exports.createApproveTransactionHelper = async ( status, transaction_number, tra
     throw error;
   }
 }
+
+
+exports.deleteTransactionHelper = async ( { transaction_number, id } ) => {
+
+  try {
+    let transaction;
+    let result = {}
+     if(id){
+      transaction = await Transaction.findById(id);
+      transaction_number = transaction.transaction_number;
+     }else {
+      transaction = await Transaction.findOne({ transaction_number });
+     } 
+    if(!transaction){
+      throw Error("Transaction not found");
+    }
+    let transaction_type = transaction.transaction_type;
+    switch (transaction_type) {
+      case transactionTypes.wallet:
+        result.walletTransaction = await WalletTransaction.findOneAndDelete({ transaction_number });
+        break;
+      case transactionTypes.giftcard:
+        result.giftcardTransaction = await GiftCardTransaction.findOneAndDelete({ transaction_number });
+        break;
+      case transactionTypes.crypto:
+        result.cryptoTransaction = await CryptoTransaction.findOneAndDelete({ transaction_number });
+        break;
+      default:
+        return false
+    }
+    result.deletedTransaction = await transaction.delete();
+
+    return result;
+  } catch (error) {
+    throw error;
+  }
+}
+
+/**
+ * Deletes transactions based on the provided options if nothing is provided then all transactions will be deleted.
+ * 
+ * @param {Object} options - The options for deleting transactions.
+ * @param {string} options.user_id - The ID of the user whose transactions to delete.
+ * 
+ * @returns {Promise<void>} A promise that resolves when the transactions are deleted.
+ */
+exports.deleteAllTransactionsHelper = async (options) => {
+  /**
+   * Extracts the user ID from the options.
+   * 
+   * @type {string}
+   */
+  const { user_id } = options;
+
+  let result = {
+    walletTransaction: [],
+    giftcardTransaction: [],
+    cryptoTransaction: []
+  }
+
+  try {
+    /**
+     * Finds transactions based on the provided options.
+     * 
+     * @type {Transaction[]}
+     */
+    let transactions;
+    if( user_id ){
+      transactions = await Transaction.find({ user_id });
+      if (transactions.length < 1) {
+        /**
+         * Throws an error if no transactions are found.
+         * 
+         * @throws {Error} Transaction not found.
+         */
+        throw Error("Transactions not found");
+      }
+    }else{
+      transactions = await Transaction.find();
+    }
+
+    /**
+     * Iterates over each transaction and deletes it based on its type.
+     */
+    if(user_id)
+      for (const transaction of transactions) {
+        {/**
+        * Extracts the transaction type and number.
+        * 
+        * @type {string}
+        */
+          let transaction_type = transaction.transaction_type;
+          /**
+           * @type {string}
+           */
+          let transaction_number = transaction.transaction_number;
+  
+          /**
+           * Deletes the transaction based on its type.
+           */
+          switch (transaction_type) {
+            case transactionTypes.wallet:
+              result.walletTransaction.push(await WalletTransaction.findOneAndDelete({ transaction_number }));
+              break;
+            case transactionTypes.giftcard:
+              result.giftcardTransaction.push(await GiftCardTransaction.findOneAndDelete({ transaction_number }));
+              break;
+            case transactionTypes.crypto:
+              result.cryptoTransaction.push(await CryptoTransaction.findOneAndDelete({ transaction_number }));
+              break;
+            default:
+              break;
+          }
+        };
+        }
+    else {
+          result.walletTransaction.push(await WalletTransaction.deleteMany());
+
+          result.giftcardTransaction.push(await GiftCardTransaction.deleteMany());
+
+          result.cryptoTransaction.push(await CryptoTransaction.deleteMany());
+    }
+
+    await Promise.all(result.cryptoTransaction, result.giftcardTransaction, result.walletTransaction);
+
+    /**
+     * Deletes all transactions that match the options.
+     */
+    if( user_id ){
+      result.deletedTransactions = await Transaction.deleteMany({user_id});
+    }else{
+      result.deletedTransactions = await Transaction.deleteMany();
+    }
+
+    return result;
+  } catch (error) {
+    /**
+     * Throws any error that occurs during the deletion process.
+     * 
+     * @throws {Error} Any error that occurs during deletion.
+     */
+    throw error;
+  }
+};
