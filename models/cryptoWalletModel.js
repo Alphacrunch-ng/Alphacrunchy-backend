@@ -1,22 +1,23 @@
 const mongoose = require("mongoose");
 
 const cryptoWalletSchema = new mongoose.Schema({
-  uid: { type: String, required: true },
-  name: { type: String, required: true },
+  name: { 
+    type: String, 
+    required: true 
+  },
   externalId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
   },
-  isDeleted: { type: Boolean, default: false, required: true },
-  isArchived: { type: Boolean, default: false, required: true },
-  organizationId: { type: String, required: true },
-  network: { type: String, required: true },
-  createdAt: { type: Date, required: true },
-  updatedAt: { type: Date, required: true },
+  network: { 
+    type: String
+  },
   mode: { type: String},
   accountId: { type: String, required: true },
   addresses: { type: Array, defaultValue: [] },
+},{
+  timestamps: true
 });
 
 const cryptoWallet = mongoose.model("cryptoWallet", cryptoWalletSchema);

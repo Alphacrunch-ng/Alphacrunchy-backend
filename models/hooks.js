@@ -2,7 +2,7 @@
 const bcrypt = require('bcrypt');
 const { roles, Status } = require('../utils/constants');
 const { createWalletNumber } = require('../utils/services');
-const { hashPassword } = require('../utils/crypto/hash');
+const { hashPassword } = require('../utils/security/hash');
 
 exports.modifiedAt = async function(next){
     try {

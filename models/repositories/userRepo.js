@@ -1,6 +1,6 @@
 const User = require('../userModel');
 const { roles } = require('../../utils/constants');
-const { hashPassword } = require('../../utils/crypto/hash');
+const { hashPassword } = require('../../utils/security/hash');
 
 /**
  * Finds a user by their email address.

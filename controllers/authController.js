@@ -10,8 +10,8 @@ let crypto = require('crypto');
 const { authEvents } = require('../utils/events/emitters.js');
 const { events } = require('../utils/events/eventConstants.js');
 const { checkWalletHelper } = require('../models/repositories/walletRepo.js');
-const { comparePassword, hashPassword } = require('../utils/crypto/hash.js');
-const { generateToken } = require('../utils/crypto/token.js');
+const { comparePassword, hashPassword } = require('../utils/security/hash.js');
+const { generateToken } = require('../utils/security/token.js');
 const { validatePassword } = require('../utils/validators/passwordValidators/passwordValidator.js');
 const { lengthValidator, uppercaseValidator, symbolValidator, numberValidator } = require('../utils/validators/passwordValidators/passwordValidators.js');
 

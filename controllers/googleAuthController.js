@@ -1,5 +1,5 @@
 const { verifyGoogleToken, fetchIdToken } = require('../middlewares/googleAuth');
-const { generateToken } = require('../utils/crypto/token');
+const { generateToken } = require('../utils/security/token');
 const { authEvents } = require('../utils/events/emitters');
 const { events } = require('../utils/events/eventConstants');
 const { getUserWalletsHelper, createWalletHelper } = require('../models/repositories/walletRepo');

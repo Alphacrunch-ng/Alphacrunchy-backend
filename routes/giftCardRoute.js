@@ -1,5 +1,5 @@
 
-const { getGiftCardById, setGiftCardInactive, getAllGiftCards, createGiftCard, updateGiftCard, uploadGiftCard, deleteGiftCard, deleteUploadedGiftCard, createGiftCardTransaction, setTransactionGiftCardState, getGiftCardTransaction, getUserGiftCardTransactions, setGiftCardTransaction, getAllGiftCardTransactions, getAllGiftCardRates, createGiftCardRate, getGiftCardRates, updateGiftCardRate, setGiftCardRateState, getAllCurrencies, getGiftCardSupportedAllCurrencies, editGiftCardCurrency, addCardToGiftCardTransaction } = require('../controllers/giftCardController');
+const { getGiftCardById, setGiftCardInactive, getAllGiftCards, createGiftCard, updateGiftCard, uploadGiftCard, deleteGiftCard, deleteUploadedGiftCard, createGiftCardTransaction, setTransactionGiftCardState, getGiftCardTransaction, getUserGiftCardTransactions, setGiftCardTransaction, getAllGiftCardTransactions, getAllGiftCardRates, createGiftCardRate, getGiftCardRates, updateGiftCardRate, setGiftCardRateState, getAllCurrencies, getGiftCardSupportedAllCurrencies, editGiftCardCurrency, addCardToGiftCardTransaction, getGiftCardRateById } = require('../controllers/giftCardController');
 const { auth, authRoles } = require('../middlewares/auth');
 const upload = require('../middlewares/multer');
 const { roles } = require('../utils/constants');
@@ -24,6 +24,9 @@ router.post('/create', auth, authRoles(roles.admin), upload.single('card_pic') ,
 
 // Get all giftcards RATES, takes optional params of active, pagesize and page
 router.get('/rates', getAllGiftCardRates);
+
+// Get single giftcard rates
+router.get('/get-rate-details', getGiftCardRateById);
 
 // Get single giftcard rates
 router.get('/rates/:giftcardId', getGiftCardRates);

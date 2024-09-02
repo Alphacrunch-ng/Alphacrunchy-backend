@@ -5,7 +5,7 @@ const GiftCard = require("../models/giftCardModel");
 const GiftCardRate = require("../models/giftCardRateModel");
 const cloudinary = require("../middlewares/cloudinary.js");
 const Wallet = require("../models/walletModel.js");
-const { serverErrorResponse: serverError, badRequestResponse } = require("../utils/services.js");
+const { serverErrorResponse: serverError, badRequestResponse, successResponse } = require("../utils/services.js");
 const GiftCardTransaction = require("../models/giftcardTransactionModel");
 const { createTransaction,/**, checkTransactionHelper**/ 
 createApproveTransactionHelper,
@@ -701,7 +701,7 @@ exports.createGiftCardRate = async (req, res) => {
   }
 };
 
-// controller for getting a giftcard transaction
+// controller for getting a giftcard rates for a giftcard
 exports.getGiftCardRates = async (req, res) => {
   const cacheKey = "giftcardrates" + req.params.giftcardId;
   try {
@@ -731,6 +731,37 @@ exports.getGiftCardRates = async (req, res) => {
       success: true,
       data: giftcardRates,
     });
+  } catch (error) {
+    return serverError(res, error);
+  }
+};
+
+// controller for getting a giftcard transaction
+exports.getGiftCardRateById = async (req, res) => {
+  const { giftcard_rate_id } = req.body;
+  const cacheKey = "giftcard_rate_id" + giftcard_rate_id;
+  try {
+    // Check if the result is already cached
+    const cachedData = getCacheData(cacheKey);
+    if (cachedData) {
+      return res.status(200).json({
+        data: cachedData,
+        success: true,
+        message: "Cached result",
+      });
+    }
+    const check = await findGiftCardRateById({id: giftcard_rate_id});
+    if (!check) {
+      return res.status(204).json({
+        success: true,
+        message: "giftcard rates not found",
+      });
+    }
+
+    const giftcardRates = check;
+    setCacheData(cacheKey, giftcardRates, 60 * 5 * 1000);
+    
+    return successResponse({ res, data: check });
   } catch (error) {
     return serverError(res, error);
   }

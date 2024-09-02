@@ -127,6 +127,11 @@ exports.deleteAllTransactionsHelper = async (options) => {
    */
   const { user_id } = options;
 
+  /**
+     * Finds transactions based on the provided options.
+     * 
+     * @type {Object}
+     */
   let result = {
     walletTransaction: [],
     giftcardTransaction: [],
