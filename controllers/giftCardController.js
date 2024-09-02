@@ -60,8 +60,8 @@ exports.createGiftCardTransaction = async (req, res) => {
   const {
     receiverWalletId,
     giftcard_id,
-    cards,
     description,
+    cards,
     card_rate_id
   } = req.body;
 
@@ -74,6 +74,7 @@ exports.createGiftCardTransaction = async (req, res) => {
       return badRequestResponse({ res, message: "giftcard rate not found"})
     }
     const check = await Wallet.findById(receiverWalletId);
+
     
     if (check !== null) {
       // create a new GiftCardTransaction document
@@ -82,8 +83,8 @@ exports.createGiftCardTransaction = async (req, res) => {
           reciever_wallet_number: check.wallet_number,
           user_id: req.user.id,
           giftcard_id,
-          cards: cards,
           card_rate_id,
+          cards,
           description: description,
       });
       //create transactiondocument

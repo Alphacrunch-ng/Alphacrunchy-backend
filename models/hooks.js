@@ -19,26 +19,32 @@ exports.sum = async function(next){
     try {
         await this.populate('card_rate_id');
         
-        // Now cards will be populated
         const cards = this.cards;
-        
-        // Calculate total cards
-        this.total_cards = cards.length;
-        
-        let totalAmountExpected = 0;
-        let totalAmount = 0;
-        // Assuming this.card_rate_id.rate is populated
-        const rate = this.card_rate_id.rate;
-        
-        cards.forEach(card => {
+        if(cards?.length < 1){
+            return next();
+        }
+        else{
+            // Now cards will be populated
+            let totalAmountExpected = 0;
+            let totalAmount = 0;
             
-            totalAmountExpected += card.amount * rate;
-            if (card.state === Status.approved) {
-                totalAmount += card.amount;
-            }
-        });
-        this.total_amount_expected = totalAmountExpected;
-        next();
+            // Calculate total cards
+            this.total_cards = cards.length;
+            
+            // Assuming this.card_rate_id.rate is populated
+            const rate = this.card_rate_id.rate;
+            
+            cards.forEach(card => {
+                
+                totalAmountExpected += card.amount * rate;
+                if (card.state === Status.approved) {
+                    totalAmount += card.amount;
+                }
+            });
+            this.total_amount_expected = totalAmountExpected;
+            next();
+        }
+        
     } catch (error) {
         next();
     }

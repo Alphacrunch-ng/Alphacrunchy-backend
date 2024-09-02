@@ -6,8 +6,8 @@ const { modifiedAt, sum } = require('./hooks');
 
 const cardItemSchema = new mongoose.Schema({
     card_item : {
-        type: String, // if card type is e-code then this would be an array of e-codes in string else it would be an array of the picture cloud_url
-        unique: true
+        type: String, // if card type is e-code then this would be an array of e-codes in string else it would be an array of the picture cloud_url 
+        default: ""
     },
     amount : {
         type: Number,
@@ -20,9 +20,6 @@ const cardItemSchema = new mongoose.Schema({
             message: "status can either be 'approved' 'pending', or 'failed'",
         },
         default: Status.pending
-    },
-    item_card_rate: {
-        type: mongoose.Schema.Types.ObjectId, ref: 'GiftCardRate'
     }
 });
 
@@ -50,21 +47,14 @@ const giftcardTransactionSchema = new mongoose.Schema({
     },
     cards : {
         type: [cardItemSchema],
+        sparse: true
     },
     description: {
         type: String,
     },
-    createdAt: {
-        type: Date,
-        default: Date.now()
-    },
     transaction_number: {
         type: String,
         index: true
-    },
-    modifiedAt: {
-        type: Date,
-        default: Date.now()
     },
     status : {
         type: String,
@@ -81,6 +71,8 @@ const giftcardTransactionSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+}, {
+    timestamps: true
 });
 
 //setting totals to current cards after every update
@@ -90,12 +82,6 @@ giftcardTransactionSchema.pre('save', sum);
 // giftcardTransactionSchema.pre('save', updateGiftcardTransactionStatus);
 // giftcardTransactionSchema.pre('findOneAndUpdate', checkAndUpdateGiftcardTransactionStatus);
 
-//setting modifiedAt to current time after every update
-giftcardTransactionSchema.pre('save', modifiedAt);
-giftcardTransactionSchema.pre('findOneAndUpdate', function(next) {
-    this._update.modifiedAt = new Date();
-    next();
-  });
 
 const GiftCardTransaction = mongoose.model('GiftCardTransaction', giftcardTransactionSchema);
 
