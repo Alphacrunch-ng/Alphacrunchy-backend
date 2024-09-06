@@ -1,4 +1,3 @@
-
 require("dotenv").config();
 const mongodb = require("./utils/db.js");
 const app = require("./app.js")
