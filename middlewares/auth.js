@@ -1,5 +1,6 @@
 const JWT = require('jsonwebtoken');
 const { roles } = require('../utils/constants');
+const { unauthorizedErrorResponse } = require('../utils/apiResponses');
 const secret = process.env.JWT_SECRET;
 const bitpowrWebhookSecret = process.env.BITPOWR_WEBHOOK_SECRET;
 
@@ -14,7 +15,10 @@ exports.auth = async (req, res, next) => {
         req.user = decoded;
         next();
     } catch (error) {
-        res.status(401).send({ error: error.message });
+        unauthorizedErrorResponse({
+            res,
+            message: error.message
+        })
     }
 }
 

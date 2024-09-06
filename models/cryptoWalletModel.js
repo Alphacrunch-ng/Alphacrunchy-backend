@@ -10,12 +10,7 @@ const cryptoWalletSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
-  network: { 
-    type: String
-  },
-  mode: { type: String},
-  accountId: { type: String, required: true },
-  addresses: { type: Array, defaultValue: [] },
+  accountId: { type: String, required: true }
 },{
   timestamps: true
 });

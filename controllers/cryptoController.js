@@ -1,4 +1,4 @@
-const { makeBitpowrRequest, userRequestError } = require("../utils/services");
+const { makeBitpowrRequest, userRequestError, serverErrorResponse, createdSuccessFullyResponse } = require("../utils/services");
 const CryptoAssetModel = require("../models/cryptoAssetModel");
 const CryptoWalletModel = require("../models/cryptoWalletModel");
 const CryptoRate = require("../models/cryptoRateModel");
@@ -9,6 +9,8 @@ const User = require("../models/userModel.js");
 const { roles } = require("../utils/constants.js");
 const { isValidAmount } = require("../utils/validators/generalValidators.js");
 const { debitWalletHelper } = require("./walletController.js");
+const { createVaultWalletHelper: createVaultWallet, getSupportedAssetsFromSourceHelper: getSupportedAssetsHelper } = require("../utils/fireblockServices.js");
+const { notFoundErrorResponse, badRequestResponse, successResponse, cachedResponse } = require("../utils/apiResponses.js");
 
 exports.getAssets = async (req, res) => {
   const cacheKey = `cryptoassets`;
@@ -65,6 +67,136 @@ exports.getAssets = async (req, res) => {
   // } catch (error) {
   //   serverError(res, error);
   // }
+};
+
+/**
+ * @api {get} /crypto/supported-assets Get Supported Assets
+ * @apiName getSupportedAssets
+ * @apiGroup Crypto
+ * @apiDescription Get all supported crypto assets
+ * @apiSuccess {Object[]} data Array of supported assets with name, symbol, icon and id
+ * @apiSuccessExample {json} Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "success": true,
+ *       "data": [
+ *         {
+ *           "name": "Bitcoin",
+ *           "symbol": "BTC",
+ *           "icon": "https://example.com/icon.png",
+ *           "id": "bitcoin"
+ *         },
+ *         {
+ *           "name": "Ethereum",
+ *           "symbol": "ETH",
+ *           "icon": "https://example.com/icon2.png",
+ *           "id": "ethereum"
+ *         }
+ *       ]
+ *     }
+ * @apiError (404) Error Assets not found
+ * @apiErrorExample {json} Error-Response:
+ *     HTTP/1.1 404 Not Found
+ *     {
+ *       "success": false,
+ *       "message": "Assets not found"
+ *     }
+ */
+exports.getSupportedAssets = async (req, res) => {
+  const cacheKey = `supportedcryptoassets`;
+  try {
+    const cachedData = getCacheData(cacheKey);
+    if (cachedData) {
+      return cachedResponse({
+        res,
+        data: cachedData,
+        message: "Cached result"
+      })
+    }
+
+    const responseData = await getSupportedAssetsHelper();
+
+    if (responseData) {
+      setCacheData(cacheKey, responseData, 60 * 5 * 1000);
+      return successResponse({
+        res,
+        data: responseData
+      });
+    }
+    return notFoundErrorResponse({
+      success: false, 
+      message: "Assets not found"
+    });
+  } catch (error) {
+    return serverErrorResponse(res, error);
+  }
+};
+
+/**
+ * @api {get} /crypto/supported-assets-source Get Supported Assets From Source
+ * @apiName getSupportedAssetsFromSource
+ * @apiGroup Crypto
+ * @apiDescription Get all supported crypto assets from source
+ * @apiSuccess {Object[]} data Array of supported assets with name, type, contractAddress, nativeAsset and decimals
+ * @apiSuccessExample {json} Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "success": true,
+ *       "data": [
+ *         {
+                "id": "BTC",
+                "name": "Bitcoin",
+                "type": "BASE_ASSET",
+                "contractAddress": "",
+                "nativeAsset": "BTC",
+                "decimals": 8
+            },
+ *         {
+                "id": "ETH",
+                "name": "Ethereum",
+                "type": "BASE_ASSET",
+                "contractAddress": "",
+                "nativeAsset": "ETH",
+                "decimals": 18
+            },
+ *       ]
+ *     }
+ * @apiError (404) Error Assets not found
+ * @apiErrorExample {json} Error-Response:
+ *     HTTP/1.1 404 Not Found
+ *     {
+ *       "success": false,
+ *       "message": "Assets not found"
+ *     }
+ */
+exports.getSupportedAssetsFromSource = async (req, res) => {
+  const cacheKey = `supportedcryptoassets`;
+  try {
+    const cachedData = getCacheData(cacheKey);
+    if (cachedData) {
+      return cachedResponse({
+        res,
+        data: cachedData,
+        message: "Cached result"
+      })
+    }
+
+    const responseData = await getSupportedAssetsFromSourceHelper();
+
+    if (responseData) {
+      setCacheData(cacheKey, responseData, 60 * 5 * 1000);
+      return successResponse({
+        res,
+        data: responseData
+      });
+    }
+    return notFoundErrorResponse({
+      success: false, 
+      message: "Assets not found"
+    });
+  } catch (error) {
+    return serverErrorResponse(res, error);
+  }
 };
 
 exports.getCryptoWallet = async (req, res) => {
@@ -425,6 +557,16 @@ exports.createCryptoTransaction = async (req, res) => {
   }
 };
 
+  /**
+   * @api {post} /crypto/:id/create-subaccount
+   * @apiName createUserCryptoAccount
+   * @apiGroup Crypto
+   * @apiDescription Create a subaccount on the bitpowr platform
+   * @apiParam {String} id The id of the user to create the subaccount for
+   * @apiSuccess {Object} data The created subaccount
+   * @apiError {Object} 404 Error creating wallet
+   * @apiError {Object} 400 User wallet already exists
+   */
 exports.createUserCryptoAccount = async (req, res) => { // create subaccount
   const userId = req.params.id;
   try {
@@ -434,11 +576,11 @@ exports.createUserCryptoAccount = async (req, res) => { // create subaccount
         success: false, 
         message: "user not found" 
       });
+    const account = await createVaultWallet({user_id: userId, fullname: user.fullName});
 
     const ifExists = await CryptoWalletModel.findOne({
       externalId: user._id,
     });
-    console.log(ifExists, userId);
     if (ifExists) {
       return res.status(400).json({
         success: false,
@@ -448,50 +590,46 @@ exports.createUserCryptoAccount = async (req, res) => { // create subaccount
     const data = {
       externalId: userId,
       name: user.fullName,
-      autoGenerateAddress: true, // generate addresses for all available asset on the parent account.
+      accountId: account.id,
+      addresses: account.addresses,
     };
 
-    // create the subaccount on bitpowr
-    const responseData = await makeBitpowrRequest(
-      `${process.env.BITPOWR_BASEURL}/accounts/${process.env.BITPOWR_ACCOUNT_WALLET_ID}/sub-accounts`,
-      "post",
-      data
-    );
-    if (responseData) {
-      const data = {
-        uid: responseData.data.uid,
-        name: responseData.data.name,
-        externalId: responseData.data.externalId,
-        isDeleted: responseData.data.isDeleted,
-        isArchived: responseData.data.isArchived,
-        organizationId: responseData.data.organizationId,
-        network: responseData.data.network,
-        createdAt: responseData.data.createdAt,
-        updatedAt: responseData.data.updatedAt,
-        mode: responseData.data.mode,
-        accountId: responseData.data.accountId,
-        addresses: responseData.data.addresses,
-      };
+    // // create the subaccount on bitpowr
+    // const responseData = await makeBitpowrRequest(
+    //   `${process.env.BITPOWR_BASEURL}/accounts/${process.env.BITPOWR_ACCOUNT_WALLET_ID}/sub-accounts`,
+    //   "post",
+    //   data
+    // );
+    // if (responseData) {
+    //   const data = {
+    //     uid: responseData.data.uid,
+    //     name: responseData.data.name,
+    //     externalId: responseData.data.externalId,
+    //     isDeleted: responseData.data.isDeleted,
+    //     isArchived: responseData.data.isArchived,
+    //     organizationId: responseData.data.organizationId,
+    //     network: responseData.data.network,
+    //     createdAt: responseData.data.createdAt,
+    //     updatedAt: responseData.data.updatedAt,
+    //     mode: responseData.data.mode,
+    //     accountId: responseData.data.accountId,
+    //     addresses: responseData.data.addresses,
+    //   };
       const wallet = await CryptoWalletModel.create(data);
       if (wallet) {
-        return res.status(201).json({
-          success: true,
-          message: wallet,
-        });
+        return createdSuccessFullyResponse({res, data: wallet, message: "Wallet created successfully"});
       }
-      return res.status(400).json({
-        success: false,
-        message: "Error creating wallet",
-      });
-    }
+      
+      return badRequestResponse({res, message: "Error creating wallet"});
+
   } catch (error) {
-    if (error.response.status === 404) {
-      return res.status(404).json({
-        success: false,
+    if (error?.response?.status === 404) {
+      return notFoundErrorResponse({
+        res,
         message: error?.response?.data?.message,
-      });
+      })
     }
-    serverError(res, error);
+    return serverErrorResponse(res, error);
   }
 };
 

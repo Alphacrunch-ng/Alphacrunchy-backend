@@ -9,6 +9,7 @@ const {
   buyCrypto,
   getCryptoWallet,
   getSwapRate,
+  getSupportedAssets,
 } = require("../controllers/cryptoController");
 const { authRoles, auth } = require("../middlewares/auth");
 const upload = require("../middlewares/multer");
@@ -17,6 +18,7 @@ const { roles } = require("../utils/constants");
 const router = require("express").Router();
 
 router.get("/get-assets", getAssets);
+router.get("/supported-assets", getSupportedAssets)
 router.get("/get-accounts/source", getSubAccountsFromSource);
 router.get("/user/get-account", auth, getCryptoWallet);
 router.get("/user/get-assets/", auth, getUserAssets);

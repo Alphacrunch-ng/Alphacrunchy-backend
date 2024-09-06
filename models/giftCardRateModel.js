@@ -45,6 +45,11 @@ const giftCardRateSchema = new mongoose.Schema({
         min: 0,
         required: true
     },
+    range : {
+        type: Number,
+        default: 0,
+        min: 0
+    },
     currency: {
         type: currencySchema,
         required: true,

@@ -6,3 +6,5 @@ log
 npm-debug*
 access.log
 log/access.log
+*.key
+*.crt
