@@ -29,3 +29,11 @@ exports.getSupportedAssetsFromSourceHelper = async () => {
         throw error;
     }
 }
+exports.getAllVaultAccountsHelper = async (options) => {
+    try {
+        const response = await fireblocks.getVaultAccountsWithPageInfo(options);
+        return response;
+    } catch (error) {
+        throw error;
+    }
+}

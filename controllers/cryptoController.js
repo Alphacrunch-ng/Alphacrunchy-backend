@@ -9,8 +9,9 @@ const User = require("../models/userModel.js");
 const { roles } = require("../utils/constants.js");
 const { isValidAmount } = require("../utils/validators/generalValidators.js");
 const { debitWalletHelper } = require("./walletController.js");
-const { createVaultWalletHelper: createVaultWallet, getSupportedAssetsFromSourceHelper: getSupportedAssetsHelper } = require("../utils/fireblockServices.js");
+const { createVaultWalletHelper: createVaultWallet, getSupportedAssetsFromSourceHelper, getAllVaultAccountsHelper } = require("../utils/fireblockServices.js");
 const { notFoundErrorResponse, badRequestResponse, successResponse, cachedResponse } = require("../utils/apiResponses.js");
+const { getSupportedAssetsHelper } = require("../models/repositories/supportedAssetsRepo.js");
 
 exports.getAssets = async (req, res) => {
   const cacheKey = `cryptoassets`;
@@ -638,31 +639,29 @@ exports.getSubAccountsFromSource = async (req, res) => {
   try {
     const cachedData = getCacheData(cacheKey);
     if (cachedData) {
-      return res.status(200).json({
-        data: cachedData,
-        success: true,
-        message: "Cached result",
+      return cachedResponse({
+        res, 
+        data: cachedData, 
+        message: "Success getting sub accounts"
       });
     }
-    const responseData = await makeBitpowrRequest(
-      `${process.env.BITPOWR_BASEURL}/accounts/${process.env.BITPOWR_ACCOUNT_WALLET_ID}/sub-accounts`,
-      "get"
-    );
+    const responseData = await getAllVaultAccountsHelper();
     if (responseData) {
-      setCacheData(cacheKey, responseData.data, 60 * 5 * 1000);
-      return res.status(200).json({
-        success: true,
-        message: responseData,
+      setCacheData(cacheKey, responseData, 60 * 5 * 1000);
+      return successResponse({
+        res,
+        data: responseData,
+        message: "Success getting sub accounts",
       })
     } else {
-      return res.status(404).json({
-        success: false,
-        message: "Error getting sub accounts",
-      })
+      return notFoundErrorResponse({
+        res, 
+        message: "Error getting sub accounts"
+      });
     }
   }
   catch (error) {
-    serverError(res, error);
+    return serverErrorResponse(res, error);
   }
 }
 

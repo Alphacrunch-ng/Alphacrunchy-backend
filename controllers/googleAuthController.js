@@ -4,7 +4,7 @@ const { authEvents } = require('../utils/events/emitters');
 const { events } = require('../utils/events/eventConstants');
 const { getUserWalletsHelper, createWalletHelper } = require('../models/repositories/walletRepo');
 const { getUserByEmailHelper, getUserByGoogleIdHelper, createUserHelper, deleteUserByIdHelper } = require('../models/repositories/userRepo');
-const { serverError } = require('../utils/services');
+const { serverError, setTokenDataInCookie } = require('../utils/services');
 
 exports.googleLoginCallback = async (req, res) => {
     const ipaddress =  req?.headers['x-forwarded-for'] || req?.connection?.remoteAddress || req?.ip;
@@ -25,6 +25,8 @@ exports.googleLoginCallback = async (req, res) => {
     
         const checkWallets = await getUserWalletsHelper(checkUser?._id);
         checkUser.password = "";
+
+        setTokenDataInCookie(res, { token, expiresIn });
         return res.status(200).json({
             data: checkUser,
             wallets: checkWallets,
@@ -59,6 +61,7 @@ exports.googleSignupCallback = async (req, res) => {
         const { token, expiresIn } = generateToken(createdUser);
         const wallet = await createWalletHelper(createdUser?._id);
         // const checkWallets = await getUserWalletsHelper(createdUser?._id);
+        setTokenDataInCookie(res, { token, expiresIn });
         return res.status(201).json({
             data: createdUser,
             wallets: [wallet],

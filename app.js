@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const cookieParser =  require('cookie-parser');
 const useragent = require("express-useragent");
 const indexRoute = require("./routes/indexRoute");
 const { logger, logDirectory } = require("./utils/logger/logger.js");
@@ -21,6 +22,7 @@ app.use(cors({
 }));
 
 //middlewares
+app.use(cookieParser());
 app.use(express.json({ limit: "5mb" }));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use("/", express.static("public"));

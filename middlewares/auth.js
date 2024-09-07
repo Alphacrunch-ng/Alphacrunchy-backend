@@ -6,11 +6,17 @@ const bitpowrWebhookSecret = process.env.BITPOWR_WEBHOOK_SECRET;
 
 exports.auth = async (req, res, next) => {
     try {
-        const token = req.header('Authorization')?.replace('Bearer ', '');
+        const cookieRaw = req?.cookies?.tokenData;
+        const tokenData = JSON.parse(cookieRaw);
+        
+        if(new Date(tokenData?.expiresIn) < new Date(Date.now())) throw new Error("Token expired");
+
+        const token = tokenData? tokenData?.token : req.header('Authorization')?.replace('Bearer ', '');
         const decoded = JWT.verify(token, secret, {
             issuer: process.env.JWT_ISSUER,
             audience: process.env.JWT_AUDIENCE,
         });
+
         if (!decoded) throw new Error("User not found");
         req.user = decoded;
         next();

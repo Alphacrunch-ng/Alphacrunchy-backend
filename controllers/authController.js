@@ -2,7 +2,7 @@ const bcrypt = require('bcrypt');
 const User = require('../models/userModel.js');
 const Wallet = require('../models/walletModel.js');
 const { resetPasswordMailer, noticeMailer, otpMailer } = require('../utils/nodeMailer.js');
-const { serverError, createOtp, formatEmail, userRequestError, unauthorizedError } = require('../utils/services.js');
+const { serverError, createOtp, formatEmail, userRequestError, unauthorizedError, setTokenDataInCookie } = require('../utils/services.js');
 const { operations } = require('../utils/constants.js');
 const jwt = require('jsonwebtoken');
 const { authEvents } = require('../utils/events/emitters.js');
@@ -165,6 +165,8 @@ exports.loggingIn = async (request, response) => {
                     
                     const checkWallets = await Wallet.find({user_id: user._id}).select("-wallet_pin");
 
+                    setTokenDataInCookie(response, { token, expiresIn });
+
                     return response.status(200).json({
                         data: user,
                         wallets: checkWallets,
@@ -233,6 +235,8 @@ exports.twoFactorLoggingIn = async (request, response) => {
                 
                 const userLocationDetails = {useragent, ip: String(ipaddress).split(',')[0]}
                 authEvents.emit(events.USER_LOGGED_IN, {user , data: userLocationDetails})
+
+                setTokenDataInCookie(response, { token, expiresIn });
 
                 return response.status(200).json({
                     data: user,

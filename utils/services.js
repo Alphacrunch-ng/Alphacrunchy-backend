@@ -181,3 +181,13 @@ exports.makeBitpowrRequest = async (url, method = "get", data = null) => {
 //         await GiftCardRate.create(dataE)
 //     })
 // })
+
+
+exports.setTokenDataInCookie = (res, { token, expiresIn }) => {
+  res.cookie("tokenData", JSON.stringify({ token, expiresIn }), {
+    httpOnly: true,
+    expires: expiresIn,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+  });
+}
