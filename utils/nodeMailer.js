@@ -114,24 +114,61 @@ exports.transactionMailer = (email, operation, amount, description) => {
         <h1 style="margin:0;">Notification From ${product_name} App</h1>
     </div>
     <p style="color:#333;">Notifying you of ${operation} action on your account</p>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
-        <thead>
-            <tr style="background-color:#f0f0f0;">
-                <th style="padding:10px;border:1px solid #ccc;text-align:left;">Email</th>
-                <th style="padding:10px;border:1px solid #ccc;text-align:left;">Description</th>
-                <th style="padding:10px;border:1px solid #ccc;text-align:left;">Amount</th>
-                <th style="padding:10px;border:1px solid #ccc;text-align:left;">Operation</th>
-            </tr>
-        </thead>
-        <tbody >
-            <tr >
-                <td style="padding:10px;border:1px solid #ccc;">${email}</td>
-                <td style="padding:10px;border:1px solid #ccc;">${description}</td>
-                <td style="padding:10px;border:1px solid #ccc;">${amount}</td>
-                <td style="padding:10px;border:1px solid #ccc;">${operation}</td>
-            </tr>
-        </tbody>
-    </table>
+    <div style="border: 1px solid #ccc; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); max-width: 400px;">
+        <div style="margin-bottom: 10px;">
+            <strong>Email:</strong>
+            <p style="margin: 5px 0;">${email}</p>
+        </div>
+        <div style="margin-bottom: 10px;">
+            <strong>Description:</strong>
+            <p style="margin: 5px 0;">${description}</p>
+        </div>
+        <div style="margin-bottom: 10px;">
+            <strong>Amount:</strong>
+            <p style="margin: 5px 0;">${amount}</p>
+        </div>
+        <div>
+            <strong>Operation:</strong>
+            <p style="margin: 5px 0;">${operation}</p>
+        </div>
+    </div>
+
+
+    <p>If this was not initiated by you please contact customer care</p>
+    <p style="text-align:center;">Thank You</p>
+</div>  
+  `;
+  // setup email data with unicode symbols
+  let mailOptions = {
+    from: `"${product_name}" <${process.env.SENDER_EMAIL}>`, // sender address
+    to: `${email}`, // list of recievedRequest
+    subject: `${product_name} ${operation} notification`, //
+    text: `New ${operation} notification`, // subject
+    html: message, // html body
+  };
+
+  transportSender(mailOptions);
+};
+
+exports.initiateTransactionMailer = ({email, operation, description}) => {
+  const message = `
+<div style="font-family: Arial, sans-serif; max-width: 400px; margin: auto; border: 1px solid #ccc; padding: 20px; border-radius: 10px;">
+    <div style="background-color:#B98100;color:white;padding:20px;text-align:center;border-radius:10px;">
+        <img src="https://res.cloudinary.com/dkgblnkxm/image/upload/v1694926535/w2wnxtjjbydmtjru2gjg.png" alt="Logo" style="width:100px;height:100px;">
+        <h1 style="margin:0;">Notification From ${product_name} App</h1>
+    </div>
+    <p style="color:#333;">Notifying you of ${operation} action on your account</p>
+    <div style="border: 1px solid #ccc; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); max-width: 400px;">
+        <div style="margin-bottom: 10px;">
+            <strong>Email:</strong>
+            <p style="margin: 5px 0;">${email}</p>
+        </div>
+        <div style="margin-bottom: 10px;">
+            <strong>Description:</strong>
+            <p style="margin: 5px 0;">${description}</p>
+        </div>
+    </div>
+
 
     <p>If this was not initiated by you please contact customer care</p>
     <p style="text-align:center;">Thank You</p>

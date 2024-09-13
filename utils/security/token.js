@@ -23,13 +23,13 @@ exports.generateToken = (user) => {
 
   // Signing token
   const token = jwt.sign(dataStoredInToken, secret, {
-    expiresIn: "7d",
+    expiresIn: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
     audience: process.env.JWT_AUDIENCE,
     issuer: process.env.JWT_ISSUER
   });
 
-  const today = new Date();
-  const expiresIn = new Date(today.getTime() + (7 * 24 * 60 * 60 * 1000)); // Token expiration time (7 days)
+  const expiresIn = new Date();
+  expiresIn.setDate(expiresIn.getDate() + 7); // Token expiration time (7 days)
 
   return { token, expiresIn };
 };
