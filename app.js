@@ -19,6 +19,7 @@ app.use(cors({
     "http://localhost:3000", "*"],
   allowedHeaders: ["Content-Type", "Authorization", "Accept", "Accept-Language", "Accept-Encoding", "*"],
   exposedHeaders: ["Content-Type", "Authorization", "Accept", "Accept-Language", "Accept-Encoding", "*"],
+  credentials: true 
 }));
 
 //middlewares
