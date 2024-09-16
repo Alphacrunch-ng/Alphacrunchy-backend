@@ -25,6 +25,7 @@ const corsOptions = {
     "Accept-Language", "Accept-Encoding", 
     "X-Requested-With"
   ],
+  allowedCredentials: true,
   credentials: true, // This allows cookies to be included in requests
 };
 
