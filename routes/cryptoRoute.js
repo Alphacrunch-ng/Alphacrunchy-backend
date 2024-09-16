@@ -1,5 +1,5 @@
 const {
-  getAssets,
+  // getAssets,
   addAdminAsset,
   createUserCryptoAccount,
   getSubAccountsFromSource,
@@ -18,7 +18,7 @@ const { roles } = require("../utils/constants");
 
 const router = require("express").Router();
 
-router.get("/get-assets", getAssets);
+// router.get("/get-assets", getAssets);
 router.get("/supported-assets", getSupportedAssets);
 router.get("/source/supported-assets", auth, getSupportedAssetsFromSource);
 router.get("/get-accounts/source", auth, getSubAccountsFromSource);

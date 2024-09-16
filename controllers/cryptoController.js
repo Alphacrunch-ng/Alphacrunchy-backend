@@ -13,34 +13,34 @@ const { createVaultWalletHelper: createVaultWallet, getSupportedAssetsFromSource
 const { notFoundErrorResponse, badRequestResponse, successResponse, cachedResponse } = require("../utils/apiResponses.js");
 const { getSupportedAssetsHelper } = require("../models/repositories/supportedAssetsRepo.js");
 
-exports.getAssets = async (req, res) => {
-  const cacheKey = `cryptoassets`;
-  try {
-    const cachedData = getCacheData(cacheKey);
-    if (cachedData) {
-      return res.status(200).json({
-        data: cachedData,
-        success: true,
-        message: "Cached result",
-      });
-    }
+// exports.getAssets = async (req, res) => {
+//   const cacheKey = `cryptoassets`;
+//   try {
+//     const cachedData = getCacheData(cacheKey);
+//     if (cachedData) {
+//       return res.status(200).json({
+//         data: cachedData,
+//         success: true,
+//         message: "Cached result",
+//       });
+//     }
 
-    const responseData = await CryptoAssetModel.find({
-      account_uid: process.env.BITPOWR_ACCOUNT_WALLET_ID,
-      isDeleted: false,
-    });
+//     const responseData = await CryptoAssetModel.find({
+//       account_uid: process.env.BITPOWR_ACCOUNT_WALLET_ID,
+//       isDeleted: false,
+//     });
 
-    if (responseData) {
-      setCacheData(cacheKey, responseData, 60 * 5 * 1000);
-      return res.status(200).json({
-        success: true,
-        data: responseData,
-      });
-    }
-    return res.status(404).json({ success: false });
-  } catch (error) {
-    serverError(res, error);
-  }
+//     if (responseData) {
+//       setCacheData(cacheKey, responseData, 60 * 5 * 1000);
+//       return res.status(200).json({
+//         success: true,
+//         data: responseData,
+//       });
+//     }
+//     return res.status(404).json({ success: false });
+//   } catch (error) {
+//     serverError(res, error);
+//   }
 
   // const cacheKey = `cryptoassets_${process.env.BITPOWR_ACCOUNT_WALLET_ID}`;
   // try {
@@ -68,7 +68,7 @@ exports.getAssets = async (req, res) => {
   // } catch (error) {
   //   serverError(res, error);
   // }
-};
+// };
 
 /**
  * @api {get} /crypto/supported-assets Get Supported Assets

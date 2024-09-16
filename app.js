@@ -7,20 +7,32 @@ const indexRoute = require("./routes/indexRoute");
 const { logger, logDirectory } = require("./utils/logger/logger.js");
 
 const app = express();
-app.options('*', cors({
-  headers: ['Content-Type', 'Authorization', '*'], // sets the Access-Control-Allow-Headers header
-  methods: ['GET', 'POST', 'PUT','PATCH', 'DELETE', '*'] // sets the Access-Control-Allow-Methods header
-}))
-app.use(cors({
+const corsOptions = {
   origin: [
     "https://cambio.ng",
     "https://admin-alpha-crunch.netlify.app",
     "http://localhost:3001",
-    "http://localhost:3000", "*"],
-  allowedHeaders: ["Content-Type", "Authorization", "Accept", "Accept-Language", "Accept-Encoding", "*"],
-  exposedHeaders: ["Content-Type", "Authorization", "Accept", "Accept-Language", "Accept-Encoding", "*"],
-  credentials: true 
-}));
+    "http://localhost:3000"
+  ],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], // Allow these methods
+  allowedHeaders: [
+    "Content-Type", "Authorization", "Accept", 
+    "Accept-Language", "Accept-Encoding", 
+    "X-Requested-With"
+  ],
+  exposedHeaders: [
+    "Content-Type", "Authorization", "Accept", 
+    "Accept-Language", "Accept-Encoding", 
+    "X-Requested-With"
+  ],
+  credentials: true, // This allows cookies to be included in requests
+};
+
+app.use(cors(corsOptions)); // Regular requests
+// app.options('*', (req, res) => {
+//   res.sendStatus(204);  // No content response for OPTIONS requests
+// });
+
 
 //middlewares
 app.use(cookieParser());

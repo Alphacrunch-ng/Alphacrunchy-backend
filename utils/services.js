@@ -187,7 +187,7 @@ exports.setTokenDataInCookie = (res, { token, expiresIn }) => {
   res.cookie("tokenData", JSON.stringify({ token, expiresIn }), {
     httpOnly: true,
     expires: expiresIn,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+    secure: process.env.NODE_ENV === 'production', // true for production
+    sameSite: "none",
   });
 }
