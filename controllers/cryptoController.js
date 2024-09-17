@@ -11,7 +11,7 @@ const { isValidAmount } = require("../utils/validators/generalValidators.js");
 const { debitWalletHelper } = require("./walletController.js");
 const { createVaultWalletHelper: createVaultWallet, getSupportedAssetsFromSourceHelper, getAllVaultAccountsHelper } = require("../utils/fireblockServices.js");
 const { notFoundErrorResponse, badRequestResponse, successResponse, cachedResponse } = require("../utils/apiResponses.js");
-const { getSupportedAssetsHelper } = require("../models/repositories/supportedAssetsRepo.js");
+const { getSupportedAssetsHelper, addSupportedAssetHelper } = require("../models/repositories/supportedAssetsRepo.js");
 
 // exports.getAssets = async (req, res) => {
 //   const cacheKey = `cryptoassets`;
@@ -252,67 +252,35 @@ exports.getCryptoWallet = async (req, res) => {
 
 exports.addAdminAsset = async (req, res) => {
   // the asset should have been added on the bitpowr dashboard
-  const { chain_name } = req.body;
+  const { name, asset_id, asset_type, contractAddress, nativeAsset, decimals  } = req.body;
   try {
-    console.log(chain_name);
-    const responseData = await makeBitpowrRequest(
-      `${process.env.BITPOWR_BASEURL}/accounts/${process.env.BITPOWR_ACCOUNT_WALLET_ID}/assets`
-    );
-    if (!responseData.data) {
-      return res.status(404).json({
-        success: false,
-        message: "unable to check provider",
-      });
-    }
-    const assets = Array(...responseData.data);
-    const check = assets.filter((asset) => {
-      return asset.chain.toUpperCase() === String(chain_name).toUpperCase();
-    });
-    if (check.length < 1) {
-      return res.status(400).json({
-        success: false,
-        message: "Asset not found on the provider",
-      });
-    }
-
-    const ifExists = await CryptoAssetModel.findOne({
-      chain: String(chain_name).toUpperCase(),
-    });
-    if (ifExists) {
-      return res.status(400).json({
-        success: false,
-        message: "Asset already exists",
-      });
-    }
-
+    
     const cloudFile = await cloudinary.uploader.upload(req.file.path, {
       folder: "Alphacrunch/crypto",
     });
-    const icon = cloudFile.secure_url;
+    const icon_url = cloudFile.secure_url;
     const assetData = {
-      account_uid: process.env.BITPOWR_ACCOUNT_WALLET_ID,
-      icon: icon,
-      uid: check[0].uid,
-      guid: check[0].guid,
-      label: check[0].label,
-      isDeleted: check[0].isDeleted,
-      isArchived: check[0].isArchived,
-      isContract: check[0].isContract,
-      chain: check[0].chain,
-      network: check[0].network,
-      mode: check[0].mode,
-      assetType: check[0].assetType,
-      autoForwardAddress: check[0].autoForwardAddress,
-      createdAt: check[0].createdAt,
-      balance: check[0].balance,
+      name,
+      asset_id,
+      asset_type,
+      contractAddress,
+      nativeAsset,
+      icon_url,
+      decimals
     };
-    const asset = await CryptoAssetModel.create(assetData);
+    const asset = await addSupportedAssetHelper(assetData);
 
     return res.status(200).json({
       success: true,
       asset,
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: "Asset already exists",
+      });
+    }
     serverError(res, error);
   }
 };

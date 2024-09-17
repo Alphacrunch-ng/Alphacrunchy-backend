@@ -22,6 +22,7 @@ exports.getSupportedAssetsHelper = async (options) => {
  * @param {Object} asset - Asset object with the following properties:
  *   @property {string} name - The name of the asset
  *   @property {string} asset_id - The ID of the asset
+ *   @property {string} asset_type - The type of the asset
  *   @property {string} contractAddress - The contract address of the asset
  *   @property {string} nativeAsset - The native asset symbol
  *   @property {string} icon_url - The native asset symbol
@@ -29,9 +30,17 @@ exports.getSupportedAssetsHelper = async (options) => {
  * @returns {Promise<SupportedCryptoAsset>} The newly created asset
  * @throws {Error} If there is an error creating the asset
  */
-exports.addSupportedAssetHelper = async (asset) => {
+exports.addSupportedAssetHelper = async ({ name, asset_id, asset_type, contractAddress, nativeAsset, icon_url, decimals }) => {
+    
     try {
-        const result = await SupportedCryptoAsset.create(asset);
+        if (!name || !asset_id ) {
+            throw new Error("All fields are required");
+        }
+        const existingAsset = await SupportedCryptoAsset.findOne({ asset_id });
+        if (existingAsset) {
+            throw new Error("Asset already exists");
+        }
+        const result = await SupportedCryptoAsset.create({ name, asset_id, asset_type, contractAddress, nativeAsset, icon_url, decimals });
         return result;
     } catch (error) {
         throw error;

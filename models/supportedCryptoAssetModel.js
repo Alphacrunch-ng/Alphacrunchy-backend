@@ -8,6 +8,9 @@ const supportedCryptoAssetSchema = new Schema({
         required: true,
         index: true
     },
+    asset_type: {
+        type: String
+    },
     name: {
         type: String,
     },
