@@ -9,8 +9,9 @@ const SupportedCryptoAsset = require("../supportedCryptoAssetModel");
  */
 exports.getSupportedAssetsHelper = async (options) => {
     try {
-        const result = await SupportedCryptoAsset.find(options);
-        return result;
+        const data = await SupportedCryptoAsset.find(options);
+        const count = await SupportedCryptoAsset.countDocuments(options);
+        return {count, data };
     } catch (error) {
         throw error;
     }
@@ -57,6 +58,28 @@ exports.addSupportedAssetHelper = async ({ name, asset_id, asset_type, contractA
 exports.deleteSupportedAssetHelper = async (options) => {
     try {
         const result = await SupportedCryptoAsset.findOneAndDelete(options);
+        return result;
+    } catch (error) {
+        throw error;
+    }
+}
+
+/**
+ * Finds a supported crypto asset by its id or asset_id.
+ * @param {Object} options - The options for finding a supported asset.
+ *   @property {string} _id - The id of the supported asset to find.
+ *   @property {string} name - The name of the asset
+ *   @property {string} asset_id - The ID of the asset
+ *   @property {string} asset_type - The type of the asset
+ *   @property {string} contractAddress - The contract address of the asset
+ *   @property {string} nativeAsset - The native asset symbol
+ *   @property {string} icon_url - The native asset symbol
+ *   @property {number} decimals - The number of decimal places for the asset
+ * @returns {Promise<SupportedCryptoAsset>} A promise that resolves with the found supported asset.
+ */
+exports.findSupportedAssetHelper = async (options) => {
+    try {
+        const result = await SupportedCryptoAsset.findOne(options);
         return result;
     } catch (error) {
         throw error;

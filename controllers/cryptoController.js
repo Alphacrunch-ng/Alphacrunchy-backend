@@ -11,7 +11,7 @@ const { isValidAmount } = require("../utils/validators/generalValidators.js");
 const { debitWalletHelper } = require("./walletController.js");
 const { createVaultWalletHelper: createVaultWallet, getSupportedAssetsFromSourceHelper, getAllVaultAccountsHelper } = require("../utils/fireblockServices.js");
 const { notFoundErrorResponse, badRequestResponse, successResponse, cachedResponse } = require("../utils/apiResponses.js");
-const { getSupportedAssetsHelper, addSupportedAssetHelper } = require("../models/repositories/supportedAssetsRepo.js");
+const { getSupportedAssetsHelper, addSupportedAssetHelper, findSupportedAssetHelper } = require("../models/repositories/supportedAssetsRepo.js");
 
 // exports.getAssets = async (req, res) => {
 //   const cacheKey = `cryptoassets`;
@@ -202,8 +202,6 @@ exports.getSupportedAssetsFromSource = async (req, res) => {
 
 exports.getCryptoWallet = async (req, res) => {
   const { id } = req.user;
-  let { source } = req.query;
-  source = Boolean(source);
   const cacheKey = `cryptowallet${id}`;
   try {
     const cachedData = getCacheData(cacheKey);
@@ -222,31 +220,14 @@ exports.getCryptoWallet = async (req, res) => {
         data: "Wallet not found",
       });
     }
-    if(source){
-      const responseData = await makeBitpowrRequest(
-        `${process.env.BITPOWR_BASEURL}/accounts/${process.env.BITPOWR_ACCOUNT_WALLET_ID}/sub-accounts/${cryptoWallet.uid}?orderBy=asc`,
-        "get"
-      );
-      if (responseData) {
-        setCacheData(cacheKey, responseData.data, 60 * 5 * 1000);
-        return res.status(200).json({
-          success: true,
-          data: responseData.data,
-        })
-      } else {
-        return res.status(404).json({
-          success: false,
-          message: "Error getting sub accounts",
-        })
-      }
-    }
+
     setCacheData(cacheKey, cryptoWallet, 60 * 5 * 1000);
-    return res.status(200).json({
-      success: true,
-      data: cryptoWallet
+    return successResponse({
+      res,
+      data: cryptoWallet,
     });
   } catch (error) {
-    return serverError(res, error);
+    return serverErrorResponse(res, error);
   }
 }
 
@@ -254,7 +235,10 @@ exports.addAdminAsset = async (req, res) => {
   // the asset should have been added on the bitpowr dashboard
   const { name, asset_id, asset_type, contractAddress, nativeAsset, decimals  } = req.body;
   try {
-    
+    const checkAsset = await findSupportedAssetHelper({ asset_id });
+    if (checkAsset) {
+      return badRequestResponse(res, "Asset already exists");
+    }
     const cloudFile = await cloudinary.uploader.upload(req.file.path, {
       folder: "Alphacrunch/crypto",
     });
@@ -281,7 +265,7 @@ exports.addAdminAsset = async (req, res) => {
         message: "Asset already exists",
       });
     }
-    serverError(res, error);
+    return serverErrorResponse(res, error);
   }
 };
 
